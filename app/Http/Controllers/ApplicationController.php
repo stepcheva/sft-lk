@@ -64,13 +64,11 @@ class ApplicationController extends Controller
             'period' => $date->format('Y-m-d'),
             ]);
 
-        $productranges = Productrange::where('provider_id', $request->provider_id)->get();
+        $productranges = Productrange::where('provider_id', $request->provider_id)->paginate(15);
 
-        dd($consigneer_deliveries = $application->consigneer->consigneerDeliveries()->where('price', '<', 100000)->get());
+        $consigneer_deliveries = $application->consigneer->consigneerDeliveries;
 
-        $productranges = $productranges->crossJoin($consigneer_deliveries)->all();
-
-        return view('templates.applications.productrange', ['productranges' => $productranges, 'applicator' => $applicator]);
+        return view('templates.applications.productrange', compact('productranges','applicator', 'consigneer_deliveries'));
     }
 
     /**

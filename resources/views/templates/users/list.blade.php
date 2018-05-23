@@ -68,6 +68,7 @@
                                     @endif
                                     </tbody>
                                 </table>
+                                <div> {{ $users->links() }}</div>
                                 <div>
                                     Показано: {{ $users->lastItem() }} из {{  $users->total() }}
                                 </div>
