@@ -14,6 +14,7 @@ class SendMail extends Mailable implements ShouldQueue
     public $mailTo;
     public $mailFrom = "file.storages.ex@gmail.com";
     public $subject;
+    public $data;
     public $info;
     public $url;
     public $view;
@@ -23,13 +24,14 @@ class SendMail extends Mailable implements ShouldQueue
      *
      * @return void
      */
-    public function __construct($mailTo, $subject, $info, $url = null, $view)
+    public function __construct($mailTo, $subject, $info, $url = null, $view, $data = null)
     {
         $this->mailTo = $mailTo;
         $this->subject = $subject;
         $this->message = $info;
         $this->view = $view;
         $this->url = $url;
+        $this->data = $data;
     }
 
     /**
@@ -43,6 +45,6 @@ class SendMail extends Mailable implements ShouldQueue
             ->from($this->mailFrom)
             ->subject($this->subject)
             ->view($this->view)
-            ->with(['info' => $this->info, 'url'=> $this->url]);
+            ->with(['info' => $this->info, 'url'=> $this->url, $this->data = null]);
     }
 }

@@ -18,10 +18,9 @@ Route::resource('applicators', 'ApplicatorController');
 
 Route::group(['prefix' => '{applicator}'], function () {
     Route::resource('applications', 'ApplicationController');
-    Route::post('product/applications', 'ApplicationController@createProductApplication')->name('applications.product');
-
 });
 
+Route::post('applications/{application}', 'ApplicationController@createProductVolume')->name('applications.product');
+Route::post('applications/{application}/confirm', 'ApplicationController@confirmApplication')->name('applications.confirm');
 
-
-
+Route::post('applications/{application}/send', 'ApplicationController@createOrder')->name('applications.send');

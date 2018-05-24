@@ -23,7 +23,10 @@ class CreateApplicationsTable extends Migration
 
             $table->string('number',30)->unique();
             $table->date('period');
-            $table->tinyInteger('status')->default(0);
+
+            $table->string('status')->default('new');
+            $table->integer('provider_id')->unsigned();
+            $table->foreign('provider_id')->references('id')->on('providers')->onUpdate('cascade');
             $table->timestamps();
         });
     }

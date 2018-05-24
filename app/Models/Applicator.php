@@ -31,4 +31,9 @@ class Applicator extends Model
         return $this->counter->consigneers;
     }
 
+    public function cooperation()
+    {
+        return $this->belongsTo('App\Models\Cooperation');
+    }
+
 }

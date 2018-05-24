@@ -20,4 +20,9 @@ class Provider extends Model
     {
         return $this->belongsTo('App\Models\Counter');
     }
+
+    public function applications()
+    {
+        return $this->hasMany('App\Models\Application');
+    }
 }

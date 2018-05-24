@@ -11,18 +11,25 @@ class Application extends Model
         'period',
         'status',
         'consigneer_id',
+        'provider_id',
         'applicator_id'
     ];
 
     public function applicator()
     {
-        return $this->belongsTo('App\Models\Applicators');
+        return $this->belongsTo('App\Models\Applicator');
     }
 
     public function consigneer()
     {
         return $this->belongsTo('App\Models\Consigneer');
     }
+
+    public function provider()
+    {
+        return $this->belongsTo('App\Models\Provider');
+    }
+
 
 
 }

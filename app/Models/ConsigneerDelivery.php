@@ -21,4 +21,9 @@ class ConsigneerDelivery extends Model
     {
         return $this->belongsTo('App\Models\Delivery');
     }
+
+    public function product_applications()
+    {
+        return $this->hasMany('App\Models\ProductApplication');
+    }
 }

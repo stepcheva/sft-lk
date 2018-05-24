@@ -24,7 +24,7 @@ class CreateProductApplicationsTable extends Migration
             $table->foreign('application_id')->references('id')->on('applications')->onDelete('cascade')->onUpdate('cascade');
 
             $table->integer('consigneer_delivery_id')->unsigned();
-            $table->foreign('consigneer_delivery_id')->references('id')->on('consigneer_delivery')->onDelete('cascade')->onUpdate('cascade');
+            $table->foreign('consigneer_delivery_id')->references('id')->on('consigneer_deliveries')->onDelete('cascade')->onUpdate('cascade');
             $table->timestamps();
         });
     }

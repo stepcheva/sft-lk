@@ -26,4 +26,9 @@ class Cooperation extends Model
     {
         return $this->belongsToMany('App\Models\Productrange');
     }
+
+    public function applicator()
+    {
+        return $this->hasMany('App\Models\Cooperation');
+    }
 }
