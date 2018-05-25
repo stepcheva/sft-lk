@@ -42,7 +42,6 @@ class UserController extends Controller
      */
     public function store(UserRequest $request)
     {
-        dd($request);
         if($request->validated()) {
 
             $user = User::create($request->validated());

@@ -79,10 +79,5 @@ INSERT INTO `sft-lk`.`consigneer_deliveries` (`id`, `consigneer_id`, `delivery_i
 (6, '2', '3', '40000', NULL, NULL, NULL),
 (7, '2', '4', '45000', NULL, NULL, NULL);
 
- <td>{{ $application->consigneer->name }}</td>
-                                            <td>{{ $application->provider->name }}</td>
-                                            <td>{{$price}}<td>
-
-                                            $price = collect($products)->map(function ($item) {
-            return $item['price'];
-        })->sum();
+ ALTER TABLE `contactqueries` CHANGE `file_id` `file_id` INT(10) UNSIGNED NULL;
+ ALTER TABLE `contactqueries` CHANGE `applicator_id` `applicator_id` INT(10) UNSIGNED NULL;

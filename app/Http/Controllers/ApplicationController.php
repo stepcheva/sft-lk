@@ -10,8 +10,6 @@ use App\Models\Productrange;
 use App\Models\Provider;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
-use Jenssegers\Date\Date;
-
 use Mail;
 
 class ApplicationController extends Controller
@@ -165,14 +163,13 @@ class ApplicationController extends Controller
         $email = $application->applicator->user->email;
 
         $name = $application->applicator->user->firstName . " " . $application->applicator->user->lastName;
-        //$info = "Вы создали заявку $application->number";
         $data = ['application' => $application, 'product_applications' => $product_applications, 'price' => $price, 'comment' => $comment];
         $view = "templates.applications.print";
-        $mail = Mail::send(['html' => $view], $data, function($message) use ($subject, $name, $email) {
+        return Mail::send(['html' => $view], $data, function($message) use ($subject, $name, $email) {
             $message->to($email, $name);
+            $message->cc('file.storages.ex@gmail.com');
             $message->from('file.storages.ex@gmail.com', 'SFT Group');
             $message->subject($subject);
         });
-        return true;
     }
 }

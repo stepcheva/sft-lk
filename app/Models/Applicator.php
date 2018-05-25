@@ -36,4 +36,9 @@ class Applicator extends Model
         return $this->belongsTo('App\Models\Cooperation');
     }
 
+    public function contactqueries()
+    {
+        return $this->hasMany('App\Models\Contactquery');
+    }
+
 }

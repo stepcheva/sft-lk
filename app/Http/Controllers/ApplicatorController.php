@@ -19,4 +19,6 @@ class ApplicatorController extends Controller
     }
 
 
+
+
 }

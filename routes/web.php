@@ -18,6 +18,7 @@ Route::resource('applicators', 'ApplicatorController');
 
 Route::group(['prefix' => '{applicator}'], function () {
     Route::resource('applications', 'ApplicationController');
+    Route::resource('contactquery', 'ContactqueryController');
 });
 
 Route::post('applications/{application}', 'ApplicationController@createProductVolume')->name('applications.product');
