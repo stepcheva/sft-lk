@@ -14,7 +14,9 @@
                                 <a href="{{ route('applications.create', ['applicator_id' => $user->applicator->id]) }}">Создать
                                     заявку</a> |
                                 <a href="{{ route('contactquery.create', ['applicator_id' => $user->applicator->id]) }}">Создать
-                                    обращение</a>
+                                    обращение</a> |
+                                <a href="{{ route('productranges.list', ['applicator_id' => $user->applicator->id]) }}">Номенклатура</a> |
+                                <a href="{{ route('applications.index', ['applicator_id' => $user->applicator->id]) }}">Мои заявки</a>
                             </h3></div>
                     </div>
                     <div class="panel-heading"><h3>Мой профиль</h3></div>

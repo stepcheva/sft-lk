@@ -89,8 +89,7 @@ class UserController extends Controller
     public function edit(User $user)
     {
         $counters = Counter::all();
-        $user = User::findOrFail($user->id);
-        return view('templates.users.form', compact('user' , 'counters'));
+        return view('templates.users.form', compact('user', 'counters'));
     }
 
     /**

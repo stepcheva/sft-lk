@@ -16,7 +16,6 @@
                         @endif
                     </div>
 
-
                     <div class="panel-body">
                         @if(isset($user))
                             <form class="form-horizontal" method="POST" action="{{ route('users.update', ['user' => $user]) }}">
@@ -128,10 +127,10 @@
                                 <label for="counter_id" class="col-md-4 control-label">Контрагент</label>
                                     <div class="col-md-6">
 
-                                    @if(isset($user) && $user->counter->id)
+                                    @if(isset($user) && $user->applicator->counter_id)
                                         <div class="accordion">
                                             <div class="accordion-toggle">
-                                                {{ $user->counter->name }}
+                                                {{$user->applicator->counter->name }}
                                                 <a data-toggle="collapse" data-parent="#collapse-group"
                                                    href="#1">Изменить контрагента</a>
                                                 <div id="1" class="panel-collapse collapse">

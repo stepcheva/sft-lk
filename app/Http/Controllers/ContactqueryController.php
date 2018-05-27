@@ -12,9 +12,9 @@ class ContactqueryController extends Controller
     /**
      * Display a listing of the resource.
      *
-     * @return \Illuminate\Http\Response
+     * @rApplicator $applicatoreturn \Illuminate\Http\Response
      */
-    public function index(Applicator $applicator)
+    public function index()
     {
         $contactqueries = Contactquery::where('applicator_id', $applicator->id)->latest()->paginate(15);
         return view('templates.users.contactqueries_list', compact('applicator', 'contactqueries'));

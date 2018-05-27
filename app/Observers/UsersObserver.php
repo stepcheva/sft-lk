@@ -30,7 +30,6 @@ class UsersObserver
     public function updating(User $user)
     {
         $changes = array_diff($user->getOriginal(), $user->getAttributes());
-        dd($changes);
 
         if (array_key_exists('password', $changes)) {
             $user->passwordUntil = date('Y-m-d');

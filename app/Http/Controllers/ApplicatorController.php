@@ -18,7 +18,17 @@ class ApplicatorController extends Controller
         return view('templates.users.show', compact('user' , 'counter', 'consigneers', 'cooperation'));
     }
 
+    /**
+     * @param Applicator $applicator
+     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
+     */
+    public function showProductranges(Applicator $applicator) {
+        $productranges = $applicator->counter->providers->map(function ($item) {
+            return $item->productranges;
 
+        })->collapse();
 
+        return view('templates.productranges.list', ['productranges' => $productranges]);
+    }
 
 }
