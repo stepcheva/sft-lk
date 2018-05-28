@@ -15,10 +15,10 @@
                     <div class="panel-body">
                         <div class="panel-body">
                             <form method="POST"
-                                  action="{{ route('applications.send', ['application' =>$application, 'product_applications' => $product_applications, 'price' => $price]) }}">
+                                  action="{{ route('applications.send', compact('application', 'product_applications','volume', 'price', 'comment')) }}">
                                 {{ csrf_field() }}
 
-                                @include('templates.applications.print', ['application' =>$application, 'product_applications' => $product_applications, 'price' => $price])
+                                @include('templates.applications.print', compact('application', 'product_applications','volume', 'price'))
 
                                 <div class="form-group">
                                     <div>
@@ -38,9 +38,9 @@
                                 <div>
                                     <div class="pull-right">
 
-                                        <a class="btn btn-info btn-sm"
-                                           href="{{ route('applications.product', ['application' => $application]) }}">
-                                            Назад</a>
+                                        <a class="btn btn-info btn"
+                                           href="{{ route('applications.create', ['applicator_id' => $application->applicator->id]) }}">
+                                            Отменить</a>
                                         {{ method_field('POST') }}
                                         <input type="hidden" name="_token" value="{{csrf_token()}}">
                                         <button type="submit" class="btn btn-success">Подтвердить</button>

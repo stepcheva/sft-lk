@@ -31,7 +31,6 @@
                                             <th class="text-center">Марка</th>
                                             <th class="text-center">Граммаж</th>
                                             <th class="text-center">Формат</th>
-                                            <th class="text-center">Минимальный объем</th>
                                             <th class="text-center">Объем 1 декада</th>
                                             <th class="text-center">Объем 2 декада</th>
                                             <th class="text-center">Объем 3 декада</th>
@@ -48,7 +47,6 @@
                                                     <td> {{ $product->brand }} </td>
                                                     <td> {{ $product->grammage }} </td>
                                                     <td> {{ $product->format }} </td>
-                                                    <td> {{ $product->min_lot }} </td>
                                                     <td><input class="form-control-sm" type="text"
                                                                name="{{'productranges['. $key. '][volume_1]'}}"
                                                                id="volume_1" placeholder="" value="">
@@ -86,9 +84,9 @@
 
                                     <div>
                                         <div class="pull-right">
-                                            <a class="btn btn-info btn-sm"
-                                               href="{{ route('applications.product',  ['application' => $application])}}">Назад</a>
-
+                                            <a class="btn btn-info btn"
+                                               href="{{ route('applications.create', ['applicator_id' => $application->applicator->id]) }}">
+                                                Отменить</a>
                                             <input type="hidden" name="_token" value="{{csrf_token()}}">
                                             <button type="submit" class="btn btn-success btn-sm">Далее</button>
                                         </div>

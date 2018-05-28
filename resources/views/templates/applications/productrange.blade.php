@@ -66,11 +66,11 @@
                                         Показано: {{ $productranges->lastItem() }} из {{  $productranges->total() }}
                                     <div class="pull-right">
 
-                                        <a class="btn btn-info btn-sm"
+                                        <a class="btn btn-info "
                                            href="{{ route('applications.create',  ['applicator' => $application->applicator])}}">Назад</a>
 
                                         <input type="hidden" name="_token" value="{{csrf_token()}}">
-                                        <button type="submit" class="btn btn-success btn-sm">Далее</button>
+                                        <button type="submit" class="btn btn-success ">Далее</button>
                                     </div>
                                     </div>
                                 </form>

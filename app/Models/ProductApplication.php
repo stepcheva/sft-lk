@@ -36,7 +36,12 @@ class ProductApplication extends Model
 
     public function setPrice() {
 
-        return $this->price = $this->consigneer_delivery->price;
+        return $this->price = $this->consigneer_delivery->price * ($this->getVolume());
+    }
+
+    public function getVolume() {
+
+        return $this->volume_1 + $this->volume_2 + $this->volume_3;
     }
 
 }

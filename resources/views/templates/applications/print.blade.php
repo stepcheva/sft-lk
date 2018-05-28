@@ -1,4 +1,4 @@
-    <h3>Заявка № 001/{{ $application->number }}</h3>
+    <h3>Заявка № {{ $application->number }}</h3>
     <h5>от {{$application->created_at->format('Y-m-d')}}</h5>
     <h5>
         Заказчик: {{$application->applicator->user->lastName }}
@@ -17,7 +17,6 @@
                     <th>Период отгрузки<br>{{ $application->period }}</th>
                     <th>Грузополучатель<br>{{ $application->consigneer->name }}</th>
                     <th>Поставщик<br>{{ $application->provider->name }}</th>
-                    <th>Сумма заказа<br>{{ array_sum($price)}}</th>
                 </tr>
             </table>
         </div>
@@ -28,12 +27,10 @@
                     <th class="text-center">Марка</th>
                     <th class="text-center">Граммаж</th>
                     <th class="text-center">Формат</th>
-                    <th class="text-center">Минимальный объем</th>
                     <th class="text-center">Объем 1 декада</th>
                     <th class="text-center">Объем 2 декада</th>
                     <th class="text-center">Объем 3 декада</th>
                     <th class="text-center">Доставка</th>
-                    <th class="text-center">Цена</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -46,20 +43,25 @@
                             <td> {{ $product->productrange->brand }} </td>
                             <td> {{ $product->productrange->grammage }} </td>
                             <td> {{ $product->productrange->format }} </td>
-                            <td> {{ $product->productrange->min_lot }} </td>
                             <td> {{ $product->volume_1 }} </td>
                             <td> {{ $product->volume_2 }} </td>
                             <td> {{ $product->volume_3 }} </td>
                             <td> {{ $product->consigneer_delivery->delivery->name }}</td>
-                            <td> {{ $product->consigneer_delivery->price  }}</td>
                         </tr>
-                        </tr>
+
                     @endforeach
                 @else
                     <h2>Ошибка создания заявки</h2>
                 @endif
-                @isset($comment) {{$comment}} @endisset
+
+                @isset($comment)
+                    <p> {{$comment}} </p>
+                @endisset
                 </tbody>
             </table>
+            <div>
+                <p>Итого (тн): {{ array_sum($volume) }}</p>
+                <p>Сумма (руб): {{ array_sum($price) }}</p>
+            </div>
         </div>
     </div>
