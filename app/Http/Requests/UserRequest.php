@@ -33,7 +33,7 @@ class UserRequest extends FormRequest
             'lastName' => 'required|max:50|alpha',
             'firstName' => 'required|max:50|alpha',
             'middleName' => 'required|max:50|alpha',
-            'email' => 'required|email|unique:users,email,'. $this->user->id,
+            'email' => 'required|email',
             'phone' => 'required|min:5|max:25|regex:[(\s*)?(\+)?([- _():=+]?\d[- _():=+]?){10,14}(\s*)?]',
             'password' => 'required|min:6|max:50|regex:/\w/',
             'passwordUntil' => 'date',

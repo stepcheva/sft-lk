@@ -88,7 +88,7 @@
                                                href="{{ route('applications.create', ['applicator_id' => $application->applicator->id]) }}">
                                                 Отменить</a>
                                             <input type="hidden" name="_token" value="{{csrf_token()}}">
-                                            <button type="submit" class="btn btn-success btn-sm">Далее</button>
+                                            <button type="submit" class="btn btn-success">Далее</button>
                                         </div>
                                     </div>
                                 </form>
