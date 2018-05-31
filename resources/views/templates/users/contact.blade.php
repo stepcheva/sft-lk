@@ -9,14 +9,26 @@
                     @include('flashes')
 
                     <div class="panel-heading">
-                        <h4>Создание обращения</h4>
+                        <h4>
+                        @if(isset($contactquery))
+                            Редактирование обращения
+                        @else
+                            Создание обращения
+                        @endif
+                        </h4>
                     </div>
 
                     <div class="panel-body">
                         <div class="panel-body">
-                            <form method="POST"
-                                  action="{{ route('contactquery.store', ['applicator' =>$applicator]) }}">
-                                {{ csrf_field() }}
+
+                            @if(isset($contactquery))
+                                <form class="form-horizontal" method="POST" action="{{ route('contactquery.update',['applicator' => $applicator, 'contactquery' => $contactquery] ) }}">
+                            @else
+                                <form class="form-horizontal" method="POST" action="{{ route('contactquery.store',['applicator' => $applicator]) }}">
+                            @endif
+
+                            {{ csrf_field() }}
+
                                 <div class="form-group">
                                      <h4>Пользователь:
                                          {{ $applicator->user->lastName }}
@@ -28,42 +40,46 @@
                                     <div>
                                         <label for="theme" class="control-label">Тема обращения</label>
                                         <input id="theme" class="form-control" name="theme"
-                                                  value=" {{ old('theme') }}" required>
-                                                </input>
+                                                  value=" {{ isset($contactquery->theme) ?  $contactquery->theme : old('theme') }}" required>
 
                                         @if ($errors->has('theme'))
                                             <span class="help-block">
                                                     <strong>{{ $errors->first('theme') }}</strong>
-                                                 </span>
+                                            </span>
                                         @endif
                                     </div>
                                 </div>
-                                <div>
 
                                 <div class="form-group">
                                     <div>
                                         <label for="querytext" class="control-label">Текст обращения</label>
                                         <textarea id="querytext" class="form-control" name="querytext"
-                                                 rows="10" value="{{ old('querytext') }}" required>
-                                                </textarea>
+                                                 rows="10" value="{{ isset($contactquery->querytext) ?  $contactquery->querytext : old('querytext') }}" required>
+                                        </textarea>
 
-                                        @if ($errors->has('contactquery'))
+                                        @if ($errors->has('querytext'))
                                             <span class="help-block">
-                                                    <strong>{{ $errors->first('contactquery') }}</strong>
+                                                    <strong>{{ $errors->first('querytext') }}</strong>
                                                  </span>
                                         @endif
                                     </div>
                                 </div>
-                                <div>
-                                    <div class="pull-right">
-                                        <a class="btn btn-info"
-                                           href="{{ route('applicators.show', ['applicator' => $applicator]) }}">
-                                            Вернуться в профиль</a>
-                                        {{ method_field('POST') }}
 
-                                        <button type="submit" class="btn btn-success">Отправить</button>
+                                <div class="form-group">
+                                        <div class="col-md-8 col-md-offset-4">
+
+                                            <a href="{{ route('applicators.show', ['applicator' => $applicator]) }}" class="cancel">Отмена</a>
+
+                                            @isset($contactquery)
+                                                {{ method_field('PUT') }}
+                                                <button type="submit" class="btn btn-primary">Изменить</button>
+                                            @else
+                                                {{ method_field('POST') }}
+                                                <button type="submit" class="btn btn-primary">Отправить</button>
+                                            @endisset
+                                        </div>
                                     </div>
-                                </div>
+
                             </form>
                         </div>
                     </div>

@@ -14,10 +14,10 @@ class ContactqueryController extends Controller
      *
      * @rApplicator $applicatoreturn \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Applicator $applicator)
     {
         $contactqueries = Contactquery::where('applicator_id', $applicator->id)->latest()->paginate(15);
-        return view('templates.users.contactqueries_list', compact('applicator', 'contactqueries'));
+        return view('templates.contactquery.index', compact('applicator', 'contactqueries'));
     }
 
     /**
@@ -67,7 +67,7 @@ class ContactqueryController extends Controller
      */
     public function show(Contactquery $contactquery)
     {
-        //
+
     }
 
     /**
@@ -76,9 +76,9 @@ class ContactqueryController extends Controller
      * @param  \App\Models\Contactquery  $contactquery
      * @return \Illuminate\Http\Response
      */
-    public function edit(Contactquery $contactquery)
+    public function edit(Applicator $applicator, Contactquery $contactquery)
     {
-        //
+        return view('templates.users.contact', compact('applicator', 'contactquery'));
     }
 
     /**
@@ -88,9 +88,11 @@ class ContactqueryController extends Controller
      * @param  \App\Models\Contactquery  $contactquery
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Contactquery $contactquery)
+    public function update(Applicator $applicator, Contactquery $contactquery, Request $request)
     {
-        //
+        $contactquery->update($request->all());
+        session()->flash('success', 'Обращение успешно изменено.');
+        return redirect()->route('contactquery.index', ['applicator'=> $applicator]);
     }
 
     /**
@@ -99,12 +101,15 @@ class ContactqueryController extends Controller
      * @param  \App\Models\Contactquery  $contactquery
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Contactquery $contactquery)
+    public function destroy(Applicator $applicator, Contactquery $contactquery)
     {
-        //
+        Contactquery::destroy($contactquery->id);
+        session()->flash('success', 'Обращение успешно удалено.');
+        return redirect()->route('contactquery.index', ['applicator'=>$applicator]);
     }
 
-    public function send(Contactquery $contactquery) {
+    public function send(Contactquery $contactquery)
+    {
 
     }
 }
