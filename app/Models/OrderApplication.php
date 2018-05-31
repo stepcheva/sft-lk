@@ -29,4 +29,9 @@ class OrderApplication extends Model
 
         return $this->volume_1 + $this->volume_2 + $this->volume_3;
     }
+
+    public function application() {
+
+        return $this->belongsTo('App\Models\Application');
+    }
 }

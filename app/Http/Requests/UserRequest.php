@@ -5,7 +5,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
-
+use App\Models\User;
 
 
 
@@ -26,7 +26,7 @@ class UserRequest extends FormRequest
      *
      * @return array
      */
-    public function rules()
+    public function rules(User $user)
     {
 
         return [
@@ -34,6 +34,7 @@ class UserRequest extends FormRequest
             'firstName' => 'required|max:50|alpha',
             'middleName' => 'required|max:50|alpha',
             'email' => 'required|email',
+                    Rule::unique('users')->ignore($user->id),
             'phone' => 'required|min:5|max:25|regex:[(\s*)?(\+)?([- _():=+]?\d[- _():=+]?){10,14}(\s*)?]',
             'password' => 'required|min:6|max:50|regex:/\w/',
             'passwordUntil' => 'date',

@@ -10,6 +10,7 @@ class ConsigneerDelivery extends Model
         'consigneer_id',
         'delivery_id',
         'price',
+        'productrange_id',
     ];
 
     public function consigneer()
@@ -25,5 +26,9 @@ class ConsigneerDelivery extends Model
     public function product_applications()
     {
         return $this->hasMany('App\Models\ProductApplication');
+    }
+    public function productrange()
+    {
+        return $this->belongsTo('App\Models\Productrange');
     }
 }
