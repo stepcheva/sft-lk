@@ -25,4 +25,14 @@ class Productrange extends Model
         return $this->belongsTo('App\Models\Provider');
     }
 
+    public function consigneerDeliveries()
+    {
+        return $this->hasMany('App\Models\ConsigneerDelivery');
+    }
+
+    public function getConsigneerDeliveries(Application $application)
+    {
+        return $this->consigneerDeliveries()->where('consigneer_id',$application->consigneer->id)->get();
+    }
+
 }

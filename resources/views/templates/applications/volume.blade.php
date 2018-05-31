@@ -50,19 +50,34 @@
                                                     <td><input class="form-control-sm" type="text"
                                                                name="{{'productranges['. $key. '][volume_1]'}}"
                                                                id="volume_1" placeholder="" value="">
+                                                        @if ($errors->has('products['. $key. '][volume_1]'))
+                                                            <span class="help-block">
+                                            <strong>{{ $errors->first('products['. $key. '][volume_1]') }}</strong>
+                                        </span>
+                                                        @endif
                                                     </td>
                                                     <td><input class="form-control-sm" type="text"
                                                                name="{{'productranges['. $key. '][volume_2]'}}"
-                                                               id="volume_2" placeholder="" value=""></td>
+                                                               id="volume_2" placeholder="" value="">
+                                                        @if ($errors->has('products['. $key. '][volume_2]'))
+                                                            <span class="help-block">
+                                            <strong>{{ $errors->first('products['. $key. '][volume_2]') }}</strong>
+                                        </span>
+                                                        @endif</td>
                                                     <td><input class="form-control-sm" type="text"
                                                                name="{{'productranges['. $key. '][volume_3]'}}"
-                                                               id="volume_3" placeholder="" value=""></td>
+                                                               id="volume_3" placeholder="" value="">
+                                                        @if ($errors->has('products['. $key. '][volume_3]'))
+                                                            <span class="help-block">
+                                            <strong>{{ $errors->first('products['. $key. '][volume_3]') }}</strong>
+                                        </span>
+                                                        @endif</td>
                                                     <td>
-                                                        @if($consigneer_deliveries)
+                                                        @if($product->getConsigneerDeliveries($application))
                                                             <select name="{{ 'productranges['. $key. '][consigneer_delivery_id]'}}"
                                                                     class="form-control">
-                                                                @foreach($consigneer_deliveries as $consigneer_delivery)
-                                                                    <option value="{{ $consigneer_delivery->id }}">{{ $consigneer_delivery->delivery->name . '/' . $consigneer_delivery->price }}</option>
+                                                                @foreach($product->getConsigneerDeliveries($application) as $consigneer_delivery)
+                                                                    <option value="{{ $consigneer_delivery->id }}">{{ $consigneer_delivery->delivery->name . ' / ' . $consigneer_delivery->price }}</option>
                                                                 @endforeach
                                                             </select>
                                                         @endif
@@ -88,7 +103,7 @@
                                                href="{{ route('applications.create', ['applicator_id' => $application->applicator->id]) }}">
                                                 Отменить</a>
                                             <input type="hidden" name="_token" value="{{csrf_token()}}">
-                                            <button type="submit" class="btn btn-success btn-sm">Далее</button>
+                                            <button type="submit" class="btn btn-success">Далее</button>
                                         </div>
                                     </div>
                                 </form>
