@@ -28,7 +28,7 @@ class UserRequest extends FormRequest
      */
     public function rules(User $user)
     {
-       
+
         return [
             'lastName' => 'required|max:50|alpha',
             'firstName' => 'required|max:50|alpha',

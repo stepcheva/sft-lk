@@ -48,8 +48,7 @@
                                                 <td> {{ $user->password }} </td>
                                                 <td> {{ $user->passwordUntil }} </td>
                                                 <td style="text-align: center">
-                                                    <form method="POST"
-                                                          action="{{ route ('users.destroy', ['user' => $user]) }}">
+                                                    <form method="POST" action="{{ route ('users.destroy', ['user' => $user]) }}">
                                                         <a class="btn btn-primary btn-sm"
                                                            href="{{ route('applicators.show', ['applicator' => $user->applicator]) }}">show</a>
 

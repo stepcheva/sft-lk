@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 
 class Applicator extends Model
 {
@@ -24,7 +25,7 @@ class Applicator extends Model
 
     public function applications()
     {
-        return $this->belongsTo('App\Models\Application');
+        return $this->hasMany('App\Models\Application');
     }
     public function getConsigneers()
     {
@@ -40,5 +41,16 @@ class Applicator extends Model
     {
         return $this->hasMany('App\Models\Contactquery');
     }
+
+    public function getApplications($status)
+    {
+        return $this->applications()->where('status', $status)->latest()->get();
+    }
+
+    public function getMonthlyApplications()
+    {
+        return $this->applications()->where('created_at', '>=', Carbon::now()->startOfMonth())->get();
+    }
+
 
 }

@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Mail\Mail\SendMail;
 use App\Models\Application;
 use App\Models\Applicator;
 use App\Models\OrderApplication;
@@ -22,9 +21,27 @@ class ApplicationController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Applicator $applicator, Request $request)
     {
-       // список заявок пользователя
+        switch ($request->param) {
+            case 'monthly':
+                $applications = $applicator->getMonthlyApplications();
+                break;
+            case 'new':
+                $applications = $applicator->getApplications('new');
+                break;
+            case 'completed':
+                $applications = $applicator->getApplications('completed');
+                break;
+            case 'noncomplete':
+                $applications = $applicator->getApplications('noncomplete');
+                break;
+            default:
+                $applications = $applicator->applications;
+                break;
+        }
+
+        return view('templates.applications.index', compact('applicator', 'applications'));
     }
 
     /**
@@ -61,7 +78,7 @@ class ApplicationController extends Controller
         $application = Application::create([
             'consigneer_id' => $request->consigneer_id,
             'applicator_id' => $request->applicator->id,
-            'status' => 'new',
+            'status' => 'noncomplete',
             'number' => '01/'. random_int(100, 200) . '-' .random_int(100, 200) ,
             'provider_id' => $request->provider_id,
             'period' => $date->format('Y-m-d'),
@@ -78,9 +95,10 @@ class ApplicationController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show(Applicator $applicator, Application $application)
     {
-        //
+        $product_applications = $application->order_applications;
+        return view('templates.applications.show', compact('applicator','application', 'product_applications'));
     }
 
     /**
@@ -89,9 +107,11 @@ class ApplicationController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function edit($id)
+    public function edit(Applicator $applicator, Application $application)
     {
-        //
+        $product_applications = $application->order_applications;
+        return view('templates.applications.edit', compact('applicator','application', 'product_applications'));
+
     }
 
     /**
@@ -101,9 +121,21 @@ class ApplicationController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update($id, Request $request)
     {
-        //
+        dd($request);
+
+        foreach ($products as $key => $product) {
+            $product_application = OrderApplication::find($product->id)->update([
+                'volume_1' => (array_key_exists('volume_1', $product) ? $product['volume_1'] : null),
+                'volume_2' =>(array_key_exists('volume_2', $product) ? $product['volume_2'] : null),
+                'volume_3' =>(array_key_exists('volume_3', $product) ? $product['volume_3'] : null),
+                //'price' => $product['price'],
+            ]);
+
+            $volume[] = $product_application->getVolume();
+            $product_applications[] = $product_application;
+        }
     }
 
     /**
@@ -112,49 +144,73 @@ class ApplicationController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy($applicator_id, $application_id)
     {
-        //
+        $application = Application::findOrFail($application_id);
+        if (isset($application->id)) {
+            $application->order_applications()->delete();
+            Application::destroy($application->id);
+            session()->flash('success', 'Заявка успешно удалена.');
+            return redirect()->route('applications.index', ['applicator' => $applicator_id]);
+        }
     }
+
     public function createProductVolume(Application $application, Request $request)
     {
-        $productranges = Productrange::find(array_keys($request->productranges));
-        $consigneer_deliveries = $application->consigneer->consigneerDeliveries;
+        if(!isset($request->products)) {
+            $search = array_keys($request->productranges);
+        } else {
+            foreach ($request->products as $product) {
+                $search[] = $product['productrange_id'];
+            }
+        }
 
-        return view('templates.applications.volume', compact('productranges','application', 'consigneer_deliveries'));
+        $productranges = Productrange::find($search);
+
+        return view('templates.applications.volume', compact('productranges','application'));
     }
 
     public function confirmApplication(Application $application, Request $request)
     {
         $products = $request->productranges;
 
-        foreach ($products as $product) {
-            $min_lot = Productrange::find($product['productrange_id'])->min_lot;
-            $validator = Validator::make($request->all(), [
-                'volume_1' => 'integer|min:' . $min_lot,
-                'volume_2' => 'integer|min:' . $min_lot,
-                'volume_3' => 'integer|min:' . $min_lot,
-                ], [
-                    'integer' => 'Введите целое число',
-                    'min' => 'Не менее '. $min_lot . 'т',
-                ]);
+                foreach ($products as $key => $product) {
+                    /*
+                                $min_lot = Productrange::find($product['productrange_id'])->min_lot;
 
-            if ($validator->fails()) {
-                return redirect()->back()->withErrors($validator)->withInput();
-            } else {
-                $product_application = new ProductApplication(
-                    $application->id,
-                    $product['productrange_id'],
-                    $product['volume_1'],
-                    $product['volume_2'],
-                    $product['volume_3'],
-                    $product['consigneer_delivery_id']);
-                $product_application->setPrice();
-                $price[]= $product_application->price;
-                $volume[] = $product_application->getVolume();
-                $product_applications[] = $product_application;
-            }
-        }
+                                $validator[] = Validator::make($product, [
+                                    'volume_1' => isset($product['volume_1']) ? 'numeric|integer|min:' . $min_lot : '',
+                                    'volume_2' => isset($product['volume_2']) ? 'numeric|integer|min:' . $min_lot : '',
+                                    'volume_3' => isset($product['volume_3']) ? 'numeric|integer|min:' . $min_lot : '',
+                                ])->errors();
+
+                                if ($validator->fails()) {
+                                    if ($validator->messages()->has('volume_1')) {
+                                        $validator->errors()->add('products[' . $key . '][volume_1]', 'Не менее ' . $min_lot . 'т');
+                                    }
+                                    if ($validator->messages()->has('volume_2')) {
+                                        $validator->errors()->add('products[' . $key . '][volume_2]', 'Не менее ' . $min_lot . 'т');
+                                    }
+                                    if ($validator->messages()->has('volume_3')) {
+                                        $validator->errors()->add('products[' . $key . '][volume_3]', 'Не менее ' . $min_lot . 'т');
+                                    }
+                                }
+                            }
+                                    return redirect()->route('applications.product', compact('application', 'products'))->withErrors($validator)->withInput();
+                                } else {*/
+                                    $product_application = new ProductApplication(
+                                        $application->id,
+                                        $product['productrange_id'],
+                                        $product['volume_1'],
+                                        $product['volume_2'],
+                                        $product['volume_3'],
+                                        $product['consigneer_delivery_id']);
+                                    $product_application->setPrice();
+                                    $price[]= $product_application->price;
+                                    $volume[] = $product_application->getVolume();
+                                    $product_applications[] = $product_application;
+                                }
+
         //$product_applications = collect($product_applications);
 
         return view('templates.applications.confirm', compact('application', 'product_applications', 'price', 'volume'));
@@ -180,7 +236,10 @@ class ApplicationController extends Controller
             $volume[] = $product_application->getVolume();
             $product_applications[] = $product_application;
         }
+        //меняем статус с noncomplete на new
+        $application->setStatus('new');
 
+        //отправляем уведомление
         $subject = "Уведомление о создании заказа";
         $email = $application->applicator->user->email;
 
@@ -199,4 +258,11 @@ class ApplicationController extends Controller
 
         return redirect()->route('applicators.show', $applicator = $application->applicator->id);
     }
+
+    public function storeOrder(Application $application, Request $request)
+    {
+
+
+    }
+
 }

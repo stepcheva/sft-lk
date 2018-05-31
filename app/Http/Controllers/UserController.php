@@ -105,7 +105,7 @@ class UserController extends Controller
 
                 if ($user->update($request->validated())){
 
-                    //обовить подчиненную таблицу
+                    //обновить подчиненную таблицу
                     $user->applicator()->update(['counter_id' => $request->counter_id]);
 
                     session()->flash('success', 'Данные пользователя успешно изменены.');

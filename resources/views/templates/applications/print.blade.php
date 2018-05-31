@@ -12,12 +12,12 @@
             <h3>Товары в заявке</h3>
             <table id="application" class="table table-striped" border="1">
                 <thead>
-                <thead>
                 <tr>
                     <th>Период отгрузки<br>{{ $application->period }}</th>
                     <th>Грузополучатель<br>{{ $application->consigneer->name }}</th>
                     <th>Поставщик<br>{{ $application->provider->name }}</th>
                 </tr>
+                </thead>
             </table>
         </div>
         <div>
@@ -32,9 +32,6 @@
                     <th class="text-center">Объем 3 декада</th>
                     <th class="text-center">Доставка</th>
                 </tr>
-                </thead>
-                <tbody>
-                <tr>
                 </thead>
                 <tbody>
                 @if (isset($product_applications))
