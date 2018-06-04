@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Contactquery;
+use App\Models\Traits\FileTrait;
 use App\Models\Applicator;
+use App\Models\File;
 use Illuminate\Http\Request;
 use Mail;
 
@@ -39,14 +41,16 @@ class ContactqueryController extends Controller
     public function store(Applicator $applicator, Request $request)
     {
         $contactquery = Contactquery::create([
-            'theme' =>  $request->theme,
+            'theme' => $request->theme,
             'querytext' => $request->querytext,
-            'applicator_id' => $applicator->id]);
+            'applicator_id' => $applicator->id,
+            'file_id' => FileTrait::fileUpload($request),
+        ]);
 
-        //$applicator = Applicator::find($contactquery->applicator_id);
         $subject = 'Уведомление о создании обращения';
         $email = $applicator->user->email;
-        $data = ['querytext' => $contactquery->querytext, 'theme' => $contactquery->theme];
+        $file = $contactquery->file ? $contactquery->file->path : null;
+        $data = ['querytext' => $contactquery->querytext, 'theme' => $contactquery->theme, 'file' => $file ];
         $view = "templates.mail.contactquery";
         Mail::send(['html' => $view], $data, function($message) use ($subject, $email) {
             $message->to($email);

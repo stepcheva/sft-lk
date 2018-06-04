@@ -10,6 +10,7 @@ class Contactquery extends Model
         'theme',
         'querytext',
         'applicator_id',
+        'file_id',
     ];
 
     public function applicator()
@@ -17,8 +18,8 @@ class Contactquery extends Model
         return $this->belongsTo('App\Models\Applicator');
     }
 
-    public function files()
+    public function file()
     {
-        return $this->hasMany('App\Models\Files');
+        return $this->belongsTo('App\Models\File');
     }
 }

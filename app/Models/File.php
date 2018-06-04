@@ -16,7 +16,11 @@ class File extends Model
 
     public function contactquery()
     {
-        return $this->belongsTo('App\Models\Contactquery');
+        return $this->hasOne('App\Models\Contactquery');
     }
 
+    public function applicator()
+    {
+        return $this->belongsTo('App\Models\Applicator');
+    }
 }

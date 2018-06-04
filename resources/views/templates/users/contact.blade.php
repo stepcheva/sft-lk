@@ -24,7 +24,7 @@
                             @if(isset($contactquery))
                                 <form class="form-horizontal" method="POST" action="{{ route('contactquery.update',['applicator' => $applicator, 'contactquery' => $contactquery] ) }}">
                             @else
-                                <form class="form-horizontal" method="POST" action="{{ route('contactquery.store',['applicator' => $applicator]) }}">
+                                <form class="form-horizontal" method="POST" action="{{ route('contactquery.store',['applicator' => $applicator]) }}"  enctype="multipart/form-data">
                             @endif
 
                             {{ csrf_field() }}
@@ -65,7 +65,25 @@
                                     </div>
                                 </div>
 
-                                <div class="form-group">
+                                    <div class="form-group">
+                                        <div>
+                                            @isset($file))
+                                                <h5>Ссылку сделать{{ $file->name }}</h5>
+                                                <h5>Удалить файл</h5>
+                                            @endisset
+
+                                            <label for="file" class="control-label">Выберите файл</label>
+                                            <input id="file" type="file" class="form-control" name="file" value="" >
+
+                                            @if ($errors->has('file'))
+                                                <span class="help-block">
+                                                    <strong>{{ $errors->first('file') }}</strong>
+                                                 </span>
+                                            @endif
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
                                         <div class="col-md-8 col-md-offset-4">
 
                                             <a href="{{ route('applicators.show', ['applicator' => $applicator]) }}" class="cancel">Отмена</a>
