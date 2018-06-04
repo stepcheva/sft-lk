@@ -19,7 +19,7 @@
                                     заявки</a> |
                                 <a href="{{ route('productranges.list', ['applicator_id' => $applicator->id]) }}">Номенклатура</a>
                                 |
-                                <a href="{{ route('contactquery.create', ['applicator_id' => $applicator->id]) }}">Мои
+                                <a href="{{ route('contactquery.index', ['applicator_id' => $applicator->id]) }}">Мои
                                     обращения</a> |
                                 <a href="{{ route('applicators.show', ['applicator_id' => $applicator->id]) }}">{{$applicator->user->lastName ." ". $applicator->user->firstName}}</a>
                             </div>
