@@ -28,13 +28,9 @@ class ApplicationController extends Controller
                 $applications = $applicator->getMonthlyApplications();
                 break;
             case 'new':
-                $applications = $applicator->getApplications('new');
-                break;
             case 'completed':
-                $applications = $applicator->getApplications('completed');
-                break;
             case 'noncomplete':
-                $applications = $applicator->getApplications('noncomplete');
+                $applications = $applicator->getApplications($request->param);
                 break;
             default:
                 $applications = $applicator->applications;
