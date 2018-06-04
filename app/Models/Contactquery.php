@@ -16,4 +16,9 @@ class Contactquery extends Model
     {
         return $this->belongsTo('App\Models\Applicator');
     }
+
+    public function files()
+    {
+        return $this->hasMany('App\Models\Files');
+    }
 }
