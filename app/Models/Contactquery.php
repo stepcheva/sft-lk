@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Mail;
 
 class Contactquery extends Model
 {
@@ -22,4 +23,10 @@ class Contactquery extends Model
     {
         return $this->belongsTo('App\Models\File');
     }
+    public function getFilePath()
+    {
+        return $this->file ? $this->file->path : null;
+    }
+
+
 }

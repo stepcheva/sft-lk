@@ -54,7 +54,7 @@
                                     <div>
                                         <label for="querytext" class="control-label">Текст обращения</label>
                                         <textarea id="querytext" class="form-control" name="querytext"
-                                                 rows="10" value="{{ isset($contactquery->querytext) ?  $contactquery->querytext : old('querytext') }}" required>
+                                                 rows="10" value="" required>{{ isset($contactquery->querytext) ?  $contactquery->querytext : old('querytext') }}
                                         </textarea>
 
                                         @if ($errors->has('querytext'))
@@ -67,18 +67,16 @@
 
                                     <div class="form-group">
                                         <div>
-                                            @isset($file))
-                                                <h5>Ссылку сделать{{ $file->name }}</h5>
-                                                <h5>Удалить файл</h5>
-                                            @endisset
-
-                                            <label for="file" class="control-label">Выберите файл</label>
-                                            <input id="file" type="file" class="form-control" name="file" value="" >
-
-                                            @if ($errors->has('file'))
-                                                <span class="help-block">
-                                                    <strong>{{ $errors->first('file') }}</strong>
-                                                 </span>
+                                            @if(isset($file))
+                                                Файл:
+                                                <a href="{{$file}}"> {{$contactquery->file->name}}</a>
+                                            @else
+                                                <input id="file" type="file" class="form-control" name="file" value="{{ isset($file) ?  $contactquery->file->name : old('file') }}" >
+                                                    @if ($errors->has('file'))
+                                                        <span class="help-block">
+                                                            <strong>{{ $errors->first('file') }}</strong>
+                                                         </span>
+                                                    @endif
                                             @endif
                                         </div>
                                     </div>

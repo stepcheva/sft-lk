@@ -58,6 +58,16 @@
                                                         {{  $contactquery->querytext }}
                                                     </div>
                                                 </div>
+                                                @isset( $contactquery->file)
+                                                <div class="apps__block-col">
+                                                    <div class="apps__data-title">
+                                                        Файл
+                                                    </div>
+                                                    <div class="apps__data-text">
+                                                        <a href="{{  $contactquery->file->path }}">{{$contactquery->file->name}}</a>
+                                                    </div>
+                                                </div>
+                                                @endisset
                                             </div>
 
                                             <div class="apps__more">

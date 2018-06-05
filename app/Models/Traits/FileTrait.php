@@ -11,7 +11,7 @@ trait FileTrait
 {
     public static function fileUpload(Request $request)
     {
-        if ($request->hasFile('file') && $request->file->isValid()) {
+        if ($request->hasFile('file')) {
 
             $file = $request->file;
 
@@ -20,16 +20,16 @@ trait FileTrait
             //добавить, в случае необходимости ограничения по размеру файла и по типам файлов
             //$size = $request->file->getSize();
 
-            $path = "uploaded";
+            $path = "storage/uploaded";
 
-            $file->store($path);
+            $file->storeAs("$path", "$name");
 
             $file = File::create([
                 'name' => $name,
                 'path' => asset("$path/$name"),
             ]);
-
-            return $file ? $file->id : Null;
         };
+
+        return isset($file) ? $file->id : Null;
     }
 }

@@ -47,14 +47,18 @@ class ContactqueryController extends Controller
             'file_id' => FileTrait::fileUpload($request),
         ]);
 
-        $subject = 'Уведомление о создании обращения';
-        $email = $applicator->user->email;
-        $file = $contactquery->file ? $contactquery->file->path : null;
-        $data = ['querytext' => $contactquery->querytext, 'theme' => $contactquery->theme, 'file' => $file ];
+        $email = $contactquery->applicator->user->email;
+        $subject = 'Уведомление о создании сообщения';
+        $data = [
+            'querytext' => $contactquery->querytext,
+            'theme' => $contactquery->theme,
+            'file' => $contactquery->file->path,
+        ];
         $view = "templates.mail.contactquery";
+
         Mail::send(['html' => $view], $data, function($message) use ($subject, $email) {
-            $message->to($email);
-            $message->cc('file.storages.ex@gmail.com');
+            $message->to('file.storages.ex@gmail.com');
+            $message->cc($email);
             $message->from('file.storages.ex@gmail.com', 'SFT Group');
             $message->subject($subject);
         });
@@ -82,7 +86,8 @@ class ContactqueryController extends Controller
      */
     public function edit(Applicator $applicator, Contactquery $contactquery)
     {
-        return view('templates.users.contact', compact('applicator', 'contactquery'));
+        $file = $contactquery->getFilePath();
+        return view('templates.users.contact', compact('applicator', 'contactquery', 'file'));
     }
 
     /**
@@ -94,7 +99,12 @@ class ContactqueryController extends Controller
      */
     public function update(Applicator $applicator, Contactquery $contactquery, Request $request)
     {
-        $contactquery->update($request->all());
+        $contact = $contactquery->update([
+            'theme' => $request->theme,
+            'querytext' => $request->querytext,
+            'applicator_id' => $applicator->id,
+        ]);
+
         session()->flash('success', 'Обращение успешно изменено.');
         return redirect()->route('contactquery.index', ['applicator'=> $applicator]);
     }
@@ -107,6 +117,9 @@ class ContactqueryController extends Controller
      */
     public function destroy(Applicator $applicator, Contactquery $contactquery)
     {
+        if (isset($contactquery->file)) {
+            $contactquery->file()->delete();
+        }
         Contactquery::destroy($contactquery->id);
         session()->flash('success', 'Обращение успешно удалено.');
         return redirect()->route('contactquery.index', ['applicator'=>$applicator]);
