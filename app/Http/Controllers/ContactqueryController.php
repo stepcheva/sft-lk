@@ -52,7 +52,7 @@ class ContactqueryController extends Controller
         $data = [
             'querytext' => $contactquery->querytext,
             'theme' => $contactquery->theme,
-            'file' => $contactquery->file->path,
+            'file' => ($contactquery->file->path),
         ];
         $view = "templates.mail.contactquery";
 

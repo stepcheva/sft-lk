@@ -20,13 +20,14 @@ trait FileTrait
             //добавить, в случае необходимости ограничения по размеру файла и по типам файлов
             //$size = $request->file->getSize();
 
-            $path = "storage/uploaded";
+            
 
-            $file->storeAs("$path", "$name");
+            $file->storeAs("", "$name", "public");
+	
 
             $file = File::create([
                 'name' => $name,
-                'path' => asset("$path/$name"),
+                'path' => asset("storage/$name"),
             ]);
         };
 
