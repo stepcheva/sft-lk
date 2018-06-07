@@ -49,7 +49,7 @@
                                                     <td> {{ $product->format }} </td>
                                                     <td><input class="form-control-sm" type="text"
                                                                name="{{'productranges['. $key. '][volume_1]'}}"
-                                                               id="volume_1" placeholder="" value="">
+                                                               id="volume_1" placeholder="" value="" min="{{ $product->min_lot}}">
                                                         @if ($errors->has('products['. $key. '][volume_1]'))
                                                             <span class="help-block">
                                             <strong>{{ $errors->first('products['. $key. '][volume_1]') }}</strong>
@@ -58,7 +58,7 @@
                                                     </td>
                                                     <td><input class="form-control-sm" type="text"
                                                                name="{{'productranges['. $key. '][volume_2]'}}"
-                                                               id="volume_2" placeholder="" value="">
+                                                               id="volume_2" placeholder="" value="" min="{{ $product->min_lot}}">
                                                         @if ($errors->has('products['. $key. '][volume_2]'))
                                                             <span class="help-block">
                                             <strong>{{ $errors->first('products['. $key. '][volume_2]') }}</strong>
@@ -66,7 +66,7 @@
                                                         @endif</td>
                                                     <td><input class="form-control-sm" type="text"
                                                                name="{{'productranges['. $key. '][volume_3]'}}"
-                                                               id="volume_3" placeholder="" value="">
+                                                               id="volume_3" placeholder="" value="" min="{{ $product->min_lot}}">
                                                         @if ($errors->has('products['. $key. '][volume_3]'))
                                                             <span class="help-block">
                                             <strong>{{ $errors->first('products['. $key. '][volume_3]') }}</strong>

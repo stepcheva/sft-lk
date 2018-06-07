@@ -104,6 +104,9 @@
                                                       action="{{ route('applications.destroy',  ['application' => $application, 'applicator' => $applicator]) }}">
                                                     <a class="btn btn-primary btn-sm"
                                                        href="{{ route('applications.show',  ['application' => $application, 'applicator' => $applicator]) }}">show</a>
+                                                    <a class="btn btn-default btn-sm"
+                                                       href="{{ route('applications.edit',  ['application' => $application, 'applicator' => $applicator]) }}">edit</a>
+
                                                     <input type="hidden" name="_method" value="delete"/>
                                                     <input type="hidden" name="_token" value="{{csrf_token()}}">
                                                     <button type="submit" class="btn btn-danger btn-sm">delete</button>

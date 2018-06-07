@@ -105,9 +105,12 @@ class ApplicationController extends Controller
      */
     public function edit(Applicator $applicator, Application $application)
     {
-        $product_applications = $application->order_applications;
-        return view('templates.applications.edit', compact('applicator','application', 'product_applications'));
-
+        $order_applications = $application->order_applications;
+        return response()->json([
+                'application' => $application,
+                'order_applications' => $order_applications,
+            ]);
+        //view('templates.applications.edit', compact('applicator','application', 'order_applications'));
     }
 
     /**
@@ -119,19 +122,34 @@ class ApplicationController extends Controller
      */
     public function update($id, Request $request)
     {
-        dd($request);
+        $application = Application::find($id)->update([
+            'consigneer_id' => $request->consigneer_id,
+            'applicator_id' => $request->applicator->id,
+            'status' => $request->status,
+            'number' => $request->number,
+            'provider_id' => $request->provider_id,
+            'period' => $request->period,
+        ]);
 
-        foreach ($products as $key => $product) {
-            $product_application = OrderApplication::find($product->id)->update([
-                'volume_1' => (array_key_exists('volume_1', $product) ? $product['volume_1'] : null),
-                'volume_2' =>(array_key_exists('volume_2', $product) ? $product['volume_2'] : null),
-                'volume_3' =>(array_key_exists('volume_3', $product) ? $product['volume_3'] : null),
-                //'price' => $product['price'],
-            ]);
-
-            $volume[] = $product_application->getVolume();
-            $product_applications[] = $product_application;
+        $products = $request->order_applications ? $request->order_applications : null;
+        if (isset($products)) {
+            foreach ($products as $key => $product) {
+                $product_application = OrderApplication::find($product->id)->update([
+                    'volume_1' => (array_key_exists('volume_1', $product) ? $product['volume_1'] : null),
+                    'volume_2' => (array_key_exists('volume_2', $product) ? $product['volume_2'] : null),
+                    'volume_3' => (array_key_exists('volume_3', $product) ? $product['volume_3'] : null),
+                    //'price' => $product['price'],
+                ]);
+                $volume = $product_application->getVolume();
+                $price = (ConsigneerDelivery::find($product->consigneer_delivery_id)->price) * $volume;
+                $product_application->update(['price', $price]);
+            }
         }
+
+        return response()->json([
+            'application' => $application,
+            'order_applications' => $order_applications,
+        ]);
     }
 
     /**
