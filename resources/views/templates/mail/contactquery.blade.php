@@ -3,9 +3,10 @@
 
 <p>Тема: {{ $theme }}</p>
 <p>Сообщение: {{ $querytext }}</p>
-@isset($file)
-    <p>Файл: {{ $file }}</p>
-@endisset
+
+@if($fileName || $filePath)
+	<p>Файл: <a href= "{{ $filePath }}">{{ $fileName }}</a></p>
+@endif
 
 <hr />
 <p>P.S. Письмо сгененировано автоматически. Не отвечайте на это письмо.</p>
