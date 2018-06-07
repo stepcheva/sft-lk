@@ -22,12 +22,12 @@ trait FileTrait
 
             
 
-            $file->storeAs("", "$name", "public");
+            $tmp = $file->store("", "public");
 	
 
             $file = File::create([
                 'name' => $name,
-                'path' => asset("storage/$name"),
+                'path' => asset("storage/$tmp"),
             ]);
         };
 
