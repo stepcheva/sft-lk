@@ -10,49 +10,61 @@ use Mail;
 class UsersObserver
 
 {
-    public $observables = [
-            'password',
-            'passwordUntil',
-    ];
-
     /**
      * @param User $user
      * @return bool
      */
     public function creating(User $user)
     {
-        if ($user->getAttributes('passwordUntil')) {
-            $user->passwordUntil = Carbon::now()->addDays(25)->format('Y-m-d');
+        if ($user->getAttributes('password')) {
+            $user->setPasswordUntil();
         }
-
+        return true;
     }
 
     public function updating(User $user)
     {
         $changes = array_diff($user->getOriginal(), $user->getAttributes());
-
         if (array_key_exists('password', $changes)) {
-            $user->passwordUntil = date('Y-m-d');
+            $user->setPasswordUntil();
         }
-
         return $changes or false;
-
     }
 
     public function updated(User $user)
     {
-        if (array_key_exists('password', $user->getAttributes())) {
-            $prefix = $user->getTable();
-            $subject = "Уведомление об изменении пароля";
-            $view = "templates.mail.$prefix";
-            $url = url("applicators/{$user->id}");
-            $send = Mail::send(new SendMail($user->email, $subject, "Ваш пароль успешно изменен. Обновите пароль через 25 дней", $url, $view));
-            if ($send) {
-                session()->flash('success', 'Новый пароль успешно изменен. Уведомление о смене пароля отправлено на {{$user->email}}');
-            } else {
-                session()->flash('alert', 'Ошибка отправки данных.');
-            }
+        $changes = $this->getChangesForEmail($user);
+
+        if (isset($changes)) {
+            session()->flash('success', 'Уведомление об изменении учетных данных отправлено на email');
         }
         return true;
+    }
+
+    public function getChangesForEmail(User $user) {
+        $changes = array_diff($user->getOriginal(), $user->getAttributes());
+        if (!empty($changes)) {
+            $info = 'Учетные данные изменены.';
+
+                if (array_key_exists('password', $changes)) {
+                  $user->setPasswordUntil();
+                  $info .= " Ваш пароль изменен. Новый пароль действителен до $user->passwordUntil.";
+                  $mailto = $user->email;
+                }
+
+                if (array_key_exists('email', $changes )) {
+                  $info .= ' Ваш логин изменен администратором сайта.';
+                  $mailto = $user->getOriginal()['email'];
+                }
+
+            $prefix = $user->getTable();
+            $subject = "Уведомление об изменении учетных данных";
+            $view = "templates.mail.$prefix";
+            $url = ($prefix == 'users') ? url("applicators/{$user->id}") : url("admins/{$user->id}");
+
+            Mail::send(new SendMail($mailto, $subject, $info, $url, $view));
+            return true;
+
+        } else return false;
     }
 }
