@@ -7,7 +7,6 @@ use App\Models\Applicator;
 use App\Models\OrderApplication;
 use App\Models\ProductApplication;
 use App\Models\Productrange;
-use App\Models\Provider;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Validator;
@@ -48,22 +47,24 @@ class ApplicationController extends Controller
     public function create(Applicator $applicator)
     {
         $date_year = [
-            Carbon::now()->format('Y'), Carbon::now()->addYear()->format('Y')
+            Carbon::now()->format('Y'),
+            Carbon::now()->addYear()->format('Y')
         ];
 
         $date_month = [];
 
-        for($i = 1; count($date_month) < 12; $i++) {
+        for ($i = 1; count($date_month) < 12; $i++) {
             $date_month[] = Carbon::now()->addMonth($i)->format('F');
         }
 
-        return view('templates.applications.create', ['applicator' => $applicator, 'date_month' => $date_month, 'date_year' => $date_year]);
+        return view('templates.applications.create',
+            ['applicator' => $applicator, 'date_month' => $date_month, 'date_year' => $date_year]);
     }
 
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  \Illuminate\Http\Request $request
      * @return \Illuminate\Http\Response
      */
     public function store(Applicator $applicator, Request $request)
@@ -75,49 +76,49 @@ class ApplicationController extends Controller
             'consigneer_id' => $request->consigneer_id,
             'applicator_id' => $request->applicator->id,
             'status' => 'noncomplete',
-            'number' => '01/'. random_int(100, 200) . '-' .random_int(100, 200) ,
+            'number' => '01/' . random_int(100, 200) . '-' . random_int(100, 200),
             'provider_id' => $request->provider_id,
             'period' => $date->format('Y-m-d'),
-            ]);
+        ]);
 
         $productranges = Productrange::where('provider_id', $request->provider_id)->paginate(15);
 
-        return view('templates.applications.productrange', compact('productranges','application'));
+        return view('templates.applications.productrange', compact('productranges', 'application'));
     }
 
     /**
      * Display the specified resource.
      *
-     * @param  int  $id
+     * @param  int $id
      * @return \Illuminate\Http\Response
      */
     public function show(Applicator $applicator, Application $application)
     {
         $product_applications = $application->order_applications;
-        return view('templates.applications.show', compact('applicator','application', 'product_applications'));
+        return view('templates.applications.show', compact('applicator', 'application', 'product_applications'));
     }
 
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  int  $id
+     * @param  int $id
      * @return \Illuminate\Http\Response
      */
     public function edit(Applicator $applicator, Application $application)
     {
         $order_applications = $application->order_applications;
         return response()->json([
-                'application' => $application,
-                'order_applications' => $order_applications,
-            ]);
+            'application' => $application,
+            'order_applications' => $order_applications,
+        ]);
         //view('templates.applications.edit', compact('applicator','application', 'order_applications'));
     }
 
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
+     * @param  \Illuminate\Http\Request $request
+     * @param  int $id
      * @return \Illuminate\Http\Response
      */
     public function update($id, Request $request)
@@ -152,12 +153,6 @@ class ApplicationController extends Controller
         ]);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
     public function destroy($applicator_id, $application_id)
     {
         $application = Application::findOrFail($application_id);
@@ -171,7 +166,7 @@ class ApplicationController extends Controller
 
     public function createProductVolume(Application $application, Request $request)
     {
-        if(!isset($request->products)) {
+        if (!isset($request->products)) {
             $search = array_keys($request->productranges);
         } else {
             foreach ($request->products as $product) {
@@ -181,53 +176,52 @@ class ApplicationController extends Controller
 
         $productranges = Productrange::find($search);
 
-        return view('templates.applications.volume', compact('productranges','application'));
+        return view('templates.applications.volume', compact('productranges', 'application'));
     }
 
     public function confirmApplication(Application $application, Request $request)
     {
         $products = $request->productranges;
 
-                foreach ($products as $key => $product) {
-                    /*
-                                $min_lot = Productrange::find($product['productrange_id'])->min_lot;
+        foreach ($products as $key => $product) {
 
-                                $validator[] = Validator::make($product, [
-                                    'volume_1' => isset($product['volume_1']) ? 'numeric|integer|min:' . $min_lot : '',
-                                    'volume_2' => isset($product['volume_2']) ? 'numeric|integer|min:' . $min_lot : '',
-                                    'volume_3' => isset($product['volume_3']) ? 'numeric|integer|min:' . $min_lot : '',
-                                ])->errors();
+            $min_lot = Productrange::find($product['productrange_id'])->min_lot;
 
-                                if ($validator->fails()) {
-                                    if ($validator->messages()->has('volume_1')) {
-                                        $validator->errors()->add('products[' . $key . '][volume_1]', 'Не менее ' . $min_lot . 'т');
-                                    }
-                                    if ($validator->messages()->has('volume_2')) {
-                                        $validator->errors()->add('products[' . $key . '][volume_2]', 'Не менее ' . $min_lot . 'т');
-                                    }
-                                    if ($validator->messages()->has('volume_3')) {
-                                        $validator->errors()->add('products[' . $key . '][volume_3]', 'Не менее ' . $min_lot . 'т');
-                                    }
-                                }
-                            }
-                                    return redirect()->route('applications.product', compact('application', 'products'))->withErrors($validator)->withInput();
-                                } else {*/
-                                    $product_application = new ProductApplication(
-                                        $application->id,
-                                        $product['productrange_id'],
-                                        $product['volume_1'],
-                                        $product['volume_2'],
-                                        $product['volume_3'],
-                                        $product['consigneer_delivery_id']);
-                                    $product_application->setPrice();
-                                    $price[]= $product_application->price;
-                                    $volume[] = $product_application->getVolume();
-                                    $product_applications[] = $product_application;
-                                }
+            $validator = Validator::make($product, [
+                'volume_1' => isset($product['volume_1']) ? 'numeric|integer|min:' . $min_lot : '',
+                'volume_2' => isset($product['volume_2']) ? 'numeric|integer|min:' . $min_lot : '',
+                'volume_3' => isset($product['volume_3']) ? 'numeric|integer|min:' . $min_lot : '',
+            ]);
+
+            if ($validator->messages()->has('volume_1')) {
+                $validator_errors[$key]['volume_1'] = 'Не менее ' . $min_lot . 'т';
+            }
+            if ($validator->messages()->has('volume_2')) {
+                $validator_errors[$key]['volume_2'] = 'Не менее ' . $min_lot . 'т';
+            }
+            if ($validator->messages()->has('volume_3')) {
+                $validator_errors[$key]['volume_3'] = 'Не менее ' . $min_lot . 'т';
+            }
+        }
+        if ($validator->fails()) {
+            return redirect()->route('applications.product',
+                compact('application', 'products', 'validator_errors'))->withInput();
+        } else {
+            foreach ($products as $product) {
+                $product_application = new ProductApplication($application->id, $product['productrange_id'],
+                    $product['volume_1'], $product['volume_2'], $product['volume_3'],
+                    $product['consigneer_delivery_id']);
+            }
+            $product_application->setPrice();
+            $price[] = $product_application->price;
+            $volume[] = $product_application->getVolume();
+            $product_applications[] = $product_application;
+        }
 
         //$product_applications = collect($product_applications);
 
-        return view('templates.applications.confirm', compact('application', 'product_applications', 'price', 'volume'));
+        return view('templates.applications.confirm',
+            compact('application', 'product_applications', 'price', 'volume'));
     }
 
     public function createOrder(Application $application, Request $request)
@@ -241,8 +235,8 @@ class ApplicationController extends Controller
                 'application_id' => $product['application_id'],
                 'productrange_id' => $product['productrange_id'],
                 'volume_1' => (array_key_exists('volume_1', $product) ? $product['volume_1'] : null),
-                'volume_2' =>(array_key_exists('volume_2', $product) ? $product['volume_2'] : null),
-                'volume_3' =>(array_key_exists('volume_3', $product) ? $product['volume_3'] : null),
+                'volume_2' => (array_key_exists('volume_2', $product) ? $product['volume_2'] : null),
+                'volume_3' => (array_key_exists('volume_3', $product) ? $product['volume_3'] : null),
                 'consigneer_delivery_id' => $product['consigneer_delivery_id'],
                 'price' => $product['price'],
             ]);
@@ -258,15 +252,21 @@ class ApplicationController extends Controller
         $email = $application->applicator->user->email;
 
         $name = $application->applicator->user->firstName . " " . $application->applicator->user->lastName;
-        $data = ['application' => $application, 'product_applications' => $product_applications,'volume' => $volume, 'price' => $price, 'comment' => $comment];
+        $data = [
+            'application' => $application,
+            'product_applications' => $product_applications,
+            'volume' => $volume,
+            'price' => $price,
+            'comment' => $comment
+        ];
         $view = "templates.mail.applications";
-        $send = Mail::send(['html' => $view], $data, function($message) use ($subject, $name, $email) {
+        $send = Mail::send(['html' => $view], $data, function ($message) use ($subject, $name, $email) {
             $message->to($email, $name);
             $message->cc('file.storages.ex@gmail.com');
             $message->from('file.storages.ex@gmail.com', 'SFT Group');
             $message->subject($subject);
         });
-        if(!$send) {
+        if (!$send) {
             session()->flash('alert', 'Ошибка отправки писем.');
         }
 
