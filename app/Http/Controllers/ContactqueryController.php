@@ -7,6 +7,7 @@ use App\Models\Traits\FileTrait;
 use App\Models\Applicator;
 use App\Models\File;
 use Illuminate\Http\Request;
+use Validator;
 use Mail;
 
 class ContactqueryController extends Controller
@@ -40,6 +41,16 @@ class ContactqueryController extends Controller
      */
     public function store(Applicator $applicator, Request $request)
     {
+        $validator = Validator::make($request->all(), [
+            'file' => 'file|max:51200',
+        ], [
+            'max' => 'Файл не более 50 Мб',
+        ]);
+
+        if ($validator->fails()) {
+            return redirect()->back()->withErrors($validator)->withInput();
+        }
+
         $contactquery = Contactquery::create([
             'theme' => $request->theme,
             'querytext' => $request->querytext,
