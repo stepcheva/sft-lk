@@ -1,0 +1,37 @@
+@mixin absolute_center {
+    position: absolute;
+    left:-9999px;
+    right:-9999px;
+    top:-9999px;
+    bottom:-9999px;
+    margin:auto;
+}
+@mixin box_sizing($index){
+	-webkit-box-sizing: $index;
+    -moz-box-sizing: $index;
+    box-sizing: $index;
+}
+@mixin plasholder{
+    &::-webkit-input-placeholder {@content};
+    &:-webkit-input-placeholder  {@content};
+    &::-moz-input-placeholder    {@content};
+    &:-moz-input-placeholder     {@content};
+    &::-ms-input-placeholder     {@content};
+    &:-ms-input-placeholder      {@content};
+    &::input-placeholder         {@content};
+    &:input-placeholder          {@content};
+}
+
+@mixin transform($index){
+	-webkit-transform: $index;
+    -moz-transform: $index;
+    -ms-transform: $index;
+    -o-transform: $index;
+    transform: $index;
+}
+
+@mixin transition($index){
+    -webkit-transition: $index;
+    -moz-transition: $index;
+    transition: $index;
+};

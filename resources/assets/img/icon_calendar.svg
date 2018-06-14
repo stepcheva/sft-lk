@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="526px" height="512px" viewBox="0 0 526 512" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 49.3 (51167) - http://www.bohemiancoding.com/sketch -->
+    <title>calendar</title>
+    <desc>Created with Sketch.</desc>
+    <defs></defs>
+    <g id="calendar" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <path d="M72,78 C52.117749,78 36,94.117749 36,114 L36,440 C36,459.882251 52.117749,476 72,476 L454,476 C473.882251,476 490,459.882251 490,440 L490,114 C490,94.117749 473.882251,78 454,78 L72,78 Z M72,42 L454,42 C493.764502,42 526,74.235498 526,114 L526,440 C526,479.764502 493.764502,512 454,512 L72,512 C32.235498,512 4.86974701e-15,479.764502 0,440 L0,114 C-4.86974701e-15,74.235498 32.235498,42 72,42 Z" id="Rectangle-2" fill="#156947" fill-rule="nonzero"></path>
+        <rect id="Rectangle-3-Copy-7" fill="#156947" x="48" y="43" width="120" height="36" rx="0.200000003"></rect>
+        <rect id="Rectangle-3-Copy-8" fill="#156947" x="358" y="43" width="120" height="36" rx="0.200000003"></rect>
+        <rect id="Rectangle-3" fill="#156947" x="0" y="152" width="526" height="36"></rect>
+        <rect id="Rectangle" fill="#156947" x="83" y="233" width="44" height="44" rx="0.200000003"></rect>
+        <rect id="Rectangle" fill="#156947" x="162" y="233" width="44" height="44" rx="0.200000003"></rect>
+        <rect id="Rectangle" fill="#156947" x="241" y="233" width="44" height="44" rx="0.200000003"></rect>
+        <rect id="Rectangle" fill="#156947" x="320" y="233" width="44" height="44" rx="0.200000003"></rect>
+        <rect id="Rectangle" fill="#156947" x="399" y="233" width="44" height="44" rx="0.200000003"></rect>
+        <rect id="Rectangle" fill="#156947" x="83" y="312" width="44" height="44" rx="0.200000003"></rect>
+        <rect id="Rectangle" fill="#156947" x="162" y="312" width="44" height="44" rx="0.200000003"></rect>
+        <rect id="Rectangle" fill="#156947" x="241" y="312" width="44" height="44" rx="0.200000003"></rect>
+        <rect id="Rectangle" fill="#156947" x="320" y="312" width="44" height="44" rx="0.200000003"></rect>
+        <rect id="Rectangle" fill="#156947" x="83" y="391" width="44" height="44" rx="0.200000003"></rect>
+        <rect id="Rectangle" fill="#156947" x="162" y="391" width="44" height="44" rx="0.200000003"></rect>
+        <rect id="Rectangle" fill="#156947" x="241" y="391" width="44" height="44" rx="0.200000003"></rect>
+        <rect id="Rectangle" fill="#156947" x="320" y="391" width="44" height="44" rx="0.200000003"></rect>
+        <rect id="Rectangle" fill="#156947" x="399" y="312" width="44" height="44" rx="0.200000003"></rect>
+    </g>
+</svg>
