@@ -121,36 +121,38 @@ class ApplicationController extends Controller
         $new_application = Application::create([
             'consigneer_id' => $application->consigneer_id,
             'applicator_id' => $application->applicator->id,
-            'status' => 'noncomplete',
+            'status' => 'draft',
             'number' => '01/' . random_int(100, 200) . '-' . random_int(100, 200),
             'provider_id' => $application->provider_id,
             'period' => $application->period,
         ]);
 
         $products = $application->order_applications;
+        if (isset($products)) {
+            foreach ($products as $product) {
+                $product_application = OrderApplication::create([
+                    'application_id' => $new_application->id,
+                    'productrange_id' => $product->productrange->id,
+                    'volume_1' => $product->volume_1,
+                    'volume_2' => $product->volume_2,
+                    'volume_3' => $product->volume_3,
+                    'consigneer_delivery_id' => $product->consigneer_delivery_id,
+                    'price' => $product->price,
+                ]);
+            }
 
-        foreach ($products as $product) {
-            $product_application = OrderApplication::create([
-                'application_id' => $new_application->id,
-                'productrange_id' => $product->productrange->id,
-                'volume_1' => $product->volume_1,
-                'volume_2' => $product->volume_2,
-                'volume_3' => $product->volume_3,
-                'consigneer_delivery_id' => $product->consigneer_delivery_id,
-                'price' => $product->price,
-            ]);
-        }
-        //меняем статус с noncomplete на new
-        $new_application->setStatus('new');
-        $send = $new_application->sendNotification();
+            $status = 'new';
+            $new_application->setStatus($status);
+            $send = $new_application->sendNotification();
 
-        if (!$send) {
-            session()->flash('alert', 'Ошибка отправки писем.');
-            return redirect()->route('applications.index', ['applicator' => $application->applicator->id, 'user' => $application->applicator->id]);
-        } else {
-            session()->flash('success', 'Уведомление отправлено на email.');
-            return redirect()->route('applications.index', ['applicator' => $application->applicator->id, 'user' => $application->applicator->id, 'active' => 'new']);
+            if (!$send) {
+                session()->flash('alert', 'Ошибка отправки писем.');
+                return redirect()->route('applications.index', ['applicator' => $application->applicator->id, 'user' => $application->applicator->id]);
+            } else {
+                session()->flash('success', 'Уведомление отправлено на email.');
+            }
         }
+        return redirect()->route('applications.index', ['applicator' => $application->applicator->id, 'user' => $application->applicator->id, 'active' => $new_application->status ]);
     }
 
     /**
@@ -188,7 +190,7 @@ class ApplicationController extends Controller
 
         return response()->json([
             'application' => $application,
-            'order_applications' => $order_applications,
+            'order_applications' => $application->order_applications,
         ]);
     }
 
@@ -248,17 +250,15 @@ class ApplicationController extends Controller
         } else {
             foreach ($products as $product) {
                 $product_application = new ProductApplication($application->id, $product['productrange_id'],
-                    $product['volume_1'], $product['volume_2'], $product['volume_3'],
-                    $product['consigneer_delivery_id']);
+                    $product['volume_1'], $product['volume_2'], $product['volume_3'], $product['consigneer_delivery_id']);
+                $product_application->setPrice();
+                $price[] = $product_application->price;
+                $volume[] = $product_application->getVolume();
+                $product_applications[] = $product_application;
             }
-            $product_application->setPrice();
-            $price[] = $product_application->price;
-            $volume[] = $product_application->getVolume();
-            $product_applications[] = $product_application;
         }
 
         //$product_applications = collect($product_applications);
-
         return view('templates.applications.confirm',
             compact('application', 'product_applications', 'price', 'volume'));
     }
@@ -267,11 +267,15 @@ class ApplicationController extends Controller
     {
         $products = $request->query('product_applications');
         $price = $request->query('price');
-        $comment = $request->comment;
+        $application->contactquery()->create([
+            'application_id' => $application->id,
+            'theme' => "Комментарий к заявке $application->number",
+            'querytext' => $request->comment,
+        ]);
 
         foreach ($products as $key => $product) {
-            $product_application = OrderApplication::create([
-                'application_id' => $product['application_id'],
+            $application->order_applications()->create([
+                'application_id' => $application->id,
                 'productrange_id' => $product['productrange_id'],
                 'volume_1' => (array_key_exists('volume_1', $product) ? $product['volume_1'] : null),
                 'volume_2' => (array_key_exists('volume_2', $product) ? $product['volume_2'] : null),
@@ -279,39 +283,16 @@ class ApplicationController extends Controller
                 'consigneer_delivery_id' => $product['consigneer_delivery_id'],
                 'price' => $product['price'],
             ]);
-
-            $volume[] = $product_application->getVolume();
-            $product_applications[] = $product_application;
         }
+
         //меняем статус с noncomplete на new
         $application->setStatus('new');
+        $send = $application->sendNotification();
 
-        //отправляем уведомление
-        $subject = "Уведомление о создании заказа";
-        $email = $application->applicator->user->email;
-
-        $name = $application->applicator->user->firstName . " " . $application->applicator->user->lastName;
-        $data = [
-            'application' => $application,
-            'product_applications' => $product_applications,
-            'volume' => $this->getApplicationVolume(),
-            'price' => $this->getApplicationPrice(),
-            'comment' => $comment,
-        ];
-        $view = "templates.mail.applications";
-        $send = Mail::send(['html' => $view], $data, function ($message) use ($subject, $name, $email) {
-            $message->to($email, $name);
-            $message->cc('file.storages.ex@gmail.com');
-            $message->from('file.storages.ex@gmail.com', 'SFT Group');
-            $message->subject($subject);
-        });
         if (!$send) {
             session()->flash('alert', 'Ошибка отправки писем.');
         }
 
-        return redirect()->route('applicators.show', $applicator = $application->applicator->id);
+        return redirect()->route('applications.index', ['applicator' => $application->applicator->id, 'user' => $application->applicator->id, 'active' => $application->status ]);
     }
-
-
-
 }

@@ -93,11 +93,11 @@
                     </tbody>
                 </table>
             </div>
-            @isset($application->contactquery)
+            @isset($application->contactquery->querytext)
             <div class="a-comment comment">
                 <span class="comment__title">Комментарий:</span>
                 <div class="comment__text">
-                    {{ $application->contactquery }}
+                    {{ $application->contactquery->querytext }}
                 </div>
             </div>
             @endisset

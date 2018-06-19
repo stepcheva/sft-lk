@@ -46,8 +46,8 @@
             </tbody>
         </table>
         <div>
-            <h5>Итого (тн): {{ array_sum($volume) }}</h5>
-            <h5>Сумма (руб): {{ array_sum($price) }}</h5>
+            <h5>Итого (тн): {{ $volume }}</h5>
+            <h5>Сумма (руб): {{ $price }}</h5>
         </div>
     </div>
 </div>

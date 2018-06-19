@@ -36,6 +36,11 @@ class Application extends Model
         return $this->hasMany('App\Models\OrderApplication');
     }
 
+    public function contactquery()
+    {
+        return $this->hasOne('App\Models\Contactquery');
+    }
+
     public function getApplicationVolume()
     {
         $volume = $this->order_applications->map(function ($item){
@@ -69,6 +74,7 @@ class Application extends Model
             'product_applications' => $this->order_applications,
             'volume' => $this->getApplicationVolume(),
             'price' => $this->getApplicationPrice(),
+            'comment' => isset($this->contactquery) ? $this->contactquery->querytext : 'null',
         ];
         $view = "templates.mail.applications";
         $send = Mail::send(['html' => $view], $data, function ($message) use ($subject, $name, $email) {

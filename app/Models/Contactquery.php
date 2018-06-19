@@ -23,6 +23,12 @@ class Contactquery extends Model
     {
         return $this->belongsTo('App\Models\File');
     }
+
+    public function application()
+    {
+        return $this->belongsTo('App\Models\Application');
+    }
+
     public function getFilePath()
     {
         return $this->file ? $this->file->path : null;
