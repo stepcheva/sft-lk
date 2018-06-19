@@ -40,14 +40,14 @@
                 <h2>Ошибка создания заявки</h2>
             @endif
 
-            @isset($comment)
-                <p> Комментарий к заказу: {{ $comment }} </p>
+            @isset($application->contactquery)
+                <p> Комментарий к заказу: {{ $application->contactquery->querytext }} </p>
             @endisset
             </tbody>
         </table>
         <div>
-            <h5>Итого (тн): {{ $volume }}</h5>
-            <h5>Сумма (руб): {{ $price }}</h5>
+            <h5>Итого (тн): {{ $application->getApplicationVolume() }}</h5>
+            <h5>Сумма (руб): {{ $application->getApplicationPrice() }}</h5>
         </div>
     </div>
 </div>

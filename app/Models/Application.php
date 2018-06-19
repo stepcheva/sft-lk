@@ -72,9 +72,6 @@ class Application extends Model
         $data = [
             'application' => $this,
             'product_applications' => $this->order_applications,
-            'volume' => $this->getApplicationVolume(),
-            'price' => $this->getApplicationPrice(),
-            'comment' => isset($this->contactquery) ? $this->contactquery->querytext : 'null',
         ];
         $view = "templates.mail.applications";
         $send = Mail::send(['html' => $view], $data, function ($message) use ($subject, $name, $email) {
