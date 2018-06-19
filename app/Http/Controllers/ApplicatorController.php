@@ -15,7 +15,7 @@ class ApplicatorController extends Controller
         $consigneers = $applicator->getConsigneers();
         $cooperation = $applicator->counter->getCooperation();
 
-        return view('templates.users.show', compact('user' , 'counter', 'consigneers', 'cooperation'));
+        return view('templates.users.profile', compact('user' , 'counter', 'consigneers', 'cooperation'));
     }
 
     /**

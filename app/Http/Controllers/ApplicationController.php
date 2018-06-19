@@ -23,20 +23,22 @@ class ApplicationController extends Controller
     public function index(Applicator $applicator, Request $request)
     {
         switch ($request->param) {
-            case 'monthly':
+            case 'current':
                 $applications = $applicator->getMonthlyApplications();
                 break;
             case 'new':
-            case 'completed':
-            case 'noncomplete':
+            case 'done':
+            case 'draft':
                 $applications = $applicator->getApplications($request->param);
                 break;
             default:
                 $applications = $applicator->applications;
                 break;
         }
+        $user = $applicator->user;
+        $active = $request->param;
 
-        return view('templates.applications.index', compact('applicator', 'applications'));
+        return view('templates.applications.index', compact('user', 'applicator', 'applications','active'));
     }
 
     /**
@@ -75,7 +77,7 @@ class ApplicationController extends Controller
         $application = Application::create([
             'consigneer_id' => $request->consigneer_id,
             'applicator_id' => $request->applicator->id,
-            'status' => 'noncomplete',
+            'status' => 'draft',
             'number' => '01/' . random_int(100, 200) . '-' . random_int(100, 200),
             'provider_id' => $request->provider_id,
             'period' => $date->format('Y-m-d'),
@@ -95,7 +97,8 @@ class ApplicationController extends Controller
     public function show(Applicator $applicator, Application $application)
     {
         $product_applications = $application->order_applications;
-        return view('templates.applications.show', compact('applicator', 'application', 'product_applications'));
+        $user = $applicator->user;
+        return view('templates.applications.show', compact('applicator', 'application', 'product_applications', 'user'));
     }
 
     /**
@@ -112,6 +115,42 @@ class ApplicationController extends Controller
             'order_applications' => $order_applications,
         ]);
         //view('templates.applications.edit', compact('applicator','application', 'order_applications'));
+    }
+    public function duplicate(Application $application)
+    {
+        $new_application = Application::create([
+            'consigneer_id' => $application->consigneer_id,
+            'applicator_id' => $application->applicator->id,
+            'status' => 'noncomplete',
+            'number' => '01/' . random_int(100, 200) . '-' . random_int(100, 200),
+            'provider_id' => $application->provider_id,
+            'period' => $application->period,
+        ]);
+
+        $products = $application->order_applications;
+
+        foreach ($products as $product) {
+            $product_application = OrderApplication::create([
+                'application_id' => $new_application->id,
+                'productrange_id' => $product->productrange->id,
+                'volume_1' => $product->volume_1,
+                'volume_2' => $product->volume_2,
+                'volume_3' => $product->volume_3,
+                'consigneer_delivery_id' => $product->consigneer_delivery_id,
+                'price' => $product->price,
+            ]);
+        }
+        //меняем статус с noncomplete на new
+        $new_application->setStatus('new');
+        $send = $new_application->sendNotification();
+
+        if (!$send) {
+            session()->flash('alert', 'Ошибка отправки писем.');
+            return redirect()->route('applications.index', ['applicator' => $application->applicator->id, 'user' => $application->applicator->id]);
+        } else {
+            session()->flash('success', 'Уведомление отправлено на email.');
+            return redirect()->route('applications.index', ['applicator' => $application->applicator->id, 'user' => $application->applicator->id, 'active' => 'new']);
+        }
     }
 
     /**
@@ -255,9 +294,9 @@ class ApplicationController extends Controller
         $data = [
             'application' => $application,
             'product_applications' => $product_applications,
-            'volume' => $volume,
-            'price' => $price,
-            'comment' => $comment
+            'volume' => $this->getApplicationVolume(),
+            'price' => $this->getApplicationPrice(),
+            'comment' => $comment,
         ];
         $view = "templates.mail.applications";
         $send = Mail::send(['html' => $view], $data, function ($message) use ($subject, $name, $email) {
@@ -273,10 +312,6 @@ class ApplicationController extends Controller
         return redirect()->route('applicators.show', $applicator = $application->applicator->id);
     }
 
-    public function storeOrder(Application $application, Request $request)
-    {
 
-
-    }
 
 }

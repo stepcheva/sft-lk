@@ -1,127 +1,107 @@
-@extends('layouts._app')
+@extends('layouts.master')
+
+@section('title', "Мои заявки")
 
 @section('content')
-    <div class="container">
-        <div class="row">
-            <div class="col-md-12">
-                <div class="panel panel-default">
 
-                    @include('flashes')
+    @include('flashes')
 
-                    <div class="panel-heading">
-                        <h4>Мои заявки</h4>
-                    </div>
-
-                    <div class="panel-body">
-                        <div class="panel-body">
-                            <div class="default-tabs pull-right">
-                                <a href="{{ route('applications.index', ['applicator_id' => $applicator->id]) }}">Мои
-                                    заявки</a> |
-                                <a href="{{ route('productranges.list', ['applicator_id' => $applicator->id]) }}">Номенклатура</a>
-                                |
-                                <a href="{{ route('contactquery.index', ['applicator_id' => $applicator->id]) }}">Мои
-                                    обращения</a> |
-                                <a href="{{ route('applicators.show', ['applicator_id' => $applicator->id]) }}">{{$applicator->user->lastName ." ". $applicator->user->firstName}}</a>
-                            </div>
-
-                            <div class="default-tabs">
-
-                                <a class="js-tab-link tabs_controls_link"
-                                   href="{{route('applications.index', ['applicator_id' => $applicator->id, 'param' => 'current']) }}">Заявки
-                                    текущего месяца</a>
-                                |
-                                <a class="js-tab-link tabs_controls_link"
-                                   href="{{route('applications.index', ['applicator_id' => $applicator->id, 'param' => 'new']) }}">Новые</a>
-                                |
-                                <a class="js-tab-link tabs_controls_link"
-                                   href="{{route('applications.index', ['applicator_id' => $applicator->id, 'param' => 'completed']) }}">Выполненные</a>
-                                |
-                                <a class="js-tab-link tabs_controls_link"
-                                   href="{{ route('applications.index', ['applicator_id' => $applicator->id, 'param' => 'all']) }}">Все
-                                    заявки</a>
-                                |
-                                <a class="js-tab-link tabs_controls_link"
-                                   href="{{route('applications.index', ['applicator_id' => $applicator->id, 'param' => 'noncomplete']) }}">Черновик</a>
-                            </div>
-                            <hr/>
-                            <a class="btn btn-sm btn-success pull-right"
-                               href="{{ route('applications.create', ['applicator_id' => $applicator->id]) }}">Добавить
-                                новую заявку</a>
-                            <div class="article">
-
-                                @foreach($applications as $application)
-                                    <div class="apps__item js-app-item">
-                                        <div class="apps__inner">
-                                            <span class="apps__number">Заявка №{{ $application->number }}</span>
-                                            <span class="apps__date">от {{ $application->created_at->format('d.m.Y') }}</span>
-                                            <div class="apps__toolbar">
-                                                <div class="icon apps__icon apps__icon_copy"></div>
-                                                <div class="icon apps__icon apps__icon_calendar js-calendar-show"></div>
-                                            </div>
-                                            <div class="apps__block apps__block_top">
-                                                <div class="apps__block-col">
-                                                    <div class="apps__data-title">
-                                                        Поставщик
-                                                    </div>
-                                                    <div class="apps__data-text">
-                                                        {{ $application->provider->name }}
-                                                    </div>
-                                                </div>
-                                                <div class="apps__block-col">
-                                                    <div class="apps__data-title">
-                                                        Грузополучатель
-                                                    </div>
-                                                    <div class="apps__data-text">
-                                                        {{ $application->consigneer->name }}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="apps__block">
-                                                <div class="apps__block-col">
-                                                    <div class="apps__data-title">
-                                                        Период отгрузки
-                                                    </div>
-                                                    <div class="apps__data-text">
-                                                        {{$application->period}}
-                                                    </div>
-                                                </div>
-                                                <div class="apps__block-col">
-                                                    <div class="apps__data-title">
-                                                        Итого по заявке
-                                                    </div>
-                                                    <div class="apps__data-text">
-                                                        {{ $application->getApplicationVolume() }} тонн
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="apps__progress-bar">
-                                                <div class="apps__progress-line apps__progress-line_online js-progress"
-                                                     data-status="25" style="width: 25%;"></div>
-                                                <span class="apps__progress-text">Статус {{  $application->status }}</span>
-                                            </div>
-                                            <div class="apps__more">
-                                                <form method="POST"
-                                                      action="{{ route('applications.destroy',  ['application' => $application, 'applicator' => $applicator]) }}">
-                                                    <a class="btn btn-primary btn-sm"
-                                                       href="{{ route('applications.show',  ['application' => $application, 'applicator' => $applicator]) }}">show</a>
-                                                    <a class="btn btn-default btn-sm"
-                                                       href="{{ route('applications.edit',  ['application' => $application, 'applicator' => $applicator]) }}">edit</a>
-
-                                                    <input type="hidden" name="_method" value="delete"/>
-                                                    <input type="hidden" name="_token" value="{{csrf_token()}}">
-                                                    <button type="submit" class="btn btn-danger btn-sm">delete</button>
-                                                </form>
-                                            </div>
-                                            <hr/>
-                                        </div>
-                                    </div>
-                                @endforeach
-                            </div>
+    <h1 class="ai-title">Мои заявки</h1>
+    <div class="default-tabs">
+        <ul class="tabs_controls">
+            @include('templates.applications.sub_menu')
+        </ul>
+        <ul class="tabs_list">
+            <li class="tabs_item active">
+                <div class="apps">
+                    <div class="apps__item js-app-item apps__item_new" >
+                        <div class="apps__inner-new" min-height = "500">
+                            <a class="apps__add-link js-add-new-app" href="{{ route("applications.create", ['applicator' => $applicator ]) }}">
+                                <i class="icon apps__new-icon"></i>
+                                <span class="apps__add-text">Добавить новую заявку</span>
+                            </a>
                         </div>
                     </div>
 
+                    @foreach($applications as $application)
+                    <div class="apps__item js-app-item">
+                            <div class="apps__inner">
+                                <span class="apps__number">Заявка №{{ $application->number }}</span>
+                                <span class="apps__date">от {{ $application->created_at->format('d.m.Y') }}</span>
+                                <div class="apps__toolbar">
+                                    <a href="{{ route('applications.duplicate', ['application' => $application]) }}" class="icon apps__icon apps__icon_copy"></a>
+                                    <div class="icon apps__icon apps__icon_calendar js-calendar-show"></div>
+                                </div>
+                                <div class="apps__block apps__block_top">
+                                    <div class="apps__block-col">
+                                        <div class="apps__data-title">
+                                            Поставщик
+                                        </div>
+                                        <div class="apps__data-text">
+                                            {{ $application->provider->name }}
+                                        </div>
+                                    </div>
+                                    <div class="apps__block-col">
+                                        <div class="apps__data-title">
+                                            Грузополучатель
+                                        </div>
+                                        <div class="apps__data-text">
+                                            {{ $application->consigneer->name }}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="apps__block">
+                                    <div class="apps__block-col">
+                                        <div class="apps__data-title">
+                                            Период отгрузки
+                                        </div>
+                                        <div class="apps__data-text">
+                                            {{$application->period}}
+                                        </div>
+                                    </div>
+                                    <div class="apps__block-col">
+                                        <div class="apps__data-title">
+                                            Итого по заявке
+                                        </div>
+                                        <div class="apps__data-text">
+                                            {{ $application->getApplicationVolume() }} тонн
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="apps__progress-bar">
+                                    @if(in_array($application->status, ['on review', 'in planning', 'confirmed']))
+                                    <div class="apps__progress-line apps__progress-line_review js-progress" data-status="100" style="width: 100%;"></div>
+                                    @elseif($application->status === 'done')
+                                    <div class="apps__progress-line apps__progress-line_online js-progress"
+                                         data-status="100" style="width: 100%;"></div>
+                                    @elseif($application->status === 'in progress')
+                                     <div class="apps__progress-line apps__progress-line_online js-progress"
+                                         data-status="25" style="width: 25%;"></div>
+                                    @endif
+                                    <span class="apps__progress-text">Статус
+                                        @if(App::isLocale('ru'))
+                                            @lang("applications.status.$application->status")
+                                        @endif
+                                    </span>
+                                </div>
+                                <div class="apps__more">
+                                    <form method="POST" action="{{ route('applications.destroy',  ['application' => $application, 'applicator' => $application->applicator ]) }}">
+                                        <input type="hidden" name="_method" value="delete"/>
+                                        <input type="hidden" name="_token" value="{{csrf_token()}}">
+                                        <button type="submit">Удалить заявку</button>
+                                    </form>
+                                    <a class="apps__details-btn" href="{{ route('applications.show',  ['application' => $application, 'applicator' => $applicator]) }}">Детали заявки</a>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
                 </div>
-            </div>
-        </div>
+            </li>
+        </ul>
     </div>
+    @include('templates.applications.calendar')
+@endsection
+
+@section('hidden')
+    @include('templates.applications.shipments')
 @endsection

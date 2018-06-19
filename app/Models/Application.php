@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Mail;
 
 class Application extends Model
 {
@@ -29,10 +30,12 @@ class Application extends Model
     {
         return $this->belongsTo('App\Models\Provider');
     }
+
     public function order_applications()
     {
         return $this->hasMany('App\Models\OrderApplication');
     }
+
     public function getApplicationVolume()
     {
         $volume = $this->order_applications->map(function ($item){
@@ -55,6 +58,27 @@ class Application extends Model
     {
         $this->status = $status;
         $this->save();
+    }
+
+    public function sendNotification($subject = 'Уведомление о создании заказа')
+    {
+        $email = $this->applicator->user->email;
+        $name = $this->applicator->user->firstName . " " . $this->applicator->user->lastName;
+        $data = [
+            'application' => $this,
+            'product_applications' => $this->order_applications,
+            'volume' => $this->getApplicationVolume(),
+            'price' => $this->getApplicationPrice(),
+        ];
+        $view = "templates.mail.applications";
+        $send = Mail::send(['html' => $view], $data, function ($message) use ($subject, $name, $email) {
+            $message->to($email, $name);
+            $message->cc('file.storages.ex@gmail.com');
+            $message->from('file.storages.ex@gmail.com', 'SFT Group');
+            $message->subject($subject);
+        });
+
+        return $send;
     }
 
 }

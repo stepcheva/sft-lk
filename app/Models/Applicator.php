@@ -25,7 +25,7 @@ class Applicator extends Model
 
     public function applications()
     {
-        return $this->hasMany('App\Models\Application');
+        return $this->hasMany('App\Models\Application')->latest();
     }
     public function getConsigneers()
     {
@@ -52,5 +52,13 @@ class Applicator extends Model
         return $this->applications()->where('created_at', '>=', Carbon::now()->startOfMonth())->get();
     }
 
+    public function getMonthlyVolumeRemainder($data)
+    {
+        $current_volume = $this->applications()->where('period', $data)->get()->map(function ($item) {
+            return $item->getApplicationVolume();
+        })->sum();
+
+        return $this->cooperation->monthly_min_volume - $current_volume;
+    }
 
 }

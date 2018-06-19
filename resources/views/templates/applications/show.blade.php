@@ -1,106 +1,108 @@
-@extends('layouts._app')
+@extends('layouts.master')
+
+@section('title', "Детальная страница заявки")
 
 @section('content')
-    <div class="container">
-        <div class="row">
-            <div class="col-md-12">
-                <div class="panel panel-default">
 
-                    @include('flashes')
+    @include('flashes')
 
-                    <div class="panel-heading">
-                        <h4>Мои заявки</h4>
-
-
-
-                    <div class="panel-body">
-                        <div class="panel-body">
-                            <div class="default-tabs">
-                                <a class="js-tab-link tabs_controls_link" href="{{ route('applications.index', ['applicator_id' => $applicator->id, 'param' => 'all']) }}">Все заявки</a>
-                                |
-                                <a class="js-tab-link tabs_controls_link" href="{{route('applications.index', ['applicator_id' => $applicator->id, 'param' => 'current']) }}">Заявки текущего месяца</a>
-                                |
-                                <a class="js-tab-link tabs_controls_link" href="{{route('applications.index', ['applicator_id' => $applicator->id, 'param' => 'new']) }}">Новые</a>
-                                |
-                                <a class="js-tab-link tabs_controls_link" href="{{route('applications.index', ['applicator_id' => $applicator->id, 'param' => 'completed']) }}">Выполненные</a>
-                                |
-                                <a class="js-tab-link tabs_controls_link" href="{{route('applications.index', ['applicator_id' => $applicator->id, 'param' => 'noncomplete']) }}">В черновике</a>
-
-                                <a class="btn btn-sm btn-success pull-right"
-                                   href="{{ route('applications.create', ['applicator_id' => $applicator->id]) }}">Добавить
-                                    новую заявку</a>
-                            </div><hr/>
-                            <div>
-                                <h3>Заявка № {{ $application->number }}</h3>
-                                <h5>от {{$application->created_at->format('Y-m-d')}}</h5>
-                                <h5>
-                                    Заказчик: {{$application->applicator->user->lastName }}
-                                    {{  $application->applicator->user->firstName }}
-                                    {{  $application->applicator->user->middleName }}</h5>
-                                <h5>Статус: новая </h5>
-                                <h5>Минимальный объем на
-                                    месяц: {{ $application->applicator->cooperation->monthly_min_volume }}т</h5>
-                                <div>
-                                    <div>
-                                        <h3>Товары в заявке</h3>
-                                        <table id="application" class="table table-striped" border="1">
-                                            <thead>
-                                            <tr>
-                                                <th>Период отгрузки<br>{{ $application->period }}</th>
-                                                <th>Грузополучатель<br>{{ $application->consigneer->name }}</th>
-                                                <th>Поставщик<br>{{ $application->provider->name }}</th>
-                                            </tr>
-                                            </thead>
-                                        </table>
-                                    </div>
-                                    <div>
-                                        <table id="application_products" class="table table-bordered table-striped" border="1">
-                                            <thead>
-                                            <tr>
-                                                <th class="text-center">Марка</th>
-                                                <th class="text-center">Граммаж</th>
-                                                <th class="text-center">Формат</th>
-                                                <th class="text-center">Объем 1 декада</th>
-                                                <th class="text-center">Объем 2 декада</th>
-                                                <th class="text-center">Объем 3 декада</th>
-                                                <th class="text-center">Доставка</th>
-                                            </tr>
-                                            </thead>
-                                            <tbody>
-                                            @if (isset($product_applications))
-                                                @foreach($product_applications as $product)
-                                                    <tr>
-                                                        <td> {{ $product->productrange->brand }} </td>
-                                                        <td> {{ $product->productrange->grammage }} </td>
-                                                        <td> {{ $product->productrange->format }} </td>
-                                                        <td> {{ $product->volume_1 }} </td>
-                                                        <td> {{ $product->volume_2 }} </td>
-                                                        <td> {{ $product->volume_3 }} </td>
-                                                        <td> {{ $product->consigneer_delivery->delivery->name }}</td>
-                                                    </tr>
-
-                                                @endforeach
-                                            @else
-                                                <h2>Ошибка создания заявки</h2>
-                                            @endif
-
-                                            @isset($comment)
-                                                <p> {{$comment}} </p>
-                                            @endisset
-                                            </tbody>
-                                        </table>
-                                        <div>
-                                            <p>Итого (тн): {{ $application->getApplicationVolume() }}</p>
-                                            <p>Сумма (руб): {{ $application->getApplicationPrice() }}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                        </div>
-                    </div>
+    <div class="a-header flex">
+        <div class="a-header__col">
+            <h1 class="a-header__title">Заявка {{ $application->number }}</h1>
+            <a href="{{ route('applications.duplicate', ['application' => $application]) }}" class="a-header__icon icon icon-copy"></a>
+            <div class="a-date">От {{$application->created_at->format('Y-m-d')}}</div>
+        </div>
+        <div class="a-header__col">
+			<span class="a-status a-status_approved">
+                @if(App::isLocale('ru'))
+                    @lang("applications.status.$application->status")
+                @endif
+			</span>
+        </div>
+    </div>
+    <div class="a-body">
+        <div class="a-information">
+            <div class="a-title">
+                <div class="a-title__h3">Информация по заявке</div>
+            </div>
+            <div class="flex info-flex">
+                <div class="flex__col info-flex__col">
+                    <div class="info-title-small">Период отгрузки</div>
+                    <span class="info-line">{{ $application->period }}</span>
+                </div>
+                <div class="flex__col info-flex__col">
+                    <div class="info-title-small">Диаметр рулона</div>
+                    <span class="info-line">{{ $application->consigneer->roll_diameter }}</span>
+                </div>
+                <div class="flex__col info-flex__col">
+                    <div class="info-title-small">Диаметр гильз</div>
+                    <span class="info-line">{{ $application->consigneer->core_diameter }}</span>
                 </div>
             </div>
         </div>
+        <div class="a-goods">
+            <div class="a-title">
+                <div class="a-title__h3">Товары в заявке</div>
+            </div>
+            <div class="table-wrapper">
+                <table class="table a-table">
+                    <thead>
+                    <tr>
+                        <th class="table__th">Марка</th>
+                        <th class="table__th">Граммаж</th>
+                        <th class="table__th">Формат</th>
+                        <th class="table__th">Объем 1 декада</th>
+                        <th class="table__th">Объем 2 декада</th>
+                        <th class="table__th">Объем 3 декада</th>
+                        <th class="table__th">Вид доставки</th>
+                        <th class="table__th">Сумма без НДС</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    @if (isset($product_applications))
+                        @foreach($product_applications as $product)
+                            <tr>
+                                <td class="table__td a-table__td">{{ $product->productrange->brand }}</td>
+                                <td class="table__td a-table__td">{{ $product->productrange->grammage }}</td>
+                                <td class="table__td a-table__td">{{ $product->productrange->format }}</td>
+                                <td class="table__td a-table__td">{{ $product->volume_1 }}</td>
+                                <td class="table__td a-table__td">{{ $product->volume_2 }}</td>
+                                <td class="table__td a-table__td">{{ $product->volume_3 }}</td>
+                                <td class="table__td a-table__td">{{ $product->consigneer_delivery->delivery->name }}</td>
+                                <td class="table__td a-table__td a-table__td-line">{{ $product->price }}<span class="rouble">q</span></td>
+                            </tr>
+                        @endforeach
+                    <tr>
+                        <td colspan="8" class="table__td table__td_summary table__td_left">
+                            <div class="table__summary">
+                                <span class="table__summary-title">Итого:</span> {{ $application->getApplicationVolume() }} т
+                            </div>
+                            <div class="table__summary">
+                                <span class="table__summary-title">Итоговая сумма:</span> {{ $application->getApplicationPrice() }}
+                                <span class="rouble">q</span>
+                            </div>
+                            <div class="table__summary">
+                                <span class="table__summary-title">Остаток от мин. объема:</span>
+                                {{ $applicator->getMonthlyVolumeRemainder($application->period) }} т
+                            </div>
+                        </td>
+                    </tr>
+                    @else
+                        <h2>Нет товаров в заявке</h2>
+                    @endif
+                    </tbody>
+                </table>
+            </div>
+            @isset($application->contactquery)
+            <div class="a-comment comment">
+                <span class="comment__title">Комментарий:</span>
+                <div class="comment__text">
+                    {{ $application->contactquery }}
+                </div>
+            </div>
+            @endisset
+        </div>
     </div>
 @endsection
+
+
