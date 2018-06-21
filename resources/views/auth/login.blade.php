@@ -1,6 +1,6 @@
 @extends('layouts.master')
 
-@section('title', "Новая заявка")
+@section('title', "Авторизация")
 
 @section('content')
 
@@ -8,7 +8,8 @@
 
 	<h1>Авторизация</h1>
 	<div class="login">
-		<form action="" class="form">
+		<form action="{{ route('login') }}" method="POST" class="form">
+				{{ csrf_field() }}
 			<fieldset class="form__fieldset">
 				<input type="text" class="form__input form__input_large" placeholder="Введите логин" required="required">
 			</fieldset>			
@@ -23,8 +24,8 @@
 			</div>
 		</form>
 	</div>
-</div>
 @endsection
+
 @section('hidden')
 <div class="hidden">
 	<div id="recoverPass" class="popup">
