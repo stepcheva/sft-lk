@@ -65,6 +65,19 @@ class Application extends Model
         $this->save();
     }
 
+    public function setPrefixNumber($arg = 'admin')
+    {
+        $prefix = (int) explode('/', $this->number);
+        if ($arg === 'admin') {
+            $prefix[0] = ($prefix[0] === 1) ? $prefix[0] + 1 : '';
+        }
+        $prefix[0] = $prefix[0] & 1;
+        $this->number = string(implode($prefix));
+        $this->save();
+
+        return true;
+    }
+
     public function sendNotification($subject = 'Уведомление о создании заказа')
     {
         $email = $this->applicator->user->email;
