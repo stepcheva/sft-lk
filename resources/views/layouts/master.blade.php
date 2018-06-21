@@ -28,6 +28,8 @@
     <link href="{{ asset('css/plugins/nanoscroller.css') }}" rel="stylesheet" type="text/css">
     <link href="{{ asset('css/plugins/selectize.css') }}" rel="stylesheet" type="text/css">
 
+    @stack("head")
+
     <!--[if lt IE 9]>
     <script>
         document.createElement('main');
@@ -52,7 +54,9 @@
                 <div class="b-topnav js-mobile-menu">
                     <ul class="b-topnav__list">
 
+                        @if(isset($user) || isset($applicator))
                             @include('layouts.menu', ['user' => $user])
+                        @endif
 
                     </ul>
                 </div>
@@ -78,6 +82,6 @@
 <script src="{{ asset('js/plugins/swiper4/swiper.min.js') }}"></script>
 <script src="{{ asset('js/app_lk-min.js') }}"></script>
 
-@yield('script')
+@stack("script")
 
 </html>
