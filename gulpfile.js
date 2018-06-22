@@ -34,6 +34,11 @@ gulp.task('src_js:lk', function(){
 
 gulp.task('src_img:lk', function(){
     return gulp.src(['resources/assets/img/**/*'])
+    .pipe(gulp.dest('public/img/icons'));
+});
+
+gulp.task('src_logo:lk', function(){
+    return gulp.src(['resources/assets/img/logo.png'])
     .pipe(gulp.dest('public/img'));
 });
 
