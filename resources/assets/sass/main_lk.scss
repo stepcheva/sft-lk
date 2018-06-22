@@ -3,11 +3,10 @@
 @import "variables";
 @import "defaults";
 @import "mixins";
-@import "/css/plugins/nanoscroller.css";
-@import "/css/plugins/selectize.css";
-@import "/css/plugins/swiper4/swiper.css";
-@import "/css/plugins/fancybox3.3/jquery.fancybox.css";
-//@import "components/forms";
+@import url('plugins/nanoscroller.css');
+@import url('plugins/selectize.css');
+@import url('plugins/swiper4/swiper.css');
+@import url('plugins/fancybox3.3/jquery.fancybox.css');
 @import "components/scrolls";
 @import "helpers";
 
@@ -150,8 +149,7 @@ body {
             height: 6px;
             position: absolute;
             background: url('/img/icons/icon_arr-down.svg') 0 0 no-repeat;
-            right: 0;
-            top: 50%;
+            right: 0;            top: 50%;
             margin-top: -3px;
             transition: transform 0.3s;
         }
@@ -654,7 +652,7 @@ input[type="checkbox"]:checked+label::after {
     top: 4px;
     width: 11px;
     height: 9px;
-    background-image: url('/img/active-chbox.png');
+    background-image: url('/img/icons/active-chbox.png');
     background-repeat: no-repeat;
     color: $cWhite;
 }
@@ -1086,6 +1084,7 @@ flex-direction: row;
             display: flex;
             align-items: center;
             justify-content: center;
+            min-height: 228px;
         }
     }
     &__inner {
@@ -1233,6 +1232,7 @@ flex-direction: row;
     }
     &__inner-new {
         text-align: center;
+
     }
     &__add-link {
         &:hover {

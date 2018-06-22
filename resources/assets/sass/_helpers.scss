@@ -101,7 +101,7 @@
     display:none;
     width:100%;
     height:100%;
-    background:url('/img/bg_overlay.png') left top repeat;
+    background:url('/resources/assets/img/bg_overlay.png') left top repeat;
 }
 .bust-overlay {
     left:0;
@@ -114,7 +114,7 @@
         margin-left: -18px;
         top:50%;
         margin-top: -18px;
-        background: url('/img/preloader.gif') 0 0 no-repeat;
+        background: url('/resources/assets/img/preloader.gif') 0 0 no-repeat;
     }
 }
 
@@ -218,7 +218,7 @@
         bottom: 0;
         left: 0;
         right: 0;
-        background: url('/img/preloader.gif') 50% 50% no-repeat;
+        background: url('/resources/assets/img/preloader.gif') 50% 50% no-repeat;
         width: inherit;
         height: inherit;
         z-index: 1;
@@ -226,7 +226,7 @@
     }
     .lt-ie9 &{
         &:before {
-            background: url('/img/bg_overlay.png') 0 0 repeat;
+            background: url('/resources/assets/img/bg_overlay.png') 0 0 repeat;
         }
     }
 }

@@ -58,7 +58,7 @@
                 width: 11px;
                 height: 6px;
                 position: absolute;
-                background: url('/img/icons/icon_arr-down.svg') 0 0 no-repeat;
+                background: url('/resources/assets/img/icons/icon_arr-down.svg') 0 0 no-repeat;
                 right: 0;
                 top: 50%;
                 margin-top: -3px;
@@ -340,7 +340,7 @@
         &:before {
             width: 34px;
             height: 26px;
-            background-image: url('/img/icons/icon_delivery-truck.svg');
+            background-image: url('/resources/assets/img/icons/icon_delivery-truck.svg');
         }
     }
     .apps {
@@ -446,7 +446,7 @@
             &:before {
                 width: 20px;
                 height: 16px;
-                background-image: url('/img/icons/icon_arrow-l-full.svg');
+                background-image: url('/resources/assets/img/icons/icon_arrow-l-full.svg');
             }
         }
         &__header {
@@ -473,7 +473,7 @@
                 &:before {
                     width: 7px;
                     height: 12px;
-                    background-image: url('/img/icons/icon_arr-l-small.svg');
+                    background-image: url('/resources/assets/img/icons/icon_arr-l-small.svg');
                     background-color: #fafafa;
                 }
             }
@@ -482,7 +482,7 @@
                 &:before {
                     width: 7px;
                     height: 12px;
-                    background-image: url('/img/icons/icon_arr-r-small.svg');
+                    background-image: url('/resources/assets/img/icons/icon_arr-r-small.svg');
                     background-color: #fafafa;
                 }
             }
