@@ -3,7 +3,7 @@
     {{ in_array(Route::currentRouteName(), ['applications.index', 'applications.create']) ? ' active': '' }}">Мои заявки</a>
 </li>
 <li class="b-topnav__item">
-    <a href="{{ route('productranges.list', ['applicator_id' => $user->applicator->id]) }}" class="b-topnav__link
+    <a href="{{ route('productranges.list', ['applicator' => $user->applicator->id]) }}" class="b-topnav__link
     {{ in_array(Route::currentRouteName(), ['productranges.list']) ? ' active': '' }}">Номенклатура</a>
 </li>
 <li class="b-topnav__item">
