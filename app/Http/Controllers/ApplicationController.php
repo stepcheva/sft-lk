@@ -60,7 +60,7 @@ class ApplicationController extends Controller
         }
 
         return view('templates.applications.create',
-            ['applicator' => $applicator, 'date_month' => $date_month, 'date_year' => $date_year]);
+            ['applicator' => $applicator, 'date_month' => $date_month, 'date_year' => $date_year, 'user' => $applicator->user]);
     }
 
     /**
@@ -71,7 +71,7 @@ class ApplicationController extends Controller
      */
     public function store(Applicator $applicator, Request $request)
     {
-        $date = "$request->year $request->month";
+        $date = "$request->date_year $request->date_month";
         $date = Carbon::createFromFormat('Y F', $date)->lastOfMonth();
 
         $application = Application::create([
