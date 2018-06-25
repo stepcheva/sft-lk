@@ -22,7 +22,7 @@ class CreateUnitsTable extends Migration
             $table->foreign('productrange_id')->references('id')->on('productranges')->onDelete('cascade')->onUpdate('cascade');
             $table->integer('application_id')->unsigned();
             $table->foreign('application_id')->references('id')->on('applications')->onDelete('cascade')->onUpdate('cascade');
-            $table->integer('lunit_id')->unsigned();
+            $table->integer('lunit_id')->unsigned()->nullable();
             $table->foreign('lunit_id')->references('id')->on('lunits')->onDelete('cascade')->onUpdate('cascade');
             $table->timestamps();
         });
