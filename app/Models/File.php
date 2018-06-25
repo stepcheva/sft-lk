@@ -23,4 +23,9 @@ class File extends Model
     {
         return $this->belongsTo('App\Models\Applicator');
     }
+
+    public function lunit()
+    {
+        return $this->belongsTo('App\Models\Lunit');
+    }
 }

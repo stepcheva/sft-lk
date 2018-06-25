@@ -36,6 +36,16 @@ class Application extends Model
         return $this->hasMany('App\Models\OrderApplication');
     }
 
+    public function units()
+    {
+        return $this->hasMany('App\Models\Unit');
+    }
+
+    public function lunits()
+    {
+        return $this->hasMany('App\Models\Lunit');
+    }
+
     public function contactquery()
     {
         return $this->hasOne('App\Models\Contactquery');
