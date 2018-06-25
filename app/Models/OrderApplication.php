@@ -34,4 +34,35 @@ class OrderApplication extends Model
 
         return $this->belongsTo('App\Models\Application');
     }
+    public function createUnits()
+    {
+        if(isset($this->volume_1)) {
+            $unit[] = Unit::create([
+                'application_id' => $this->application->id,
+                'productrange_id' => $this->productrange_id,
+                'volume' => $this->volume_1,
+                'price' => $this->consigneer_delivery->price,
+                'decada' => 1,
+            ]);
+        }
+        if(isset($this->volume_2)) {
+            $unit[] = Unit::create([
+                'application_id' => $this->application->id,
+                'productrange_id' => $this->productrange_id,
+                'volume' => $this->volume_2,
+                'price' => $this->consigneer_delivery->price,
+                'decada' => 3,
+            ]);
+        }
+        if(isset($this->volume_3)) {
+            $unit[] = Unit::create([
+                'application_id' => $this->application->id,
+                'productrange_id' => $this->productrange_id,
+                'volume' => $this->volume_3,
+                'price' => $this->consigneer_delivery->price,
+                'decada' => 3,
+            ]);
+        }
+       return;
+    }
 }

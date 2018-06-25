@@ -29,4 +29,6 @@ class Unit extends Model
     {
         return $this->belongsTo('App\Models\Lunit');
     }
+
+
 }

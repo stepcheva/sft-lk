@@ -106,5 +106,4 @@ class Application extends Model
 
         return $send;
     }
-
 }
