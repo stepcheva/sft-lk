@@ -7,6 +7,7 @@
 
 
 window.Vue = require('vue');
+window.axios = require('axios');
 
 /**
  * Next, we will create a fresh Vue application instance and attach it to
@@ -15,6 +16,8 @@ window.Vue = require('vue');
  */
 
 Vue.component('consigneer-component', require('./components/ConsigneerComponent.vue'));
+Vue.component('fileupload-component', require('./components/FileuploadComponent.vue'));
+Vue.component('example-component', require('./components/ExampleComponent.vue'));
 
 const app = new Vue({
     el: '#root-wrapper'

@@ -31,4 +31,5 @@ class Cooperation extends Model
     {
         return $this->hasMany('App\Models\Cooperation');
     }
+
 }

@@ -27,13 +27,27 @@ Route::resource('applicators', 'ApplicatorController');
 Route::group(['prefix' => 'user/{applicator}'], function () {
     Route::resource('applications', 'ApplicationController');
     Route::resource('contactquery', 'ContactqueryController');
-    Route::get('productranges', 'ApplicatorController@showProductranges')->name('productranges.list');
+    Route::get('productranges/{consigneer_id}', 'ApplicatorController@showProductranges')->name('productranges.list');
+
+    //json на фронт
+    Route::get('/consigneers', 'ApplicatorController@showConsigneers');
+    Route::get('get/productranges/{consigneer_id}', 'ApplicatorController@getProducts');
+
 });
 
 Route::any('applications/{application}', 'ApplicationController@createProductVolume')->name('applications.product');
 Route::post('applications/{application}/confirm', 'ApplicationController@confirmApplication')->name('applications.confirm');
 Route::post('applications/{application}/send', 'ApplicationController@createOrder')->name('applications.send');
 Route::any('applications/{application}/duplicate', 'ApplicationController@duplicate')->name('applications.duplicate');
+Route::get('application/{application}/lunits', 'LunitsController@show')->name('shipments');
+
+//Работа с файлами
+Route::get('{lunit}/files', 'FileController@index');
+Route::post('files/add', 'FileController@store');
+Route::post('files/edit/{id}', 'FileController@edit');
+Route::post('files/delete/{id}', 'FileController@destroy');
+
+
 
 /*
 Route::group(['namespace' => 'Admin'], function () {
