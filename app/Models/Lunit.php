@@ -18,7 +18,6 @@ class Lunit extends Model
         'consigneer_id',
     ];
 
-
     public function application()
     {
         return $this->belongsTo('App\Models\Application');
@@ -33,4 +32,23 @@ class Lunit extends Model
     {
         return $this->hasMany('App\Models\File');
     }
+
+    public function setStatus($status)
+    {
+        return $this->status = $status;
+    }
+
+    public function consigneer()
+    {
+        return $this->belongsTo('App\Models\Consigneer');
+    }
+
+    public function transportunits()
+    {
+        return $this->belongsToMany('App\Models\Transportunits');
+    }
+
+
+
+
 }
