@@ -82,8 +82,12 @@
                                 <span class="rouble">q</span>
                             </div>
                             <div class="table__summary">
-                                <span class="table__summary-title">Остаток от мин. объема:</span>
-                                {{ $applicator->getMonthlyVolumeRemainder($application->period) }} т
+                                @if($applicator->getMonthlyVolumeRemainder($application->period) >= 0)
+                                    <span class="table__summary-title">Остаток от мин. объема:</span>
+                                @else
+                                    <span class="table__summary-title">Общий объем заказов (за месяц):</span>
+                                @endif
+                                {{ abs($applicator->getMonthlyVolumeRemainder($application->period)) }} т
                             </div>
                         </td>
                     </tr>
@@ -102,6 +106,11 @@
             </div>
             @endisset
         </div>
+
+        @isset($lunits)
+            @include('templates.applications.shipments', ['lunits' => $lunits, 'active' => $active])
+        @endisset
+
     </div>
 @endsection
 

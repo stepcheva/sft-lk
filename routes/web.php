@@ -41,11 +41,16 @@ Route::post('applications/{application}/send', 'ApplicationController@createOrde
 Route::any('applications/{application}/duplicate', 'ApplicationController@duplicate')->name('applications.duplicate');
 Route::get('application/{application}/lunits', 'LunitsController@show')->name('shipments');
 
-//Работа с файлами
+//Работа с файлами в отгрузках
 Route::get('{lunit}/files', 'FileController@index');
-Route::post('files/add', 'FileController@store');
-Route::post('files/edit/{id}', 'FileController@edit');
+Route::post('files/add/{lunit}', 'FileController@store');
 Route::post('files/delete/{id}', 'FileController@destroy');
+
+//Работа с транспортом  в отгрузках
+Route::get('{lunit}/transports', 'LunitsController@getTransports');
+Route::get('transports/edit/{id}', 'LunitsController@editTransports')->name('edit.transport');
+Route::post('transports/add/{lunit}', 'LunitsController@addTransports')->name('add.user.transport');
+Route::put('transports/{id}', 'LunitsController@updateTransports')->name('update.transport');
 
 
 
