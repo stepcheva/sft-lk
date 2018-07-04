@@ -14,4 +14,9 @@ class Delivery extends Model
     {
         return $this->hasMany('App\Models\ConsigneerDelivery');
     }
+
+    public function lunits()
+    {
+        return $this->hasMany('App\Models\Unit');
+    }
 }

@@ -13,7 +13,7 @@ class Transportunit extends Model
 
     public function lunits()
     {
-        return $this->belongsToMany('App\Models\Lunit');
+        return $this->belongsToMany('App\Models\Lunit','lunit_transportunits');
     }
 
 }

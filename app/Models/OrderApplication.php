@@ -16,27 +16,37 @@ class OrderApplication extends Model
         'application_id',
     ];
 
-    public function productrange() {
+    public function productrange()
+    {
 
         return $this->belongsTo('App\Models\Productrange');
     }
 
-    public function consigneer_delivery() {
+    public function consigneer_delivery()
+    {
         return $this->belongsTo('App\Models\ConsigneerDelivery');
     }
 
-    public function getVolume() {
+    public function units()
+    {
+        return $this->hasMany('App\Models\Unit');
+    }
+
+    public function getVolume()
+    {
 
         return $this->volume_1 + $this->volume_2 + $this->volume_3;
     }
 
-    public function application() {
+    public function application()
+    {
 
         return $this->belongsTo('App\Models\Application');
     }
+
     public function createUnits()
     {
-        if(isset($this->volume_1)) {
+        if (isset($this->volume_1)) {
             $unit[] = Unit::create([
                 'application_id' => $this->application->id,
                 'productrange_id' => $this->productrange_id,
@@ -45,7 +55,7 @@ class OrderApplication extends Model
                 'decada' => 1,
             ]);
         }
-        if(isset($this->volume_2)) {
+        if (isset($this->volume_2)) {
             $unit[] = Unit::create([
                 'application_id' => $this->application->id,
                 'productrange_id' => $this->productrange_id,
@@ -54,7 +64,7 @@ class OrderApplication extends Model
                 'decada' => 3,
             ]);
         }
-        if(isset($this->volume_3)) {
+        if (isset($this->volume_3)) {
             $unit[] = Unit::create([
                 'application_id' => $this->application->id,
                 'productrange_id' => $this->productrange_id,
@@ -63,6 +73,6 @@ class OrderApplication extends Model
                 'decada' => 3,
             ]);
         }
-       return;
+        return ($unit);
     }
 }

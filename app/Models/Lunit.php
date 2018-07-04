@@ -16,6 +16,10 @@ class Lunit extends Model
         'shipment_data',
         'delivery_data',
         'consigneer_id',
+        'delivery_id',
+    ];
+    protected $hidden = [
+        'delivery_id'
     ];
 
     public function application()
@@ -45,10 +49,31 @@ class Lunit extends Model
 
     public function transportunits()
     {
-        return $this->belongsToMany('App\Models\Transportunits');
+        return $this->belongsToMany('App\Models\Transportunit', 'lunit_transportunits');
     }
 
+    public function delivery()
+    {
+        return $this->belongsTo('App\Models\Delivery');
+    }
 
+    public function getTotalPrice()
+    {
+        return $this->units->map(function ($item) {
+            return $item->price;
+        })->sum();
+    }
 
+    public function showAddDeliveryField()
+    {
+        return !count($this->transportunits) && $this->delivery->id === 4;
+    }
+
+    public function showEditDeliveryField()
+    {
+        if (null !== $this->transportunits->count() && $this->delivery->id === 4)
+            return $this->transportunits()->first();
+        else return false;
+    }
 
 }

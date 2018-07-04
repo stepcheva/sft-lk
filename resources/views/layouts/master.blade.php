@@ -67,12 +67,12 @@
             </div>
         </div>
         <div class="lk-wrapper"> @yield('content') </div>
-        <div class="hidden"> @yield('hidden') </div>
+        <div> @stack('hidden') </div>
     </div>
 </div>
 
 </body>
-
+@stack("script")
 <script src="{{ asset('js/libs/jquery-3.3.1.min.js') }}"></script>
 <script src="{{ asset('js/addons/device.min.js') }}"></script>
 <script src="{{ asset('js/addons/modernizr.js') }}"></script>
@@ -81,7 +81,5 @@
 <script src="{{ asset('js/plugins/selectize/selectize.min.js') }}"></script>
 <script src="{{ asset('js/plugins/swiper4/swiper.min.js') }}"></script>
 <script src="{{ asset('js/app_lk-min.js') }}"></script>
-
-@stack("script")
 
 </html>

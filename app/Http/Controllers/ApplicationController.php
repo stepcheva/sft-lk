@@ -4,9 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\Application;
 use App\Models\Applicator;
+use App\Models\Lunit;
 use App\Models\OrderApplication;
 use App\Models\ProductApplication;
 use App\Models\Productrange;
+use App\Models\Unit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Validator;
@@ -94,11 +96,20 @@ class ApplicationController extends Controller
      * @param  int $id
      * @return \Illuminate\Http\Response
      */
-    public function show(Applicator $applicator, Application $application)
+    public function show(Applicator $applicator, Application $application, Request $request)
     {
         $product_applications = $application->order_applications;
         $user = $applicator->user;
-        return view('templates.applications.show', compact('applicator', 'application', 'product_applications', 'user'));
+        if($application->lunits) {
+            $active = (isset($request->active)) ? $request->active : '1';
+            $lunits = $application->getLunits($active);
+            $data = compact('applicator', 'application', 'product_applications', 'lunits', 'active', 'user');
+        } else
+            $data = compact('applicator', 'application', 'product_applications', 'user');
+
+        //dd(compact('applicator', 'application', 'product_applications', 'lunits', 'active', 'user'));
+
+        return view('templates.applications.show', $data);
     }
 
     /**
@@ -201,7 +212,7 @@ class ApplicationController extends Controller
             $application->order_applications()->delete();
             Application::destroy($application->id);
             session()->flash('success', 'Заявка успешно удалена.');
-            return redirect()->route('applications.index', ['applicator' => $applicator_id]);
+            return redirect()->back()->with(['applicator' => $applicator_id]);
         }
     }
 
@@ -267,14 +278,17 @@ class ApplicationController extends Controller
     {
         $products = $request->query('product_applications');
         $price = $request->query('price');
-        $application->contactquery()->create([
-            'application_id' => $application->id,
-            'theme' => "Комментарий к заявке $application->number",
-            'querytext' => $request->comment,
-        ]);
+
+        if(null !== ($request->query('comment'))) {
+            $application->contactquery()->create([
+                'application_id' => $application->id,
+                'theme' => "Комментарий к заявке $application->number",
+                'querytext' => $request->comment,
+            ]);
+        }
 
         foreach ($products as $key => $product) {
-            $application->order_applications()->create([
+            $order = $application->order_applications()->create([
                 'application_id' => $application->id,
                 'productrange_id' => $product['productrange_id'],
                 'volume_1' => (array_key_exists('volume_1', $product) ? $product['volume_1'] : null),
@@ -283,16 +297,60 @@ class ApplicationController extends Controller
                 'consigneer_delivery_id' => $product['consigneer_delivery_id'],
                 'price' => $product['price'],
             ]);
+            //разбиваем товары в заявке на юниты
+            //$units = $order->createUnits();
+            //$this->createFromUnits($units);
         }
+        //dd($application->lunits->map(function ($item) {
+        //   return $item->units;
+        //}));
 
         //меняем статус с noncomplete на new
         $application->setStatus('new');
+
         $send = $application->sendNotification();
 
         if (!$send) {
             session()->flash('alert', 'Ошибка отправки писем.');
         }
 
+
         return redirect()->route('applications.index', ['applicator' => $application->applicator->id, 'user' => $application->applicator->id, 'active' => $application->status ]);
     }
+
+    public function createFromUnits($units)
+    {
+        $consigneer_id = $units[0]->application->consigneer->id;
+        $application_id = $units[0]->application->id;
+        $delivery_id = $units[0]->order_application->consigneer_delivery->delivery_id;
+        $volume = array_sum(array_map(function ($item) {
+            return $item->volume;
+        }, $units));
+        $price = array_sum(array_map(function ($item) {
+            return $item->price;
+        }, $units));
+
+        //dd(compact('number','volume', 'consigneer_id','status','plan_data','shipment_data', 'delivery_data' , 'price' , 'application_id'));
+
+        $lunit = Lunit::create([
+            'number' => rand(100,200),
+            'consigneer_id' => $consigneer_id,
+            'status' => 0,
+            'volume' => $volume,
+            'plan_data' => date('Y-m-d'),
+            'shipment_data' => date('Y-m-d'),
+            'delivery_data' => date('Y-m-d'),
+            'price' => $price,
+            'application_id' => $application_id,
+            'delivery_id' => $delivery_id,
+        ]);
+
+        foreach ($units as $unit) {
+            $unit->lunit_id = $lunit->id;
+            $unit->save();
+        }
+
+        return $lunit->units;
+    }
+
 }

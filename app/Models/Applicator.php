@@ -51,7 +51,7 @@ class Applicator extends Model
     {
         return $this->applications()->where('created_at', '>=', Carbon::now()->startOfMonth())->get();
     }
-
+    //остаток от минимального объема на месяц
     public function getMonthlyVolumeRemainder($data)
     {
         $current_volume = $this->applications()->where('period', $data)->get()->map(function ($item) {

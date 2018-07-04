@@ -75,6 +75,11 @@ class Application extends Model
         $this->save();
     }
 
+    public function getLunits($decada)
+    {
+        return $this->lunits()->where('decada', $decada)->get();
+    }
+
     public function setPrefixNumber($arg = 'admin')
     {
         $prefix = (int) explode('/', $this->number);
