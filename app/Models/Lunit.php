@@ -42,6 +42,30 @@ class Lunit extends Model
         return $this->status = $status;
     }
 
+    public function status()
+    {
+        switch ($this->status) {
+            case '0':
+                return 'new';
+                break;
+            case '1':
+                return 'in stock';
+                break;
+            case '2':
+                return 'transport assigned';
+                break;
+            case '3':
+                return 'shipped';
+                break;
+            case '4':
+                return 'delivered';
+                break;
+            case '5':
+                return 'canceled';
+                break;
+            }
+    }
+
     public function consigneer()
     {
         return $this->belongsTo('App\Models\Consigneer');

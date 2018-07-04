@@ -31,8 +31,13 @@
                             <div class="accordeon__item active">
                                 <a class="accordeon__trigger js-accordeon_trigger" href="#">
                                     <span class="shipment">Отгрузка №{{ $lunit->number }}</span>
-                                    <span class="shipment-status">Статус: <span class="status status_available">{{ $lunit->status }}
-                                            (на складе)</span></span>
+                                    <span class="shipment-status">Статус:
+                                        <span class="status status_available">
+                                            @if(App::isLocale('ru'))
+                                                @lang("shipments.status." . $lunit->status())
+                                            @endif
+                                         </span>
+                                    </span>
                                 </a>
                                 <div class="accordeon__inner" style="display: block;">
                                     <div class="accordeon__inner-item">
@@ -129,19 +134,19 @@
                                                     </div>
                                                 @elseif($lunit->showEditDeliveryField())
                                                     @include('templates.transports.edit', ['transport' => $lunit->showEditDeliveryField()])
-                                                        <div class="drivers-flex__col">
+                                                    <div class="drivers-flex__col">
                                                             <span class="info-line driver-line">
                                                             <span class="info-line__color driver-line__title">
                                                                 Средство:</span> {{ $lunit->showEditDeliveryField()->info }}</span>
-                                                            <!--
-                                                            <span class="info-line driver-line"><span class="info-line__color driver-line__title">Водитель:</span> Константинопольский К.</span>
-                                                            <span class="info-line driver-line"><span class="info-line__color driver-line__title">Номер ТС:</span> Р563АЗ</span>
-                                                            -->
+                                                        <!--
+                                                        <span class="info-line driver-line"><span class="info-line__color driver-line__title">Водитель:</span> Константинопольский К.</span>
+                                                        <span class="info-line driver-line"><span class="info-line__color driver-line__title">Номер ТС:</span> Р563АЗ</span>
+                                                        -->
 
-                                                            <span class="info-line edit-line">
-                                                                <a  href="#editTransport" class="edit-btn js-modal">Изменить</a></span>
+                                                        <span class="info-line edit-line">
+                                                                <a href="#editTransport" class="edit-btn js-modal">Изменить</a></span>
 
-                                                        </div>
+                                                    </div>
                                                 @else
                                                     @foreach( $lunit->transportunits as $transport)
                                                         <div class="drivers-flex__col">
