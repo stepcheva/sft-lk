@@ -1001,6 +1001,22 @@ input[type="checkbox"]:checked+label::after {
     }
 }
 
+.icon-stock {
+    &:before {
+        width: 25px;
+        height: 14px;
+        background-image: url('/img/icons/icon_stock.svg');
+    }
+}
+
+.icon-air {
+    &:before {
+        width: 25px;
+        height: 14px;
+        background-image: url('/img/icons/icon_air.svg');
+    }
+}
+
 .icon-copy {
     cursor: pointer;
     &:before {

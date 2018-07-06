@@ -14,16 +14,7 @@
 
                     <div class="panel-body">
                         <div class="panel-body">
-                            <div class="default-tabs pull-right">
-                                <a href="{{ route('applications.index', ['applicator_id' => $applicator->id]) }}">Мои
-                                    заявки</a> |
-                                <a href="{{ route('productranges.list', ['applicator_id' => $applicator->id]) }}">Номенклатура</a>
-                                |
-                                <a href="{{ route('contactquery.index', ['applicator_id' => $applicator->id]) }}">Мои
-                                    обращения</a> |
-                                <a href="{{ route('applicators.show', ['applicator_id' => $applicator->id]) }}">{{$applicator->user->lastName ." ". $applicator->user->firstName}}</a>
-                            </div>
-
+                            <?php $user = $applicator->user ?>
                             <div class="default-tabs">
                             </div>
                             <hr/>
