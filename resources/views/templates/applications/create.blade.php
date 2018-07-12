@@ -1,97 +1,78 @@
-@extends('layouts._app')
+@extends('layouts.master')
+
+@section('title', "Новая заявка")
 
 @section('content')
-    <div class="container">
-        <div class="row">
-            <div class="col-md-8 col-md-offset-2">
-                <div class="panel panel-default">
 
-                    @include ('flashes')
+    @include('flashes')
+    <h1 class="ai-title">Новая заявка</h1>
+    <div class="a-body">
+        <select-product>компонент</select-product>
 
-                    <div class="panel-heading">
-                        Новая заявка
-                    </div>
-
-                    <div class="panel-body">
-                        <p>Информация по заявке</p>
-                        <form class="form-horizontal" method="POST" action="{{ route('applications.store', ['applicator' => $applicator]) }}">
-                            {{ csrf_field() }}
-
-                            <div class="form-group">
-                                <label for="period" class="col-md-4 control-label">Период отгрузки</label>
-                                <div class="col-md-4">
-                                    @if($date_month)
-                                        <select name="month" class="form-control">
-                                            @foreach($date_month as $month)
-                                                <option value="{{ $month }}" placeholder="Месяц">
-                                                    @if(App::isLocale('ru'))
-                                                         @lang("dates.month.$month")
-                                                    @endif
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                    @endif
-                                </div>
-
-                                <div class="col-md-2">
-                                    @if($date_year)
-                                        <select name="year" class="form-control">
-                                            @foreach($date_year as $year)
-                                                <option value="{{ $year }}" placeholder="Год">{{ $year }}</option>
-                                            @endforeach
-                                        </select>
-                                    @endif
-                                </div>
+        <form action=" //route('applications.store', ['applicator' => $applicator]) }}" class="form" method="POST">
+            {{ csrf_field() }}
+            <div class="js-step app-new-step active">
+                <div class="a-title a-title_mb">
+                    <div class="a-title__h3">Информация по заявке</div>
+                </div>
+                <div class="anew-form-wrapper">
+                    <fieldset class="form__fieldset">
+                        <div class="info-title">Период отгрузки</div>
+                        <div class="flex date">
+                            <div class="date__month">
+                                <select name="date_month" class="js-default-select form__select-large">
+                                    @foreach($date_month as $month)
+                                        <option value="{{ $month }}" placeholder="Месяц">
+                                            @if(App::isLocale('ru'))
+                                                @lang("dates.month.$month")
+                                            @endif
+                                        </option>
+                                    @endforeach
+                                </select>
                             </div>
-
-                            <div class="form-group">
-                                <label for="consigneer_id" class="col-md-4 control-label">Грузополучатель</label>
-                                <div class="col-md-6">
-                                    @if($applicator->getConsigneers())
-                                        <select name="consigneer_id" class="form-control">
-                                            @foreach($applicator->getConsigneers() as $consigneer)
-                                                <option value="{{ $consigneer->id }}">{{ $consigneer->name }}</option>
-                                            @endforeach
-                                        </select>
-                                    @endif
-                                    @if ($errors->has('consigneer_id'))
-                                        <span class="help-block">
-                                            <strong>{{ $errors->first('consigneer_id') }}</strong>
-                                        </span>
-                                    @endif
-                                </div>
+                            <div class="date__year">
+                                <select name="date_year" class="js-default-select form__select-large">
+                                    @foreach($date_year as $year)
+                                        <option value="{{ $year }}" placeholder="Год">{{ $year }}</option>
+                                    @endforeach
+                                </select>
                             </div>
-
-                            <div class="form-group">
-                                <label for="provider_id" class="col-md-4 control-label">Поставщик</label>
-                                <div class="col-md-6">
-                                    @if($applicator->counter->providers)
-                                        <select name="provider_id" class="form-control">
-                                            @foreach($applicator->counter->providers as $provider)
-                                                <option value="{{ $provider->id }}">{{ $provider->name }}</option>
-                                            @endforeach
-                                        </select>
-                                    @endif
-                                    @if ($errors->has('provider_id'))
-                                        <span class="help-block">
-                                            <strong>{{ $errors->first('provider_id') }}</strong>
-                                        </span>
-                                    @endif
-                                </div>
-                            </div>
-
-                            <div class="form-group">
-                                <div class="col-md-8 col-md-offset-4">
-                                    <button type="submit" class="btn btn-primary">Далее</button>
-                                    <a href="{{ route('applicators.show', ['applicator' => $applicator]) }}" class="cancel">Отмена</a>
-                                </div>
-                            </div>
-                        </form>
+                        </div>
+                    </fieldset>
+                    <fieldset class="form__fieldset form__fieldset_mb">
+                        <div class="info-title">Получатель</div>
+                        @if($applicator->getConsigneers())
+                            <select name="consigneer_id" class="js-default-select form__select-large">
+                                @foreach($applicator->getConsigneers() as $consigneer)
+                                    <option value="{{ $consigneer->id }}">{{ $consigneer->name }}</option>
+                                @endforeach
+                            </select>
+                        @endif
+                    </fieldset>
+                    <fieldset class="form__fieldset">
+                        <div class="info-title">Поставщик</div>
+                        @if($applicator->counter->providers)
+                            <select name="provider_id" class="js-default-select form__select-large">
+                                @foreach($applicator->counter->providers as $provider)
+                                    <option value="{{ $provider->id }}">{{ $provider->name }}</option>
+                                @endforeach
+                            </select>
+                        @endif
+                    </fieldset>
+                    <div class="anew-next">
+                        <button type="submit" class="btn btn_next">Далее</button>
                     </div>
                 </div>
             </div>
-        </div>
+        </form>
+
+        @isset($data)
+            @include('templates.applications.create_step2', ['data' => $data])
+        @endisset
     </div>
 
-
 @endsection
+
+@push('script')
+    <script src="{{ asset('js/app.js') }}"></script>
+@endpush
