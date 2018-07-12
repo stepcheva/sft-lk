@@ -54,8 +54,12 @@
                 <div class="b-topnav js-mobile-menu">
                     <ul class="b-topnav__list">
 
-                        @if(isset($user) || isset($applicator))
+                        @if(isset($user))
                             @include('layouts.menu', ['user' => $user])
+                        @elseif(isset($applicator))
+                            @include('layouts.menu', ['user' => $applicator->user])
+                        @elseif(isset($application))
+                            @include('layouts.menu', ['user' => $application->applicator->user])
                         @endif
 
                     </ul>

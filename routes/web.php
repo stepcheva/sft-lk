@@ -52,7 +52,9 @@ Route::get('transports/edit/{id}', 'LunitsController@editTransports')->name('edi
 Route::post('transports/add/{lunit}', 'LunitsController@addTransports')->name('add.user.transport');
 Route::put('transports/{id}', 'LunitsController@updateTransports')->name('update.transport');
 
-
+//работа с календарем
+Route::get('{application}/calendar', 'ApplicationController@getCalendar')->name('applications.calendar');
+Auth::routes();
 
 /*
 Route::group(['namespace' => 'Admin'], function () {

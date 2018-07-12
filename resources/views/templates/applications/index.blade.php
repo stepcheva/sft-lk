@@ -26,12 +26,15 @@
                     @foreach($applications as $application)
                     <div class="apps__item js-app-item">
                             <div class="apps__inner">
-                                <span class="apps__number">Заявка №{{ $application->number }}</span>
+                                <span class="apps__number">Заявка №{{ $application->id }}</span>
                                 <span class="apps__date">от {{ $application->created_at->format('d.m.Y') }}</span>
+
                                 <div class="apps__toolbar">
                                     <a href="{{ route('applications.duplicate', ['application' => $application]) }}" class="icon apps__icon apps__icon_copy"></a>
-                                    <div class="icon apps__icon apps__icon_calendar js-calendar-show"></div>
+                                    <a href="{{ route('applications.calendar', ['application' => $application]) }}" class="icon apps__icon apps__icon_calendar"></a>
+                                    <!--<div class="icon apps__icon apps__icon_calendar js-calendar-show" data-id=""></div>-->
                                 </div>
+
                                 <div class="apps__block apps__block_top">
                                     <div class="apps__block-col">
                                         <div class="apps__data-title">
@@ -85,23 +88,21 @@
                                     </span>
                                 </div>
                                 <div class="apps__more">
-                                    <form method="POST" action="{{ route('applications.destroy',  ['application' => $application, 'applicator' => $application->applicator ]) }}">
-                                        <input type="hidden" name="_method" value="delete"/>
-                                        <input type="hidden" name="_token" value="{{csrf_token()}}">
-                                        <button type="submit">Удалить заявку</button>
-                                    </form>
+                                    @empty($application->lunits)
+                                        <form method="POST" action="{{ route('applications.destroy',  ['application' => $application, 'applicator' => $application->applicator ]) }}">
+                                            <input type="hidden" name="_method" value="delete"/>
+                                            <input type="hidden" name="_token" value="{{csrf_token()}}">
+                                            <button type="submit">Удалить заявку</button>
+                                        </form>
+                                    @endempty
                                     <a class="apps__details-btn" href="{{ route('applications.show',  ['application' => $application, 'applicator' => $applicator]) }}">Детали заявки</a>
                                 </div>
                             </div>
-                        </div>
+                    </div>
                     @endforeach
                 </div>
             </li>
         </ul>
     </div>
-    @include('templates.applications.calendar')
 @endsection
 
-@section('hidden')
-    @include('templates.applications.shipments')
-@endsection

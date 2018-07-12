@@ -19,6 +19,7 @@ let token = document.head.querySelector('meta[name="csrf-token"]');
 
 Vue.component('consigneer-component', require('./components/ConsigneerComponent.vue'));
 Vue.component('fileupload-component', require('./components/FileuploadComponent.vue'));
+//Vue.component('transportupload-component', require('./components/TransportuploadComponent.vue'));
 Vue.component('select-product', require('./components/SelectProduct.vue'));
 Vue.component('example-component', require('./components/ExampleComponent.vue'));
 

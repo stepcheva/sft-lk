@@ -926,6 +926,9 @@ input[type="checkbox"]:checked+label::after {
             font-size: 20px;
             padding: 15px 15px;
         }
+        &_alert {
+            border: 1px solid #d32f2f;
+        }
         &_bold {
             font-weight: 700;
         }
@@ -1003,15 +1006,15 @@ input[type="checkbox"]:checked+label::after {
 
 .icon-stock {
     &:before {
-        width: 25px;
-        height: 14px;
+        width: 18px;
+        height: 18px;
         background-image: url('/img/icons/icon_stock.svg');
     }
 }
 
 .icon-air {
     &:before {
-        width: 25px;
+        width: 23px;
         height: 14px;
         background-image: url('/img/icons/icon_air.svg');
     }
@@ -2495,8 +2498,8 @@ flex-direction: row;
     display: block;
     @include helc;
     color: rgb(211, 47, 47);
-    font-size: 12px;
-    line-height: 16px;
+    font-size: 16px;
+    line-height: 22px;
 }
 
 .login {

@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Mail;
 
 class Application extends Model
 {
+    public $calendarDate = null;
+
     protected $fillable = [
         'number',
         'period',
@@ -80,6 +83,7 @@ class Application extends Model
         return $this->lunits()->where('decada', $decada)->get();
     }
 
+
     public function setPrefixNumber($arg = 'admin')
     {
         $prefix = (int) explode('/', $this->number);
@@ -110,5 +114,10 @@ class Application extends Model
         });
 
         return $send;
+    }
+
+    public function setCalendarDate()
+    {
+        return Carbon::createFromFormat('Y-m-d', $this->period);
     }
 }

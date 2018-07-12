@@ -164,7 +164,7 @@
                                         </div>
 
                                         <div class="sh-toolbar">
-                                            <a href="" class="btn btn_inversed btn_small btn_full">Перейти в
+                                            <a href="{{ route('applications.calendar', ['application' => $application]) }}" class="btn btn_inversed btn_small btn_full">Перейти в
                                                 календарь</a>
                                             <a href="#shipmentDetailPopup" class="btn btn_small btn_full js-modal">Отменить
                                                 / Изменить</a>

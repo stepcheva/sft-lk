@@ -352,5 +352,16 @@ class ApplicationController extends Controller
 
         return $lunit->units;
     }
+    public function getCalendar(Application $application)
+    {
+        $shipments = [];
+        $lunits = $application->lunits;
+        foreach($lunits as $lunit) {
+            $key = Carbon::createFromFormat('Y-m-d', $lunit->plan_data)->day;
+            $shipments["$key"][] = $lunit;
+        }
+        $endOfMonth = $application->setCalendarDate()->endOfMonth()->day;
+        return view('templates.applications.calendar', compact('application', 'shipments', 'endOfMonth'));
+    }
 
 }

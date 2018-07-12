@@ -12,14 +12,12 @@ class Lunit extends Model
         'status',
         'volume',
         'price',
+        'decada',
         'plan_data',
         'shipment_data',
         'delivery_data',
         'consigneer_id',
         'delivery_id',
-    ];
-    protected $hidden = [
-        'delivery_id'
     ];
 
     public function application()
