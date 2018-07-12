@@ -33,9 +33,7 @@ class UsersObserver
 
     public function updated(User $user)
     {
-        $changes = $this->getChangesForEmail($user);
-
-        if (isset($changes)) {
+        if ($this->getChangesForEmail($user)) {
             session()->flash('success', 'Уведомление об изменении учетных данных отправлено на email');
         }
         return true;
@@ -43,16 +41,18 @@ class UsersObserver
 
     public function getChangesForEmail(User $user) {
         $changes = array_diff($user->getOriginal(), $user->getAttributes());
-        if (!empty($changes)) {
+        if (empty($changes) || array_key_exists('remember_token', $changes))
+        {
+            return false;
+        } else {
+
             $info = 'Учетные данные изменены.';
 
                 if (array_key_exists('password', $changes)) {
                   $user->setPasswordUntil();
                   $info .= " Ваш пароль изменен. Новый пароль действителен до $user->passwordUntil.";
                   $mailto = $user->email;
-                }
-
-                if (array_key_exists('email', $changes )) {
+                } elseif (array_key_exists('email', $changes )) {
                   $info .= ' Ваш логин изменен администратором сайта.';
                   $mailto = $user->getOriginal()['email'];
                 }
@@ -63,8 +63,8 @@ class UsersObserver
             $url = ($prefix == 'users') ? url("applicators/{$user->id}") : url("admins/{$user->id}");
 
             Mail::send(new SendMail($mailto, $subject, $info, $url, $view));
-            return true;
 
-        } else return false;
+            return true;
+        }
     }
 }

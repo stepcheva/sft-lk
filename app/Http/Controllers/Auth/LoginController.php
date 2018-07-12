@@ -25,7 +25,7 @@ class LoginController extends Controller
         $password = $request->password;
         $user = User::auth($email, $password);
         if ($user) {
-            $this->guard()->login($user);
+            Auth::login($user);
             return redirect()->route('applicators.show', ['applicator_id' => $user->applicator->id]);
         } else {
             return redirect()->route('login');
