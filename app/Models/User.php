@@ -2,12 +2,15 @@
 
 namespace App\Models;
 
+
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Session;
+use App\Notifications\SendResetPasswordLink;
 
-class User extends Model
+class User extends Authenticatable
 {
     use Notifiable;
 
@@ -65,8 +68,12 @@ class User extends Model
     public static function auth($email, $password)
     {
         $user = self::where(['email' => $email, 'password' => $password])->first();
-        dd($user);
-        if (!is_null($user) && $user->passwordIsValid()) {
+
+        if (is_null($user)){
+            Session::flash('error', 'Не верные логин или пароль');
+        } elseif(!$user->passwordIsValid()) {
+            Session::flash('error', 'Пароль не действителен');
+        } else {
             Session::put('user', true);
             return $user;
         }
@@ -77,5 +84,11 @@ class User extends Model
     {
         Session::forget('user');
     }
-}
 
+    public function sendPasswordResetNotification($token)
+    {
+        $this->notify(new SendResetPasswordLink($token));
+    }
+
+
+}

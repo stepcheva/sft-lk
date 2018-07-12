@@ -30,13 +30,14 @@ class UserRequest extends FormRequest
     {
 
         return [
+            'token' => 'required',
             'lastName' => 'required|max:50|alpha',
             'firstName' => 'required|max:50|alpha',
             'middleName' => 'required|max:50|alpha',
             'email' => 'required|email',
                     Rule::unique('users')->ignore($user->id),
-            'phone' => 'required|min:5|max:25|regex:[(\s*)?(\+)?([- _():=+]?\d[- _():=+]?){10,14}(\s*)?]',
-            'password' => 'required|min:6|max:50|regex:/\w/',
+            'phone' => 'required|min:5|max:20|regex:[(\s*)?(\+)?([- _():=+]?\d[- _():=+]?){10,14}(\s*)?]',
+            'password' => 'required|confirmed|min:6|max:20|regex:/\w/',
             'passwordUntil' => 'date',
             'counter_id' => 'required|integer|exists:counters,id',
         ];
@@ -51,9 +52,12 @@ class UserRequest extends FormRequest
             'email.max' => 'Не более 50 символов',
             'counter_id.exists' => 'Нет доступа к таблице Контрагентов',
             'password.min' => 'Не менее 6 символов',
+            'password.regex' => 'Пароль состоит только из букв и цифр',
+            'password.confirmed' => 'Пароли не совпадают',
+            'password.max' => 'Не более 20 символов',
             'alpha' => 'Допускаются только буквы',
             'phone.regex' => 'Поле содержит цифры 0-9, символы: +()-',
-            'password.regex' => 'Пароль состоит из букв и цифр',
+            'phone.max' => '20 цифр в международном формате',
         ];
     }
 }
