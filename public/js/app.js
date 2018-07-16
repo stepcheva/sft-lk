@@ -60,7 +60,7 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 10);
+/******/ 	return __webpack_require__(__webpack_require__.s = 16);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -71,7 +71,7 @@
 
 
 var bind = __webpack_require__(5);
-var isBuffer = __webpack_require__(17);
+var isBuffer = __webpack_require__(23);
 
 /*global toString:true*/
 
@@ -277,7 +277,7 @@ function forEach(obj, fn) {
   }
 
   // Force an array if not already something iterable
-  if (typeof obj !== 'object' && !isArray(obj)) {
+  if (typeof obj !== 'object') {
     /*eslint no-param-reassign:0*/
     obj = [obj];
   }
@@ -375,30 +375,32 @@ module.exports = {
 
 /***/ }),
 /* 1 */
-/***/ (function(module, exports) {
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
 
+"use strict";
+/* harmony export (immutable) */ __webpack_exports__["a"] = normalizeComponent;
 /* globals __VUE_SSR_CONTEXT__ */
 
-// IMPORTANT: Do NOT use ES2015 features in this file.
+// IMPORTANT: Do NOT use ES2015 features in this file (except for modules).
 // This module is a runtime utility for cleaner component module output and will
 // be included in the final webpack user bundle.
 
-module.exports = function normalizeComponent (
-  rawScriptExports,
-  compiledTemplate,
+function normalizeComponent (
+  scriptExports,
+  render,
+  staticRenderFns,
   functionalTemplate,
   injectStyles,
   scopeId,
-  moduleIdentifier /* server only */
+  moduleIdentifier, /* server only */
+  shadowMode /* vue-cli only */
 ) {
-  var esModule
-  var scriptExports = rawScriptExports = rawScriptExports || {}
+  scriptExports = scriptExports || {}
 
   // ES6 modules interop
-  var type = typeof rawScriptExports.default
+  var type = typeof scriptExports.default
   if (type === 'object' || type === 'function') {
-    esModule = rawScriptExports
-    scriptExports = rawScriptExports.default
+    scriptExports = scriptExports.default
   }
 
   // Vue.extend constructor export interop
@@ -407,9 +409,9 @@ module.exports = function normalizeComponent (
     : scriptExports
 
   // render functions
-  if (compiledTemplate) {
-    options.render = compiledTemplate.render
-    options.staticRenderFns = compiledTemplate.staticRenderFns
+  if (render) {
+    options.render = render
+    options.staticRenderFns = staticRenderFns
     options._compiled = true
   }
 
@@ -448,34 +450,32 @@ module.exports = function normalizeComponent (
     // never gets called
     options._ssrRegister = hook
   } else if (injectStyles) {
-    hook = injectStyles
+    hook = shadowMode
+      ? function () { injectStyles.call(this, this.$root.$options.shadowRoot) }
+      : injectStyles
   }
 
   if (hook) {
-    var functional = options.functional
-    var existing = functional
-      ? options.render
-      : options.beforeCreate
-
-    if (!functional) {
-      // inject component registration as beforeCreate hook
-      options.beforeCreate = existing
-        ? [].concat(existing, hook)
-        : [hook]
-    } else {
+    if (options.functional) {
       // for template-only hot-reload because in that case the render fn doesn't
       // go through the normalizer
       options._injectStyles = hook
       // register for functioal component in vue file
+      var originalRender = options.render
       options.render = function renderWithStyleInjection (h, context) {
         hook.call(context)
-        return existing(h, context)
+        return originalRender(h, context)
       }
+    } else {
+      // inject component registration as beforeCreate hook
+      var existing = options.beforeCreate
+      options.beforeCreate = existing
+        ? [].concat(existing, hook)
+        : [hook]
     }
   }
 
   return {
-    esModule: esModule,
     exports: scriptExports,
     options: options
   }
@@ -517,7 +517,7 @@ module.exports = g;
 /* WEBPACK VAR INJECTION */(function(process) {
 
 var utils = __webpack_require__(0);
-var normalizeHeaderName = __webpack_require__(19);
+var normalizeHeaderName = __webpack_require__(25);
 
 var DEFAULT_CONTENT_TYPE = {
   'Content-Type': 'application/x-www-form-urlencoded'
@@ -825,12 +825,12 @@ module.exports = function bind(fn, thisArg) {
 
 
 var utils = __webpack_require__(0);
-var settle = __webpack_require__(20);
-var buildURL = __webpack_require__(22);
-var parseHeaders = __webpack_require__(23);
-var isURLSameOrigin = __webpack_require__(24);
+var settle = __webpack_require__(26);
+var buildURL = __webpack_require__(28);
+var parseHeaders = __webpack_require__(29);
+var isURLSameOrigin = __webpack_require__(30);
 var createError = __webpack_require__(7);
-var btoa = (typeof window !== 'undefined' && window.btoa && window.btoa.bind(window)) || __webpack_require__(25);
+var btoa = (typeof window !== 'undefined' && window.btoa && window.btoa.bind(window)) || __webpack_require__(31);
 
 module.exports = function xhrAdapter(config) {
   return new Promise(function dispatchXhrRequest(resolve, reject) {
@@ -890,7 +890,7 @@ module.exports = function xhrAdapter(config) {
       var responseData = !config.responseType || config.responseType === 'text' ? request.responseText : request.response;
       var response = {
         data: responseData,
-        // IE sends 1223 instead of 204 (https://github.com/mzabriskie/axios/issues/201)
+        // IE sends 1223 instead of 204 (https://github.com/axios/axios/issues/201)
         status: request.status === 1223 ? 204 : request.status,
         statusText: request.status === 1223 ? 'No Content' : request.statusText,
         headers: responseHeaders,
@@ -927,7 +927,7 @@ module.exports = function xhrAdapter(config) {
     // This is only done if running in a standard browser environment.
     // Specifically not if we're in a web worker, or react-native.
     if (utils.isStandardBrowserEnv()) {
-      var cookies = __webpack_require__(26);
+      var cookies = __webpack_require__(32);
 
       // Add xsrf header
       var xsrfValue = (config.withCredentials || isURLSameOrigin(config.url)) && config.xsrfCookieName ?
@@ -1011,7 +1011,7 @@ module.exports = function xhrAdapter(config) {
 "use strict";
 
 
-var enhanceError = __webpack_require__(21);
+var enhanceError = __webpack_require__(27);
 
 /**
  * Create an Error with the specified message, config, error code, request and response.
@@ -1069,14 +1069,2123 @@ module.exports = Cancel;
 
 /***/ }),
 /* 10 */
-/***/ (function(module, exports, __webpack_require__) {
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
 
-__webpack_require__(11);
-module.exports = __webpack_require__(46);
+"use strict";
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
 
+/* harmony default export */ __webpack_exports__["a"] = ({
+    props: ['applicator', 'productranges'],
+
+    data: function data() {
+        return {
+            selected: '',
+            options: [],
+            products: [],
+            showProducts: '',
+            showSelect: 'false'
+        };
+    },
+    mounted: function mounted() {
+        this.getConsigneers();
+    },
+
+
+    methods: {
+        getConsigneers: function getConsigneers() {
+            var _this = this;
+
+            var route = 'http://localhost/sft-lk/public/user/' + this.applicator + '/consigneers';
+            axios.get(route).then(function (response) {
+                _this.options = response.data.consigneers;
+                console.log(_this.options.length);
+                if (_this.options.length > 1) {
+                    _this.showSelect = true;
+                } else _this.showSelect = false;
+                _this.selected = _this.options[0];
+                _this.getProduct();
+            }).catch(function (error) {
+                console.log(error);
+            });
+        },
+        getProduct: function getProduct() {
+            var _this2 = this;
+
+            var route = 'http://localhost/sft-lk/public/user/' + this.applicator + '/get/productranges/' + this.selected.id;
+            axios.get(route).then(function (response) {
+                _this2.products = response.data.products;
+                if (_this2.products.length > 0) {
+                    _this2.showProducts = true;
+                    console.log(response.data.products);
+                }
+            }).catch(function (error) {
+                _this2.showProducts = false;
+                console.log(error);
+            });
+        }
+    }
+});
 
 /***/ }),
 /* 11 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+
+/* harmony default export */ __webpack_exports__["a"] = ({
+    props: ['lunit'],
+
+    data: function data() {
+        return {
+            file: '',
+            files: []
+        };
+    },
+    mounted: function mounted() {},
+
+
+    methods: {
+        getFiles: function getFiles() {
+            var _this = this;
+
+            axios.get('http://localhost/sft-lk/public/' + this.lunit + '/files').then(function (response) {
+                _this.files = response.data.files;
+                console.log(response);
+            }).catch(function (error) {
+                console.log(error);
+            });
+        },
+        uploadFile: function uploadFile(e) {
+            var _this2 = this;
+
+            this.file = e.target.files[0];
+            var formData = new FormData();
+            formData.append('file', this.file);
+            var route = 'http://localhost/sft-lk/public/files/add/' + this.lunit;
+            axios.post(route, formData).then(function (response) {
+                console.log(response.data);
+                _this2.files.push(response.data.file);
+            }).catch(function (error) {
+                console.log(error);
+            });
+        }
+    }
+});
+
+/***/ }),
+/* 12 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+
+/* harmony default export */ __webpack_exports__["a"] = ({
+    data: function data() {
+        return {
+            title: 'Новая заявка',
+            step: '0',
+            infoOnApplication: {
+                shipmentPeriod: {
+                    month: {
+                        name: 'Месяц',
+                        list: [{ name: 'Январь', val: 'month-01' }, { name: 'Февраль', val: 'month-02' }, { name: 'Март', val: 'month-03' }, { name: 'Апрель', val: 'month-04' }, { name: 'Май', val: 'month-05' }, { name: 'Июнь', val: 'month-06' }, { name: 'Июль', val: 'month-07' }, { name: 'Август', val: 'month-08' }, { name: 'Сентябрь', val: 'month-09' }, { name: 'Октябрь', val: 'month-10' }, { name: 'Ноябрь', val: 'month-11' }, { name: 'Декабрь', val: 'month-12' }],
+                        selected: -1
+                    },
+                    year: {
+                        name: 'Год',
+                        list: [{ name: '2018', val: 'year-2018' }, { name: '2019', val: 'year-2019' }],
+                        selected: -1
+                    }
+                },
+                recipient: {
+                    name: 'Получатель',
+                    list: [{ name: 'АО "Фамадар Картона Лимитед"', val: 'АО "Фамадар Картона Лимитед"' }],
+                    selected: -1
+                },
+                provider: {
+                    name: 'Поставщик',
+                    list: [{ name: 'АО «Каменская БКФ»', val: 'АО «Каменская БКФ»' }],
+                    selected: -1
+                },
+                deliveryMethod: {
+                    name: 'Способ доставки',
+                    list: [{ name: 'Автомобильная', val: 'delivery-type-01' }, { name: 'Железнодорожная', val: 'delivery-type-02' }, { name: 'Самовывоз', val: 'delivery-type-03' }],
+                    selected: -1
+                }
+            },
+            products: {
+                name: 'Товар',
+                selected: -1,
+                list: [{
+                    name: 'M 100 (1700мм)',
+                    val: '01',
+                    data: {
+                        decade: {
+                            name: 'Декада',
+                            selected: -1,
+                            list: [{ name: '1-ая декада', val: 'product-decade_01' }, { name: '2-ая декада', val: 'product-decade_02' }, { name: '3-ая декада', val: 'product-decade_03' }]
+                        },
+                        volume: {
+                            name: 'Объём',
+                            val: '1500'
+                        },
+                        diameter: {
+                            name: 'Диаметр рулона',
+                            selected: -1,
+                            list: [{ name: '1 330 мм', val: 'product-diameter_01' }]
+                        },
+                        price: {
+                            withDelivery: 32424,
+                            withoutDelivery: 30854
+                        }
+                    }
+                }, {
+                    name: 'M 100 (2000мм)',
+                    val: '01',
+                    data: {
+                        decade: {
+                            name: 'Декада',
+                            selected: -1,
+                            list: [{ name: '1-ая декада', val: 'product-decade_01' }, { name: '2-ая декада', val: 'product-decade_02' }, { name: '3-ая декада', val: 'product-decade_03' }]
+                        },
+                        volume: {
+                            name: 'Объём',
+                            val: '1500'
+                        },
+                        diameter: {
+                            name: 'Диаметр рулона',
+                            selected: -1,
+                            list: [{ name: '1 330 мм', val: 'product-diameter_01' }]
+                        },
+                        price: {
+                            withDelivery: 32424,
+                            withoutDelivery: 30854
+                        }
+                    }
+                }, {
+                    name: 'M 100 (2100мм)',
+                    val: '01',
+                    data: {
+                        decade: {
+                            name: 'Декада',
+                            selected: -1,
+                            list: [{ name: '1-ая декада', val: 'product-decade_01' }, { name: '2-ая декада', val: 'product-decade_02' }, { name: '3-ая декада', val: 'product-decade_03' }]
+                        },
+                        volume: {
+                            name: 'Объём',
+                            val: '1500'
+                        },
+                        diameter: {
+                            name: 'Диаметр рулона',
+                            selected: -1,
+                            list: [{ name: '1 330 мм', val: 'product-diameter_01' }]
+                        },
+                        price: {
+                            withDelivery: 32424,
+                            withoutDelivery: 30854
+                        }
+                    }
+                }, {
+                    name: 'M 100 (2200мм)',
+                    val: '01',
+                    data: {
+                        decade: {
+                            name: 'Декада',
+                            selected: -1,
+                            list: [{ name: '1-ая декада', val: 'product-decade_01' }, { name: '2-ая декада', val: 'product-decade_02' }, { name: '3-ая декада', val: 'product-decade_03' }]
+                        },
+                        volume: {
+                            name: 'Объём',
+                            val: '1500'
+                        },
+                        diameter: {
+                            name: 'Диаметр рулона',
+                            selected: -1,
+                            list: [{ name: '1 330 мм', val: 'product-diameter_01' }]
+                        },
+                        price: {
+                            withDelivery: 32424,
+                            withoutDelivery: 30854
+                        }
+                    }
+                }, {
+                    name: 'M 100 (2500мм)',
+                    val: '01',
+                    data: {
+                        decade: {
+                            name: 'Декада',
+                            selected: -1,
+                            list: [{ name: '1-ая декада', val: 'product-decade_01' }, { name: '2-ая декада', val: 'product-decade_02' }, { name: '3-ая декада', val: 'product-decade_03' }]
+                        },
+                        volume: {
+                            name: 'Объём',
+                            val: '1500'
+                        },
+                        diameter: {
+                            name: 'Диаметр рулона',
+                            selected: -1,
+                            list: [{ name: '1 330 мм', val: 'product-diameter_01' }]
+                        },
+                        price: {
+                            withDelivery: 32424,
+                            withoutDelivery: 30854
+                        }
+                    }
+                }, {
+                    name: 'M 110 (1700мм)',
+                    val: '01',
+                    data: {
+                        decade: {
+                            name: 'Декада',
+                            selected: -1,
+                            list: [{ name: '1-ая декада', val: 'product-decade_01' }, { name: '2-ая декада', val: 'product-decade_02' }, { name: '3-ая декада', val: 'product-decade_03' }]
+                        },
+                        volume: {
+                            name: 'Объём',
+                            val: '1500'
+                        },
+                        diameter: {
+                            name: 'Диаметр рулона',
+                            selected: -1,
+                            list: [{ name: '1 330 мм', val: 'product-diameter_01' }]
+                        },
+                        price: {
+                            withDelivery: 32424,
+                            withoutDelivery: 30854
+                        }
+                    }
+                }, {
+                    name: 'M 110 (2000мм)',
+                    val: '01',
+                    data: {
+                        decade: {
+                            name: 'Декада',
+                            selected: -1,
+                            list: [{ name: '1-ая декада', val: 'product-decade_01' }, { name: '2-ая декада', val: 'product-decade_02' }, { name: '3-ая декада', val: 'product-decade_03' }]
+                        },
+                        volume: {
+                            name: 'Объём',
+                            val: '1500'
+                        },
+                        diameter: {
+                            name: 'Диаметр рулона',
+                            selected: -1,
+                            list: [{ name: '1 330 мм', val: 'product-diameter_01' }]
+                        },
+                        price: {
+                            withDelivery: 32424,
+                            withoutDelivery: 30854
+                        }
+                    }
+                }, {
+                    name: 'M 110 (2100мм)',
+                    val: '01',
+                    data: {
+                        decade: {
+                            name: 'Декада',
+                            selected: -1,
+                            list: [{ name: '1-ая декада', val: 'product-decade_01' }, { name: '2-ая декада', val: 'product-decade_02' }, { name: '3-ая декада', val: 'product-decade_03' }]
+                        },
+                        volume: {
+                            name: 'Объём',
+                            val: '1500'
+                        },
+                        diameter: {
+                            name: 'Диаметр рулона',
+                            selected: -1,
+                            list: [{ name: '1 330 мм', val: 'product-diameter_01' }]
+                        },
+                        price: {
+                            withDelivery: 32424,
+                            withoutDelivery: 30854
+                        }
+                    }
+                }, {
+                    name: 'M 110 (2200мм)',
+                    val: '01',
+                    data: {
+                        decade: {
+                            name: 'Декада',
+                            selected: -1,
+                            list: [{ name: '1-ая декада', val: 'product-decade_01' }, { name: '2-ая декада', val: 'product-decade_02' }, { name: '3-ая декада', val: 'product-decade_03' }]
+                        },
+                        volume: {
+                            name: 'Объём',
+                            val: '1500'
+                        },
+                        diameter: {
+                            name: 'Диаметр рулона',
+                            selected: -1,
+                            list: [{ name: '1 330 мм', val: 'product-diameter_01' }]
+                        },
+                        price: {
+                            withDelivery: 32424,
+                            withoutDelivery: 30854
+                        }
+                    }
+                }, {
+                    name: 'M 110 (2500мм)',
+                    val: '01',
+                    data: {
+                        decade: {
+                            name: 'Декада',
+                            selected: -1,
+                            list: [{ name: '1-ая декада', val: 'product-decade_01' }, { name: '2-ая декада', val: 'product-decade_02' }, { name: '3-ая декада', val: 'product-decade_03' }]
+                        },
+                        volume: {
+                            name: 'Объём',
+                            val: '1500'
+                        },
+                        diameter: {
+                            name: 'Диаметр рулона',
+                            selected: -1,
+                            list: [{ name: '1 330 мм', val: 'product-diameter_01' }]
+                        },
+                        price: {
+                            withDelivery: 32424,
+                            withoutDelivery: 30854
+                        }
+                    }
+                }, {
+                    name: 'M 120 (1700мм)',
+                    val: '01',
+                    data: {
+                        decade: {
+                            name: 'Декада',
+                            selected: -1,
+                            list: [{ name: '1-ая декада', val: 'product-decade_01' }, { name: '2-ая декада', val: 'product-decade_02' }, { name: '3-ая декада', val: 'product-decade_03' }]
+                        },
+                        volume: {
+                            name: 'Объём',
+                            val: '1500'
+                        },
+                        diameter: {
+                            name: 'Диаметр рулона',
+                            selected: -1,
+                            list: [{ name: '1 330 мм', val: 'product-diameter_01' }]
+                        },
+                        price: {
+                            withDelivery: 32224,
+                            withoutDelivery: 30654
+                        }
+                    }
+                }, {
+                    name: 'M 120 (2000мм)',
+                    val: '01',
+                    data: {
+                        decade: {
+                            name: 'Декада',
+                            selected: -1,
+                            list: [{ name: '1-ая декада', val: 'product-decade_01' }, { name: '2-ая декада', val: 'product-decade_02' }, { name: '3-ая декада', val: 'product-decade_03' }]
+                        },
+                        volume: {
+                            name: 'Объём',
+                            val: '1500'
+                        },
+                        diameter: {
+                            name: 'Диаметр рулона',
+                            selected: -1,
+                            list: [{ name: '1 330 мм', val: 'product-diameter_01' }]
+                        },
+                        price: {
+                            withDelivery: 32224,
+                            withoutDelivery: 30654
+                        }
+                    }
+                }, {
+                    name: 'M 120 (2100мм)',
+                    val: '01',
+                    data: {
+                        decade: {
+                            name: 'Декада',
+                            selected: -1,
+                            list: [{ name: '1-ая декада', val: 'product-decade_01' }, { name: '2-ая декада', val: 'product-decade_02' }, { name: '3-ая декада', val: 'product-decade_03' }]
+                        },
+                        volume: {
+                            name: 'Объём',
+                            val: '1500'
+                        },
+                        diameter: {
+                            name: 'Диаметр рулона',
+                            selected: -1,
+                            list: [{ name: '1 330 мм', val: 'product-diameter_01' }]
+                        },
+                        price: {
+                            withDelivery: 32224,
+                            withoutDelivery: 30654
+                        }
+                    }
+                }, {
+                    name: 'M 120 (2200мм)',
+                    val: '01',
+                    data: {
+                        decade: {
+                            name: 'Декада',
+                            selected: -1,
+                            list: [{ name: '1-ая декада', val: 'product-decade_01' }, { name: '2-ая декада', val: 'product-decade_02' }, { name: '3-ая декада', val: 'product-decade_03' }]
+                        },
+                        volume: {
+                            name: 'Объём',
+                            val: '1500'
+                        },
+                        diameter: {
+                            name: 'Диаметр рулона',
+                            selected: -1,
+                            list: [{ name: '1 330 мм', val: 'product-diameter_01' }]
+                        },
+                        price: {
+                            withDelivery: 32224,
+                            withoutDelivery: 30654
+                        }
+                    }
+                }, {
+                    name: 'M 120 (2500мм)',
+                    val: '01',
+                    data: {
+                        decade: {
+                            name: 'Декада',
+                            selected: -1,
+                            list: [{ name: '1-ая декада', val: 'product-decade_01' }, { name: '2-ая декада', val: 'product-decade_02' }, { name: '3-ая декада', val: 'product-decade_03' }]
+                        },
+                        volume: {
+                            name: 'Объём',
+                            val: '1500'
+                        },
+                        diameter: {
+                            name: 'Диаметр рулона',
+                            selected: -1,
+                            list: [{ name: '1 330 мм', val: 'product-diameter_01' }]
+                        },
+                        price: {
+                            withDelivery: 32224,
+                            withoutDelivery: 30654
+                        }
+                    }
+                }, {
+                    name: 'M 135 (1700мм)',
+                    val: '01',
+                    data: {
+                        decade: {
+                            name: 'Декада',
+                            selected: -1,
+                            list: [{ name: '1-ая декада', val: 'product-decade_01' }, { name: '2-ая декада', val: 'product-decade_02' }, { name: '3-ая декада', val: 'product-decade_03' }]
+                        },
+                        volume: {
+                            name: 'Объём',
+                            val: '1500'
+                        },
+                        diameter: {
+                            name: 'Диаметр рулона',
+                            selected: -1,
+                            list: [{ name: '1 330 мм', val: 'product-diameter_01' }]
+                        },
+                        price: {
+                            withDelivery: 32024,
+                            withoutDelivery: 30454
+                        }
+                    }
+                }, {
+                    name: 'M 135 (2000мм)',
+                    val: '01',
+                    data: {
+                        decade: {
+                            name: 'Декада',
+                            selected: -1,
+                            list: [{ name: '1-ая декада', val: 'product-decade_01' }, { name: '2-ая декада', val: 'product-decade_02' }, { name: '3-ая декада', val: 'product-decade_03' }]
+                        },
+                        volume: {
+                            name: 'Объём',
+                            val: '1500'
+                        },
+                        diameter: {
+                            name: 'Диаметр рулона',
+                            selected: -1,
+                            list: [{ name: '1 330 мм', val: 'product-diameter_01' }]
+                        },
+                        price: {
+                            withDelivery: 32024,
+                            withoutDelivery: 30454
+                        }
+                    }
+                }, {
+                    name: 'M 135 (2100мм)',
+                    val: '01',
+                    data: {
+                        decade: {
+                            name: 'Декада',
+                            selected: -1,
+                            list: [{ name: '1-ая декада', val: 'product-decade_01' }, { name: '2-ая декада', val: 'product-decade_02' }, { name: '3-ая декада', val: 'product-decade_03' }]
+                        },
+                        volume: {
+                            name: 'Объём',
+                            val: '1500'
+                        },
+                        diameter: {
+                            name: 'Диаметр рулона',
+                            selected: -1,
+                            list: [{ name: '1 330 мм', val: 'product-diameter_01' }]
+                        },
+                        price: {
+                            withDelivery: 32024,
+                            withoutDelivery: 30454
+                        }
+                    }
+                }, {
+                    name: 'M 135 (2200мм)',
+                    val: '01',
+                    data: {
+                        decade: {
+                            name: 'Декада',
+                            selected: -1,
+                            list: [{ name: '1-ая декада', val: 'product-decade_01' }, { name: '2-ая декада', val: 'product-decade_02' }, { name: '3-ая декада', val: 'product-decade_03' }]
+                        },
+                        volume: {
+                            name: 'Объём',
+                            val: '1500'
+                        },
+                        diameter: {
+                            name: 'Диаметр рулона',
+                            selected: -1,
+                            list: [{ name: '1 330 мм', val: 'product-diameter_01' }]
+                        },
+                        price: {
+                            withDelivery: 32024,
+                            withoutDelivery: 30454
+                        }
+                    }
+                }, {
+                    name: 'M 135 (2500мм)',
+                    val: '01',
+                    data: {
+                        decade: {
+                            name: 'Декада',
+                            selected: -1,
+                            list: [{ name: '1-ая декада', val: 'product-decade_01' }, { name: '2-ая декада', val: 'product-decade_02' }, { name: '3-ая декада', val: 'product-decade_03' }]
+                        },
+                        volume: {
+                            name: 'Объём',
+                            val: '1500'
+                        },
+                        diameter: {
+                            name: 'Диаметр рулона',
+                            selected: -1,
+                            list: [{ name: '1 330 мм', val: 'product-diameter_01' }]
+                        },
+                        price: {
+                            withDelivery: 32024,
+                            withoutDelivery: 30454
+                        }
+                    }
+                }, {
+                    name: 'M 150 (1700мм)',
+                    val: '01',
+                    data: {
+                        decade: {
+                            name: 'Декада',
+                            selected: -1,
+                            list: [{ name: '1-ая декада', val: 'product-decade_01' }, { name: '2-ая декада', val: 'product-decade_02' }, { name: '3-ая декада', val: 'product-decade_03' }]
+                        },
+                        volume: {
+                            name: 'Объём',
+                            val: '1500'
+                        },
+                        diameter: {
+                            name: 'Диаметр рулона',
+                            selected: -1,
+                            list: [{ name: '1 330 мм', val: 'product-diameter_01' }]
+                        },
+                        price: {
+                            withDelivery: 31824,
+                            withoutDelivery: 30254
+                        }
+                    }
+                }, {
+                    name: 'M 150 (2000мм)',
+                    val: '01',
+                    data: {
+                        decade: {
+                            name: 'Декада',
+                            selected: -1,
+                            list: [{ name: '1-ая декада', val: 'product-decade_01' }, { name: '2-ая декада', val: 'product-decade_02' }, { name: '3-ая декада', val: 'product-decade_03' }]
+                        },
+                        volume: {
+                            name: 'Объём',
+                            val: '1500'
+                        },
+                        diameter: {
+                            name: 'Диаметр рулона',
+                            selected: -1,
+                            list: [{ name: '1 330 мм', val: 'product-diameter_01' }]
+                        },
+                        price: {
+                            withDelivery: 31824,
+                            withoutDelivery: 30254
+                        }
+                    }
+                }, {
+                    name: 'M 150 (2100мм)',
+                    val: '01',
+                    data: {
+                        decade: {
+                            name: 'Декада',
+                            selected: -1,
+                            list: [{ name: '1-ая декада', val: 'product-decade_01' }, { name: '2-ая декада', val: 'product-decade_02' }, { name: '3-ая декада', val: 'product-decade_03' }]
+                        },
+                        volume: {
+                            name: 'Объём',
+                            val: '1500'
+                        },
+                        diameter: {
+                            name: 'Диаметр рулона',
+                            selected: -1,
+                            list: [{ name: '1 330 мм', val: 'product-diameter_01' }]
+                        },
+                        price: {
+                            withDelivery: 31824,
+                            withoutDelivery: 30254
+                        }
+                    }
+                }, {
+                    name: 'M 150 (2200мм)',
+                    val: '01',
+                    data: {
+                        decade: {
+                            name: 'Декада',
+                            selected: -1,
+                            list: [{ name: '1-ая декада', val: 'product-decade_01' }, { name: '2-ая декада', val: 'product-decade_02' }, { name: '3-ая декада', val: 'product-decade_03' }]
+                        },
+                        volume: {
+                            name: 'Объём',
+                            val: '1500'
+                        },
+                        diameter: {
+                            name: 'Диаметр рулона',
+                            selected: -1,
+                            list: [{ name: '1 330 мм', val: 'product-diameter_01' }]
+                        },
+                        price: {
+                            withDelivery: 31824,
+                            withoutDelivery: 30254
+                        }
+                    }
+                }, {
+                    name: 'M 150 (2500мм)',
+                    val: '01',
+                    data: {
+                        decade: {
+                            name: 'Декада',
+                            selected: -1,
+                            list: [{ name: '1-ая декада', val: 'product-decade_01' }, { name: '2-ая декада', val: 'product-decade_02' }, { name: '3-ая декада', val: 'product-decade_03' }]
+                        },
+                        volume: {
+                            name: 'Объём',
+                            val: '1500'
+                        },
+                        diameter: {
+                            name: 'Диаметр рулона',
+                            selected: -1,
+                            list: [{ name: '1 330 мм', val: 'product-diameter_01' }]
+                        },
+                        price: {
+                            withDelivery: 31824,
+                            withoutDelivery: 30254
+                        }
+                    }
+                }, {
+                    name: 'M3 100 (1700мм)',
+                    val: '01',
+                    data: {
+                        decade: {
+                            name: 'Декада',
+                            selected: -1,
+                            list: [{ name: '1-ая декада', val: 'product-decade_01' }, { name: '2-ая декада', val: 'product-decade_02' }, { name: '3-ая декада', val: 'product-decade_03' }]
+                        },
+                        volume: {
+                            name: 'Объём',
+                            val: '1500'
+                        },
+                        diameter: {
+                            name: 'Диаметр рулона',
+                            selected: -1,
+                            list: [{ name: '1 330 мм', val: 'product-diameter_01' }]
+                        },
+                        price: {
+                            withDelivery: 25750,
+                            withoutDelivery: 24180
+                        }
+                    }
+                }, {
+                    name: 'M3 100 (2000мм)',
+                    val: '01',
+                    data: {
+                        decade: {
+                            name: 'Декада',
+                            selected: -1,
+                            list: [{ name: '1-ая декада', val: 'product-decade_01' }, { name: '2-ая декада', val: 'product-decade_02' }, { name: '3-ая декада', val: 'product-decade_03' }]
+                        },
+                        volume: {
+                            name: 'Объём',
+                            val: '1500'
+                        },
+                        diameter: {
+                            name: 'Диаметр рулона',
+                            selected: -1,
+                            list: [{ name: '1 330 мм', val: 'product-diameter_01' }]
+                        },
+                        price: {
+                            withDelivery: 25750,
+                            withoutDelivery: 24180
+                        }
+                    }
+                }, {
+                    name: 'M3 100 (2100мм)',
+                    val: '01',
+                    data: {
+                        decade: {
+                            name: 'Декада',
+                            selected: -1,
+                            list: [{ name: '1-ая декада', val: 'product-decade_01' }, { name: '2-ая декада', val: 'product-decade_02' }, { name: '3-ая декада', val: 'product-decade_03' }]
+                        },
+                        volume: {
+                            name: 'Объём',
+                            val: '1500'
+                        },
+                        diameter: {
+                            name: 'Диаметр рулона',
+                            selected: -1,
+                            list: [{ name: '1 330 мм', val: 'product-diameter_01' }]
+                        },
+                        price: {
+                            withDelivery: 25750,
+                            withoutDelivery: 24180
+                        }
+                    }
+                }, {
+                    name: 'M3 100 (2200мм)',
+                    val: '01',
+                    data: {
+                        decade: {
+                            name: 'Декада',
+                            selected: -1,
+                            list: [{ name: '1-ая декада', val: 'product-decade_01' }, { name: '2-ая декада', val: 'product-decade_02' }, { name: '3-ая декада', val: 'product-decade_03' }]
+                        },
+                        volume: {
+                            name: 'Объём',
+                            val: '1500'
+                        },
+                        diameter: {
+                            name: 'Диаметр рулона',
+                            selected: -1,
+                            list: [{ name: '1 330 мм', val: 'product-diameter_01' }]
+                        },
+                        price: {
+                            withDelivery: 25750,
+                            withoutDelivery: 24180
+                        }
+                    }
+                }, {
+                    name: 'M3 100 (2500мм)',
+                    val: '01',
+                    data: {
+                        decade: {
+                            name: 'Декада',
+                            selected: -1,
+                            list: [{ name: '1-ая декада', val: 'product-decade_01' }, { name: '2-ая декада', val: 'product-decade_02' }, { name: '3-ая декада', val: 'product-decade_03' }]
+                        },
+                        volume: {
+                            name: 'Объём',
+                            val: '1500'
+                        },
+                        diameter: {
+                            name: 'Диаметр рулона',
+                            selected: -1,
+                            list: [{ name: '1 330 мм', val: 'product-diameter_01' }]
+                        },
+                        price: {
+                            withDelivery: 25750,
+                            withoutDelivery: 24180
+                        }
+                    }
+                }, {
+                    name: 'M3 110 (1700мм)',
+                    val: '01',
+                    data: {
+                        decade: {
+                            name: 'Декада',
+                            selected: -1,
+                            list: [{ name: '1-ая декада', val: 'product-decade_01' }, { name: '2-ая декада', val: 'product-decade_02' }, { name: '3-ая декада', val: 'product-decade_03' }]
+                        },
+                        volume: {
+                            name: 'Объём',
+                            val: '1500'
+                        },
+                        diameter: {
+                            name: 'Диаметр рулона',
+                            selected: -1,
+                            list: [{ name: '1 330 мм', val: 'product-diameter_01' }]
+                        },
+                        price: {
+                            withDelivery: 25750,
+                            withoutDelivery: 24180
+                        }
+                    }
+                }, {
+                    name: 'M3 110 (2000мм)',
+                    val: '01',
+                    data: {
+                        decade: {
+                            name: 'Декада',
+                            selected: -1,
+                            list: [{ name: '1-ая декада', val: 'product-decade_01' }, { name: '2-ая декада', val: 'product-decade_02' }, { name: '3-ая декада', val: 'product-decade_03' }]
+                        },
+                        volume: {
+                            name: 'Объём',
+                            val: '1500'
+                        },
+                        diameter: {
+                            name: 'Диаметр рулона',
+                            selected: -1,
+                            list: [{ name: '1 330 мм', val: 'product-diameter_01' }]
+                        },
+                        price: {
+                            withDelivery: 25750,
+                            withoutDelivery: 24180
+                        }
+                    }
+                }, {
+                    name: 'M3 110 (2100мм)',
+                    val: '01',
+                    data: {
+                        decade: {
+                            name: 'Декада',
+                            selected: -1,
+                            list: [{ name: '1-ая декада', val: 'product-decade_01' }, { name: '2-ая декада', val: 'product-decade_02' }, { name: '3-ая декада', val: 'product-decade_03' }]
+                        },
+                        volume: {
+                            name: 'Объём',
+                            val: '1500'
+                        },
+                        diameter: {
+                            name: 'Диаметр рулона',
+                            selected: -1,
+                            list: [{ name: '1 330 мм', val: 'product-diameter_01' }]
+                        },
+                        price: {
+                            withDelivery: 25750,
+                            withoutDelivery: 24180
+                        }
+                    }
+                }, {
+                    name: 'M3 110 (2200мм)',
+                    val: '01',
+                    data: {
+                        decade: {
+                            name: 'Декада',
+                            selected: -1,
+                            list: [{ name: '1-ая декада', val: 'product-decade_01' }, { name: '2-ая декада', val: 'product-decade_02' }, { name: '3-ая декада', val: 'product-decade_03' }]
+                        },
+                        volume: {
+                            name: 'Объём',
+                            val: '1500'
+                        },
+                        diameter: {
+                            name: 'Диаметр рулона',
+                            selected: -1,
+                            list: [{ name: '1 330 мм', val: 'product-diameter_01' }]
+                        },
+                        price: {
+                            withDelivery: 25750,
+                            withoutDelivery: 24180
+                        }
+                    }
+                }, {
+                    name: 'M3 110 (2500мм)',
+                    val: '01',
+                    data: {
+                        decade: {
+                            name: 'Декада',
+                            selected: -1,
+                            list: [{ name: '1-ая декада', val: 'product-decade_01' }, { name: '2-ая декада', val: 'product-decade_02' }, { name: '3-ая декада', val: 'product-decade_03' }]
+                        },
+                        volume: {
+                            name: 'Объём',
+                            val: '1500'
+                        },
+                        diameter: {
+                            name: 'Диаметр рулона',
+                            selected: -1,
+                            list: [{ name: '1 330 мм', val: 'product-diameter_01' }]
+                        },
+                        price: {
+                            withDelivery: 25750,
+                            withoutDelivery: 24180
+                        }
+                    }
+                }, {
+                    name: 'L2 110 (1700мм)',
+                    val: '01',
+                    data: {
+                        decade: {
+                            name: 'Декада',
+                            selected: -1,
+                            list: [{ name: '1-ая декада', val: 'product-decade_01' }, { name: '2-ая декада', val: 'product-decade_02' }, { name: '3-ая декада', val: 'product-decade_03' }]
+                        },
+                        volume: {
+                            name: 'Объём',
+                            val: '1500'
+                        },
+                        diameter: {
+                            name: 'Диаметр рулона',
+                            selected: -1,
+                            list: [{ name: '1 330 мм', val: 'product-diameter_01' }]
+                        },
+                        price: {
+                            withDelivery: 32824,
+                            withoutDelivery: 31254
+                        }
+                    }
+                }, {
+                    name: 'L2 110 (2000мм)',
+                    val: '01',
+                    data: {
+                        decade: {
+                            name: 'Декада',
+                            selected: -1,
+                            list: [{ name: '1-ая декада', val: 'product-decade_01' }, { name: '2-ая декада', val: 'product-decade_02' }, { name: '3-ая декада', val: 'product-decade_03' }]
+                        },
+                        volume: {
+                            name: 'Объём',
+                            val: '1500'
+                        },
+                        diameter: {
+                            name: 'Диаметр рулона',
+                            selected: -1,
+                            list: [{ name: '1 330 мм', val: 'product-diameter_01' }]
+                        },
+                        price: {
+                            withDelivery: 32824,
+                            withoutDelivery: 31254
+                        }
+                    }
+                }, {
+                    name: 'L2 110 (2100мм)',
+                    val: '01',
+                    data: {
+                        decade: {
+                            name: 'Декада',
+                            selected: -1,
+                            list: [{ name: '1-ая декада', val: 'product-decade_01' }, { name: '2-ая декада', val: 'product-decade_02' }, { name: '3-ая декада', val: 'product-decade_03' }]
+                        },
+                        volume: {
+                            name: 'Объём',
+                            val: '1500'
+                        },
+                        diameter: {
+                            name: 'Диаметр рулона',
+                            selected: -1,
+                            list: [{ name: '1 330 мм', val: 'product-diameter_01' }]
+                        },
+                        price: {
+                            withDelivery: 32824,
+                            withoutDelivery: 31254
+                        }
+                    }
+                }, {
+                    name: 'L2 110 (2200мм)',
+                    val: '01',
+                    data: {
+                        decade: {
+                            name: 'Декада',
+                            selected: -1,
+                            list: [{ name: '1-ая декада', val: 'product-decade_01' }, { name: '2-ая декада', val: 'product-decade_02' }, { name: '3-ая декада', val: 'product-decade_03' }]
+                        },
+                        volume: {
+                            name: 'Объём',
+                            val: '1500'
+                        },
+                        diameter: {
+                            name: 'Диаметр рулона',
+                            selected: -1,
+                            list: [{ name: '1 330 мм', val: 'product-diameter_01' }]
+                        },
+                        price: {
+                            withDelivery: 32824,
+                            withoutDelivery: 31254
+                        }
+                    }
+                }, {
+                    name: 'L2 110 (2500мм)',
+                    val: '01',
+                    data: {
+                        decade: {
+                            name: 'Декада',
+                            selected: -1,
+                            list: [{ name: '1-ая декада', val: 'product-decade_01' }, { name: '2-ая декада', val: 'product-decade_02' }, { name: '3-ая декада', val: 'product-decade_03' }]
+                        },
+                        volume: {
+                            name: 'Объём',
+                            val: '1500'
+                        },
+                        diameter: {
+                            name: 'Диаметр рулона',
+                            selected: -1,
+                            list: [{ name: '1 330 мм', val: 'product-diameter_01' }]
+                        },
+                        price: {
+                            withDelivery: 32824,
+                            withoutDelivery: 31254
+                        }
+                    }
+                }, {
+                    name: 'L2 120 (1700мм)',
+                    val: '01',
+                    data: {
+                        decade: {
+                            name: 'Декада',
+                            selected: -1,
+                            list: [{ name: '1-ая декада', val: 'product-decade_01' }, { name: '2-ая декада', val: 'product-decade_02' }, { name: '3-ая декада', val: 'product-decade_03' }]
+                        },
+                        volume: {
+                            name: 'Объём',
+                            val: '1500'
+                        },
+                        diameter: {
+                            name: 'Диаметр рулона',
+                            selected: -1,
+                            list: [{ name: '1 330 мм', val: 'product-diameter_01' }]
+                        },
+                        price: {
+                            withDelivery: 32624,
+                            withoutDelivery: 31054
+                        }
+                    }
+                }, {
+                    name: 'L2 120 (2000мм)',
+                    val: '01',
+                    data: {
+                        decade: {
+                            name: 'Декада',
+                            selected: -1,
+                            list: [{ name: '1-ая декада', val: 'product-decade_01' }, { name: '2-ая декада', val: 'product-decade_02' }, { name: '3-ая декада', val: 'product-decade_03' }]
+                        },
+                        volume: {
+                            name: 'Объём',
+                            val: '1500'
+                        },
+                        diameter: {
+                            name: 'Диаметр рулона',
+                            selected: -1,
+                            list: [{ name: '1 330 мм', val: 'product-diameter_01' }]
+                        },
+                        price: {
+                            withDelivery: 32624,
+                            withoutDelivery: 31054
+                        }
+                    }
+                }, {
+                    name: 'L2 120 (2100мм)',
+                    val: '01',
+                    data: {
+                        decade: {
+                            name: 'Декада',
+                            selected: -1,
+                            list: [{ name: '1-ая декада', val: 'product-decade_01' }, { name: '2-ая декада', val: 'product-decade_02' }, { name: '3-ая декада', val: 'product-decade_03' }]
+                        },
+                        volume: {
+                            name: 'Объём',
+                            val: '1500'
+                        },
+                        diameter: {
+                            name: 'Диаметр рулона',
+                            selected: -1,
+                            list: [{ name: '1 330 мм', val: 'product-diameter_01' }]
+                        },
+                        price: {
+                            withDelivery: 32624,
+                            withoutDelivery: 31054
+                        }
+                    }
+                }, {
+                    name: 'L2 120 (2200мм)',
+                    val: '01',
+                    data: {
+                        decade: {
+                            name: 'Декада',
+                            selected: -1,
+                            list: [{ name: '1-ая декада', val: 'product-decade_01' }, { name: '2-ая декада', val: 'product-decade_02' }, { name: '3-ая декада', val: 'product-decade_03' }]
+                        },
+                        volume: {
+                            name: 'Объём',
+                            val: '1500'
+                        },
+                        diameter: {
+                            name: 'Диаметр рулона',
+                            selected: -1,
+                            list: [{ name: '1 330 мм', val: 'product-diameter_01' }]
+                        },
+                        price: {
+                            withDelivery: 32624,
+                            withoutDelivery: 31054
+                        }
+                    }
+                }, {
+                    name: 'L2 120 (2500мм)',
+                    val: '01',
+                    data: {
+                        decade: {
+                            name: 'Декада',
+                            selected: -1,
+                            list: [{ name: '1-ая декада', val: 'product-decade_01' }, { name: '2-ая декада', val: 'product-decade_02' }, { name: '3-ая декада', val: 'product-decade_03' }]
+                        },
+                        volume: {
+                            name: 'Объём',
+                            val: '1500'
+                        },
+                        diameter: {
+                            name: 'Диаметр рулона',
+                            selected: -1,
+                            list: [{ name: '1 330 мм', val: 'product-diameter_01' }]
+                        },
+                        price: {
+                            withDelivery: 32624,
+                            withoutDelivery: 31054
+                        }
+                    }
+                }, {
+                    name: 'L2 135 (1700мм)',
+                    val: '01',
+                    data: {
+                        decade: {
+                            name: 'Декада',
+                            selected: -1,
+                            list: [{ name: '1-ая декада', val: 'product-decade_01' }, { name: '2-ая декада', val: 'product-decade_02' }, { name: '3-ая декада', val: 'product-decade_03' }]
+                        },
+                        volume: {
+                            name: 'Объём',
+                            val: '1500'
+                        },
+                        diameter: {
+                            name: 'Диаметр рулона',
+                            selected: -1,
+                            list: [{ name: '1 330 мм', val: 'product-diameter_01' }]
+                        },
+                        price: {
+                            withDelivery: 32424,
+                            withoutDelivery: 30854
+                        }
+                    }
+                }, {
+                    name: 'L2 135 (2000мм)',
+                    val: '01',
+                    data: {
+                        decade: {
+                            name: 'Декада',
+                            selected: -1,
+                            list: [{ name: '1-ая декада', val: 'product-decade_01' }, { name: '2-ая декада', val: 'product-decade_02' }, { name: '3-ая декада', val: 'product-decade_03' }]
+                        },
+                        volume: {
+                            name: 'Объём',
+                            val: '1500'
+                        },
+                        diameter: {
+                            name: 'Диаметр рулона',
+                            selected: -1,
+                            list: [{ name: '1 330 мм', val: 'product-diameter_01' }]
+                        },
+                        price: {
+                            withDelivery: 32424,
+                            withoutDelivery: 30854
+                        }
+                    }
+                }, {
+                    name: 'L2 135 (2100мм)',
+                    val: '01',
+                    data: {
+                        decade: {
+                            name: 'Декада',
+                            selected: -1,
+                            list: [{ name: '1-ая декада', val: 'product-decade_01' }, { name: '2-ая декада', val: 'product-decade_02' }, { name: '3-ая декада', val: 'product-decade_03' }]
+                        },
+                        volume: {
+                            name: 'Объём',
+                            val: '1500'
+                        },
+                        diameter: {
+                            name: 'Диаметр рулона',
+                            selected: -1,
+                            list: [{ name: '1 330 мм', val: 'product-diameter_01' }]
+                        },
+                        price: {
+                            withDelivery: 32424,
+                            withoutDelivery: 30854
+                        }
+                    }
+                }, {
+                    name: 'L2 135 (2200мм)',
+                    val: '01',
+                    data: {
+                        decade: {
+                            name: 'Декада',
+                            selected: -1,
+                            list: [{ name: '1-ая декада', val: 'product-decade_01' }, { name: '2-ая декада', val: 'product-decade_02' }, { name: '3-ая декада', val: 'product-decade_03' }]
+                        },
+                        volume: {
+                            name: 'Объём',
+                            val: '1500'
+                        },
+                        diameter: {
+                            name: 'Диаметр рулона',
+                            selected: -1,
+                            list: [{ name: '1 330 мм', val: 'product-diameter_01' }]
+                        },
+                        price: {
+                            withDelivery: 32424,
+                            withoutDelivery: 30854
+                        }
+                    }
+                }, {
+                    name: 'L2 135 (2500мм)',
+                    val: '01',
+                    data: {
+                        decade: {
+                            name: 'Декада',
+                            selected: -1,
+                            list: [{ name: '1-ая декада', val: 'product-decade_01' }, { name: '2-ая декада', val: 'product-decade_02' }, { name: '3-ая декада', val: 'product-decade_03' }]
+                        },
+                        volume: {
+                            name: 'Объём',
+                            val: '1500'
+                        },
+                        diameter: {
+                            name: 'Диаметр рулона',
+                            selected: -1,
+                            list: [{ name: '1 330 мм', val: 'product-diameter_01' }]
+                        },
+                        price: {
+                            withDelivery: 32424,
+                            withoutDelivery: 30854
+                        }
+                    }
+                }, {
+                    name: 'L2 150 (1700мм)',
+                    val: '01',
+                    data: {
+                        decade: {
+                            name: 'Декада',
+                            selected: -1,
+                            list: [{ name: '1-ая декада', val: 'product-decade_01' }, { name: '2-ая декада', val: 'product-decade_02' }, { name: '3-ая декада', val: 'product-decade_03' }]
+                        },
+                        volume: {
+                            name: 'Объём',
+                            val: '1500'
+                        },
+                        diameter: {
+                            name: 'Диаметр рулона',
+                            selected: -1,
+                            list: [{ name: '1 330 мм', val: 'product-diameter_01' }]
+                        },
+                        price: {
+                            withDelivery: 32224,
+                            withoutDelivery: 30654
+                        }
+                    }
+                }, {
+                    name: 'L2 150 (2000мм)',
+                    val: '01',
+                    data: {
+                        decade: {
+                            name: 'Декада',
+                            selected: -1,
+                            list: [{ name: '1-ая декада', val: 'product-decade_01' }, { name: '2-ая декада', val: 'product-decade_02' }, { name: '3-ая декада', val: 'product-decade_03' }]
+                        },
+                        volume: {
+                            name: 'Объём',
+                            val: '1500'
+                        },
+                        diameter: {
+                            name: 'Диаметр рулона',
+                            selected: -1,
+                            list: [{ name: '1 330 мм', val: 'product-diameter_01' }]
+                        },
+                        price: {
+                            withDelivery: 32224,
+                            withoutDelivery: 30654
+                        }
+                    }
+                }, {
+                    name: 'L2 150 (2100мм)',
+                    val: '01',
+                    data: {
+                        decade: {
+                            name: 'Декада',
+                            selected: -1,
+                            list: [{ name: '1-ая декада', val: 'product-decade_01' }, { name: '2-ая декада', val: 'product-decade_02' }, { name: '3-ая декада', val: 'product-decade_03' }]
+                        },
+                        volume: {
+                            name: 'Объём',
+                            val: '1500'
+                        },
+                        diameter: {
+                            name: 'Диаметр рулона',
+                            selected: -1,
+                            list: [{ name: '1 330 мм', val: 'product-diameter_01' }]
+                        },
+                        price: {
+                            withDelivery: 32224,
+                            withoutDelivery: 30654
+                        }
+                    }
+                }, {
+                    name: 'L2 150 (2200мм)',
+                    val: '01',
+                    data: {
+                        decade: {
+                            name: 'Декада',
+                            selected: -1,
+                            list: [{ name: '1-ая декада', val: 'product-decade_01' }, { name: '2-ая декада', val: 'product-decade_02' }, { name: '3-ая декада', val: 'product-decade_03' }]
+                        },
+                        volume: {
+                            name: 'Объём',
+                            val: '1500'
+                        },
+                        diameter: {
+                            name: 'Диаметр рулона',
+                            selected: -1,
+                            list: [{ name: '1 330 мм', val: 'product-diameter_01' }]
+                        },
+                        price: {
+                            withDelivery: 32224,
+                            withoutDelivery: 30654
+                        }
+                    }
+                }, {
+                    name: 'L2 150 (2500мм)',
+                    val: '01',
+                    data: {
+                        decade: {
+                            name: 'Декада',
+                            selected: -1,
+                            list: [{ name: '1-ая декада', val: 'product-decade_01' }, { name: '2-ая декада', val: 'product-decade_02' }, { name: '3-ая декада', val: 'product-decade_03' }]
+                        },
+                        volume: {
+                            name: 'Объём',
+                            val: '1500'
+                        },
+                        diameter: {
+                            name: 'Диаметр рулона',
+                            selected: -1,
+                            list: [{ name: '1 330 мм', val: 'product-diameter_01' }]
+                        },
+                        price: {
+                            withDelivery: 32224,
+                            withoutDelivery: 30654
+                        }
+                    }
+                }, {
+                    name: 'L2 175 (1700мм)',
+                    val: '01',
+                    data: {
+                        decade: {
+                            name: 'Декада',
+                            selected: -1,
+                            list: [{ name: '1-ая декада', val: 'product-decade_01' }, { name: '2-ая декада', val: 'product-decade_02' }, { name: '3-ая декада', val: 'product-decade_03' }]
+                        },
+                        volume: {
+                            name: 'Объём',
+                            val: '1500'
+                        },
+                        diameter: {
+                            name: 'Диаметр рулона',
+                            selected: -1,
+                            list: [{ name: '1 330 мм', val: 'product-diameter_01' }]
+                        },
+                        price: {
+                            withDelivery: 32224,
+                            withoutDelivery: 30654
+                        }
+                    }
+                }, {
+                    name: 'L2 175 (2000мм)',
+                    val: '01',
+                    data: {
+                        decade: {
+                            name: 'Декада',
+                            selected: -1,
+                            list: [{ name: '1-ая декада', val: 'product-decade_01' }, { name: '2-ая декада', val: 'product-decade_02' }, { name: '3-ая декада', val: 'product-decade_03' }]
+                        },
+                        volume: {
+                            name: 'Объём',
+                            val: '1500'
+                        },
+                        diameter: {
+                            name: 'Диаметр рулона',
+                            selected: -1,
+                            list: [{ name: '1 330 мм', val: 'product-diameter_01' }]
+                        },
+                        price: {
+                            withDelivery: 32224,
+                            withoutDelivery: 30654
+                        }
+                    }
+                }, {
+                    name: 'L2 175 (2100мм)',
+                    val: '01',
+                    data: {
+                        decade: {
+                            name: 'Декада',
+                            selected: -1,
+                            list: [{ name: '1-ая декада', val: 'product-decade_01' }, { name: '2-ая декада', val: 'product-decade_02' }, { name: '3-ая декада', val: 'product-decade_03' }]
+                        },
+                        volume: {
+                            name: 'Объём',
+                            val: '1500'
+                        },
+                        diameter: {
+                            name: 'Диаметр рулона',
+                            selected: -1,
+                            list: [{ name: '1 330 мм', val: 'product-diameter_01' }]
+                        },
+                        price: {
+                            withDelivery: 32224,
+                            withoutDelivery: 30654
+                        }
+                    }
+                }, {
+                    name: 'L2 175 (2200мм)',
+                    val: '01',
+                    data: {
+                        decade: {
+                            name: 'Декада',
+                            selected: -1,
+                            list: [{ name: '1-ая декада', val: 'product-decade_01' }, { name: '2-ая декада', val: 'product-decade_02' }, { name: '3-ая декада', val: 'product-decade_03' }]
+                        },
+                        volume: {
+                            name: 'Объём',
+                            val: '1500'
+                        },
+                        diameter: {
+                            name: 'Диаметр рулона',
+                            selected: -1,
+                            list: [{ name: '1 330 мм', val: 'product-diameter_01' }]
+                        },
+                        price: {
+                            withDelivery: 32224,
+                            withoutDelivery: 30654
+                        }
+                    }
+                }, {
+                    name: 'L2 175 (2500мм)',
+                    val: '01',
+                    data: {
+                        decade: {
+                            name: 'Декада',
+                            selected: -1,
+                            list: [{ name: '1-ая декада', val: 'product-decade_01' }, { name: '2-ая декада', val: 'product-decade_02' }, { name: '3-ая декада', val: 'product-decade_03' }]
+                        },
+                        volume: {
+                            name: 'Объём',
+                            val: '1500'
+                        },
+                        diameter: {
+                            name: 'Диаметр рулона',
+                            selected: -1,
+                            list: [{ name: '1 330 мм', val: 'product-diameter_01' }]
+                        },
+                        price: {
+                            withDelivery: 32224,
+                            withoutDelivery: 30654
+                        }
+                    }
+                }]
+            },
+            productList: [{ product: 0, decade: 0, volume: 1, diameter: 0, price: 0 }]
+        };
+    },
+
+    computed: {
+        totalPrice: function totalPrice() {
+            var total = 0;
+            for (var i = 0; this.productList.length > i; i++) {
+                total = total + Number(this.productList[i].price);
+            }
+            return total;
+        },
+        totalVolume: function totalVolume() {
+            var volume = 0;
+            for (var i = 0; this.productList.length > i; i++) {
+                volume = volume + Number(this.productList[i].volume);
+            }
+            return volume;
+        }
+    },
+    watch: {},
+    methods: {
+        nextStep: function nextStep(i) {
+            this.step = i;
+        },
+        prevStep: function prevStep(n) {
+            n = n || 1;
+            this.step = this.step - n;
+        },
+        changeProduct: function changeProduct(indexProductList, indexProduct) {
+            this.productList[indexProductList].product = indexProduct;
+            this.productList[indexProductList].decade = 0;
+            this.productList[indexProductList].volume = 1;
+            this.productList[indexProductList].diameter = 0;
+            this.productList[indexProductList].price = 0;
+        },
+        addProduct: function addProduct(e) {
+            this.productList.push({ product: -1, decade: -1, volume: 1, diameter: -1, price: 0 });
+        },
+        delProduct: function delProduct(index) {
+            this.productList.splice(index, 1);
+        },
+        calcPrice: function calcPrice(index) {
+            var price = 0;
+            if (!this.products.list[this.productList[index].product]) {
+                return price;
+            }
+            switch (this.infoOnApplication.deliveryMethod.selected) {
+                case 0:
+                    price = this.products.list[this.productList[index].product].data.price.withDelivery;
+                    break;
+                case 1:
+                    price = this.products.list[this.productList[index].product].data.price.withDelivery;
+                    break;
+                case 2:
+                    price = this.products.list[this.productList[index].product].data.price.withoutDelivery;
+                    break;
+            }
+            this.productList[index].price = price * this.productList[index].volume;
+            return this.productList[index].price;
+        },
+        scrollStep: function scrollStep(el) {
+            scrollBy({ top: document.querySelector('#step' + this.step).offsetTop, behavior: 'smooth' });
+            // scrollTo(document.body, document.querySelector('#step' + this.step).offsetTop, 300);
+        },
+        sendForm: function sendForm() {
+            var xhr = new XMLHttpRequest();
+            var _productList = [];
+
+            for (var i = 0; this.productList.length > i; i++) {
+                if (this.productList[i].product > -1) {
+                    _productList[i] = {
+                        name: this.products.list[this.productList[i].product].name,
+                        decade: this.products.list[this.productList[i].product].data.decade.list[this.productList[i].decade].name,
+                        volume: this.productList[i].volume,
+                        diameter: this.products.list[this.productList[i].product].data.diameter.list[this.productList[i].diameter].name,
+                        price: this.productList[i].price
+                    };
+                }
+            }
+
+            var json = JSON.stringify({
+                month: this.infoOnApplication.shipmentPeriod.month.list[this.infoOnApplication.shipmentPeriod.month.selected].name,
+                year: this.infoOnApplication.shipmentPeriod.year.list[this.infoOnApplication.shipmentPeriod.year.selected].name,
+                recipient: this.infoOnApplication.recipient.list[this.infoOnApplication.recipient.selected].name,
+                provider: this.infoOnApplication.provider.list[this.infoOnApplication.provider.selected].name,
+                deliveryMethod: this.infoOnApplication.deliveryMethod.list[this.infoOnApplication.deliveryMethod.selected].name,
+                productList: _productList
+
+            });
+
+            xhr.open("POST", './sendMail.php/', true);
+            xhr.setRequestHeader('Content-type', 'application/json; charset=utf-8');
+
+            console.log(xhr);
+            xhr.onreadystatechange = function (ev) {
+                console.log(ev);
+                if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
+                    console.log('confirm!');
+
+                    var template = '\t<div id="appSuccess" class="popup popup_wide cntr">\n' + '\t\t<h3 class="popup__title-cnt">Ваша заявка успешно отправлена</h3>\n' + '\t\t<p class="popup__line">В ближайшее время с вами свяжется наш менеджер для уточнения информации!</p>\n' + '\t\t<div class="popup__toolbar">\n' + '\t\t\t<a href="./nomenclature.php" class="btn btn_wide">Ок</a>\n' + '\t\t</div>\n' + '\t</div>\n';
+
+                    $.fancybox.open({
+                        src: template,
+                        type: 'inline',
+                        animationEffect: 'fade',
+                        baseClass: 'application-modal',
+                        toolbar: false,
+                        smallBtn: false,
+                        touch: false,
+                        closeClickOutside: false,
+                        modal: true,
+                        helpers: {
+                            overlay: {
+                                closeClick: false
+                            }
+                        }
+                    });
+                } else {
+                    console.error(ev);
+                }
+            };
+            xhr.send(json);
+        }
+    }
+});
+
+/***/ }),
+/* 13 */,
+/* 14 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+
+/* harmony default export */ __webpack_exports__["a"] = ({
+    mounted: function mounted() {
+        console.log('Component mounted.');
+    }
+});
+
+/***/ }),
+/* 15 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+
+//import Multiselect from 'vue-multiselect'
+/* harmony default export */ __webpack_exports__["a"] = ({
+    //  components: { Multiselect },
+    data: function data() {
+        return {
+            searchSelect: '',
+            listShow: [],
+            selected: this.defaultSelected || -1
+        };
+    },
+
+    props: {
+        list: [Array, Boolean],
+        defaultSelected: [Number],
+        disabled: [Boolean],
+        placeholder: [String]
+    },
+
+    created: function created(e) {
+        this.selected = this.defaultSelected;
+        if (this.selected > -1) {
+            this.searchSelect = this.list[this.selected].name;
+        }
+        // console.log(this.defaultSelected);
+    },
+    methods: {
+        selectFocus: function selectFocus(e) {
+            this.searchSelect = '';
+            e.target.parentElement.classList.add('dropdown-active');
+            e.target.parentElement.nextElementSibling.style.display = 'block';
+        },
+        selectBlur: function selectBlur(e) {
+            var linkData = this;
+            setTimeout(function () {
+                if (linkData && typeof linkData.selected === 'number' && linkData.selected > -1) {
+                    linkData.searchSelect = linkData.list[linkData.selected].name;
+                } else {
+                    linkData.searchSelect = '';
+                }
+                e.target.parentElement.classList.remove('dropdown-active');
+                e.target.parentElement.nextElementSibling.style.display = 'none';
+            }, 300);
+        },
+        selectChange: function selectChange(index) {
+            var linkData = this;
+            linkData.selected = index;
+            linkData.searchSelect = linkData.list[index].name;
+            this.$emit('change', index);
+        },
+        selectSearch: function selectSearch(list, newQuestion) {
+            var indexList = [];
+            list.findIndex(function (element, index, array) {
+                if (element.name.toLowerCase().indexOf(newQuestion.toLowerCase()) > -1) {
+                    indexList.push(index);
+                }
+            });
+            return indexList;
+        }
+
+    },
+    watch: {
+        'searchSelect': function searchSelect(newQuestion, oldQuestion) {
+            this.listShow = this.selectSearch(this.list, newQuestion);
+        },
+        'list': function list(newQuestion, oldQuestion) {
+            this.selected = this.defaultSelected;
+        },
+        'defaultSelected': function defaultSelected(n, o) {
+            if (this.defaultSelected < this.list.length) {
+                this.selected = this.defaultSelected;
+            }
+        },
+        'selected': function selected(newQuestion, oldQuestion) {
+            this.searchSelect = this.list[this.selected].name;
+        }
+    }
+});
+
+/***/ }),
+/* 16 */
+/***/ (function(module, exports, __webpack_require__) {
+
+__webpack_require__(17);
+module.exports = __webpack_require__(50);
+
+
+/***/ }),
+/* 17 */
 /***/ (function(module, exports, __webpack_require__) {
 
 
@@ -1086,8 +3195,8 @@ module.exports = __webpack_require__(46);
  * building robust, powerful web applications using Vue and Laravel.
  */
 
-window.Vue = __webpack_require__(12);
-window.axios = __webpack_require__(15);
+window.Vue = __webpack_require__(18);
+window.axios = __webpack_require__(21);
 
 var token = document.head.querySelector('meta[name="csrf-token"]');
 
@@ -1096,19 +3205,19 @@ var token = document.head.querySelector('meta[name="csrf-token"]');
  * the page. Then, you may begin adding components to this application
  * or customize the JavaScript scaffolding to fit your unique needs.
  */
+Vue.component('drop-down', __webpack_require__(48).default);
+Vue.component('consigneer-component', __webpack_require__(40).default);
+Vue.component('fileupload-component', __webpack_require__(42).default);
+Vue.component('select-product', __webpack_require__(44).default);
 
-Vue.component('consigneer-component', __webpack_require__(34));
-Vue.component('fileupload-component', __webpack_require__(37));
-//Vue.component('transportupload-component', require('./components/TransportuploadComponent.vue'));
-Vue.component('select-product', __webpack_require__(40));
-Vue.component('example-component', __webpack_require__(43));
+Vue.component('example-component', __webpack_require__(46).default);
 
 var app = new Vue({
   el: '#root-wrapper'
 });
 
 /***/ }),
-/* 12 */
+/* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -12071,10 +14180,10 @@ Vue.compile = compileToFunctions;
 
 module.exports = Vue;
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(2), __webpack_require__(13).setImmediate))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(2), __webpack_require__(19).setImmediate))
 
 /***/ }),
-/* 13 */
+/* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global) {var scope = (typeof global !== "undefined" && global) ||
@@ -12130,7 +14239,7 @@ exports._unrefActive = exports.active = function(item) {
 };
 
 // setimmediate attaches itself to the global object
-__webpack_require__(14);
+__webpack_require__(20);
 // On some exotic environments, it's not clear which object `setimmediate` was
 // able to install onto.  Search each possibility in the same order as the
 // `setimmediate` library.
@@ -12144,7 +14253,7 @@ exports.clearImmediate = (typeof self !== "undefined" && self.clearImmediate) ||
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(2)))
 
 /***/ }),
-/* 14 */
+/* 20 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global, process) {(function (global, undefined) {
@@ -12337,13 +14446,13 @@ exports.clearImmediate = (typeof self !== "undefined" && self.clearImmediate) ||
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(2), __webpack_require__(4)))
 
 /***/ }),
-/* 15 */
+/* 21 */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(16);
+module.exports = __webpack_require__(22);
 
 /***/ }),
-/* 16 */
+/* 22 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -12351,7 +14460,7 @@ module.exports = __webpack_require__(16);
 
 var utils = __webpack_require__(0);
 var bind = __webpack_require__(5);
-var Axios = __webpack_require__(18);
+var Axios = __webpack_require__(24);
 var defaults = __webpack_require__(3);
 
 /**
@@ -12386,14 +14495,14 @@ axios.create = function create(instanceConfig) {
 
 // Expose Cancel & CancelToken
 axios.Cancel = __webpack_require__(9);
-axios.CancelToken = __webpack_require__(32);
+axios.CancelToken = __webpack_require__(38);
 axios.isCancel = __webpack_require__(8);
 
 // Expose all/spread
 axios.all = function all(promises) {
   return Promise.all(promises);
 };
-axios.spread = __webpack_require__(33);
+axios.spread = __webpack_require__(39);
 
 module.exports = axios;
 
@@ -12402,7 +14511,7 @@ module.exports.default = axios;
 
 
 /***/ }),
-/* 17 */
+/* 23 */
 /***/ (function(module, exports) {
 
 /*!
@@ -12429,7 +14538,7 @@ function isSlowBuffer (obj) {
 
 
 /***/ }),
-/* 18 */
+/* 24 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -12437,10 +14546,8 @@ function isSlowBuffer (obj) {
 
 var defaults = __webpack_require__(3);
 var utils = __webpack_require__(0);
-var InterceptorManager = __webpack_require__(27);
-var dispatchRequest = __webpack_require__(28);
-var isAbsoluteURL = __webpack_require__(30);
-var combineURLs = __webpack_require__(31);
+var InterceptorManager = __webpack_require__(33);
+var dispatchRequest = __webpack_require__(34);
 
 /**
  * Create a new instance of Axios
@@ -12471,11 +14578,6 @@ Axios.prototype.request = function request(config) {
 
   config = utils.merge(defaults, this.defaults, { method: 'get' }, config);
   config.method = config.method.toLowerCase();
-
-  // Support baseURL config
-  if (config.baseURL && !isAbsoluteURL(config.url)) {
-    config.url = combineURLs(config.baseURL, config.url);
-  }
 
   // Hook up interceptors middleware
   var chain = [dispatchRequest, undefined];
@@ -12522,7 +14624,7 @@ module.exports = Axios;
 
 
 /***/ }),
-/* 19 */
+/* 25 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -12541,7 +14643,7 @@ module.exports = function normalizeHeaderName(headers, normalizedName) {
 
 
 /***/ }),
-/* 20 */
+/* 26 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -12574,7 +14676,7 @@ module.exports = function settle(resolve, reject, response) {
 
 
 /***/ }),
-/* 21 */
+/* 27 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -12602,7 +14704,7 @@ module.exports = function enhanceError(error, config, code, request, response) {
 
 
 /***/ }),
-/* 22 */
+/* 28 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -12677,13 +14779,22 @@ module.exports = function buildURL(url, params, paramsSerializer) {
 
 
 /***/ }),
-/* 23 */
+/* 29 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 var utils = __webpack_require__(0);
+
+// Headers whose duplicates are ignored by node
+// c.f. https://nodejs.org/api/http.html#http_message_headers
+var ignoreDuplicateOf = [
+  'age', 'authorization', 'content-length', 'content-type', 'etag',
+  'expires', 'from', 'host', 'if-modified-since', 'if-unmodified-since',
+  'last-modified', 'location', 'max-forwards', 'proxy-authorization',
+  'referer', 'retry-after', 'user-agent'
+];
 
 /**
  * Parse headers into an object
@@ -12712,7 +14823,14 @@ module.exports = function parseHeaders(headers) {
     val = utils.trim(line.substr(i + 1));
 
     if (key) {
-      parsed[key] = parsed[key] ? parsed[key] + ', ' + val : val;
+      if (parsed[key] && ignoreDuplicateOf.indexOf(key) >= 0) {
+        return;
+      }
+      if (key === 'set-cookie') {
+        parsed[key] = (parsed[key] ? parsed[key] : []).concat([val]);
+      } else {
+        parsed[key] = parsed[key] ? parsed[key] + ', ' + val : val;
+      }
     }
   });
 
@@ -12721,7 +14839,7 @@ module.exports = function parseHeaders(headers) {
 
 
 /***/ }),
-/* 24 */
+/* 30 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -12796,7 +14914,7 @@ module.exports = (
 
 
 /***/ }),
-/* 25 */
+/* 31 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -12839,7 +14957,7 @@ module.exports = btoa;
 
 
 /***/ }),
-/* 26 */
+/* 32 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -12899,7 +15017,7 @@ module.exports = (
 
 
 /***/ }),
-/* 27 */
+/* 33 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -12958,16 +15076,18 @@ module.exports = InterceptorManager;
 
 
 /***/ }),
-/* 28 */
+/* 34 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 var utils = __webpack_require__(0);
-var transformData = __webpack_require__(29);
+var transformData = __webpack_require__(35);
 var isCancel = __webpack_require__(8);
 var defaults = __webpack_require__(3);
+var isAbsoluteURL = __webpack_require__(36);
+var combineURLs = __webpack_require__(37);
 
 /**
  * Throws a `Cancel` if cancellation has been requested.
@@ -12986,6 +15106,11 @@ function throwIfCancellationRequested(config) {
  */
 module.exports = function dispatchRequest(config) {
   throwIfCancellationRequested(config);
+
+  // Support baseURL config
+  if (config.baseURL && !isAbsoluteURL(config.url)) {
+    config.url = combineURLs(config.baseURL, config.url);
+  }
 
   // Ensure headers exist
   config.headers = config.headers || {};
@@ -13044,7 +15169,7 @@ module.exports = function dispatchRequest(config) {
 
 
 /***/ }),
-/* 29 */
+/* 35 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -13071,7 +15196,7 @@ module.exports = function transformData(data, headers, fns) {
 
 
 /***/ }),
-/* 30 */
+/* 36 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -13092,7 +15217,7 @@ module.exports = function isAbsoluteURL(url) {
 
 
 /***/ }),
-/* 31 */
+/* 37 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -13113,7 +15238,7 @@ module.exports = function combineURLs(baseURL, relativeURL) {
 
 
 /***/ }),
-/* 32 */
+/* 38 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -13177,7 +15302,7 @@ module.exports = CancelToken;
 
 
 /***/ }),
-/* 33 */
+/* 39 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -13211,15 +15336,21 @@ module.exports = function spread(callback) {
 
 
 /***/ }),
-/* 34 */
-/***/ (function(module, exports, __webpack_require__) {
+/* 40 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
 
+"use strict";
+Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__babel_loader_cacheDirectory_true_presets_env_modules_false_targets_browsers_2_uglify_true_plugins_transform_object_rest_spread_transform_runtime_polyfill_false_helpers_false_node_modules_vue_loader_lib_selector_type_script_index_0_ConsigneerComponent_vue__ = __webpack_require__(10);
+/* empty harmony namespace reexport */
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__node_modules_vue_loader_lib_template_compiler_index_id_data_v_7c04bd3a_hasScoped_false_optionsId_0_buble_transforms_node_modules_vue_loader_lib_selector_type_template_index_0_ConsigneerComponent_vue__ = __webpack_require__(41);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__node_modules_vue_loader_lib_runtime_component_normalizer__ = __webpack_require__(1);
 var disposed = false
-var normalizeComponent = __webpack_require__(1)
 /* script */
-var __vue_script__ = __webpack_require__(35)
+
+
 /* template */
-var __vue_template__ = __webpack_require__(36)
+
 /* template functional */
 var __vue_template_functional__ = false
 /* styles */
@@ -13228,9 +15359,11 @@ var __vue_styles__ = null
 var __vue_scopeId__ = null
 /* moduleIdentifier (server only) */
 var __vue_module_identifier__ = null
-var Component = normalizeComponent(
-  __vue_script__,
-  __vue_template__,
+
+var Component = Object(__WEBPACK_IMPORTED_MODULE_2__node_modules_vue_loader_lib_runtime_component_normalizer__["a" /* default */])(
+  __WEBPACK_IMPORTED_MODULE_0__babel_loader_cacheDirectory_true_presets_env_modules_false_targets_browsers_2_uglify_true_plugins_transform_object_rest_spread_transform_runtime_polyfill_false_helpers_false_node_modules_vue_loader_lib_selector_type_script_index_0_ConsigneerComponent_vue__["a" /* default */],
+  __WEBPACK_IMPORTED_MODULE_1__node_modules_vue_loader_lib_template_compiler_index_id_data_v_7c04bd3a_hasScoped_false_optionsId_0_buble_transforms_node_modules_vue_loader_lib_selector_type_template_index_0_ConsigneerComponent_vue__["a" /* render */],
+  __WEBPACK_IMPORTED_MODULE_1__node_modules_vue_loader_lib_template_compiler_index_id_data_v_7c04bd3a_hasScoped_false_optionsId_0_buble_transforms_node_modules_vue_loader_lib_selector_type_template_index_0_ConsigneerComponent_vue__["b" /* staticRenderFns */],
   __vue_template_functional__,
   __vue_styles__,
   __vue_scopeId__,
@@ -13254,127 +15387,16 @@ if (false) {(function () {
   })
 })()}
 
-module.exports = Component.exports
+/* harmony default export */ __webpack_exports__["default"] = (Component.exports);
 
 
 /***/ }),
-/* 35 */
+/* 41 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-
-/* harmony default export */ __webpack_exports__["default"] = ({
-    props: ['applicator', 'productranges'],
-
-    data: function data() {
-        return {
-            selected: '',
-            options: [],
-            products: [],
-            showProducts: '',
-            showSelect: 'false'
-        };
-    },
-    mounted: function mounted() {
-        this.getConsigneers();
-    },
-
-
-    methods: {
-        getConsigneers: function getConsigneers() {
-            var _this = this;
-
-            var route = 'http://localhost/sft-lk/public/user/' + this.applicator + '/consigneers';
-            axios.get(route).then(function (response) {
-                _this.options = response.data.consigneers;
-                console.log(_this.options.length);
-                if (_this.options.length > 1) {
-                    _this.showSelect = true;
-                } else _this.showSelect = false;
-                _this.selected = _this.options[0];
-                _this.getProduct();
-            }).catch(function (error) {
-                console.log(error);
-            });
-        },
-        getProduct: function getProduct() {
-            var _this2 = this;
-
-            var route = 'http://localhost/sft-lk/public/user/' + this.applicator + '/get/productranges/' + this.selected.id;
-            axios.get(route).then(function (response) {
-                _this2.products = response.data.products;
-                if (_this2.products.length > 0) {
-                    _this2.showProducts = true;
-                    console.log(response.data.products);
-                }
-            }).catch(function (error) {
-                _this2.showProducts = false;
-                console.log(error);
-            });
-        }
-    }
-});
-
-/***/ }),
-/* 36 */
-/***/ (function(module, exports, __webpack_require__) {
-
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return render; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "b", function() { return staticRenderFns; });
 var render = function() {
   var _vm = this
   var _h = _vm.$createElement
@@ -13555,24 +15577,30 @@ var render = function() {
 }
 var staticRenderFns = []
 render._withStripped = true
-module.exports = { render: render, staticRenderFns: staticRenderFns }
+
 if (false) {
   module.hot.accept()
   if (module.hot.data) {
-    require("vue-hot-reload-api")      .rerender("data-v-7c04bd3a", module.exports)
+    require("vue-hot-reload-api")      .rerender("data-v-7c04bd3a", { render: render, staticRenderFns: staticRenderFns })
   }
 }
 
 /***/ }),
-/* 37 */
-/***/ (function(module, exports, __webpack_require__) {
+/* 42 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
 
+"use strict";
+Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__babel_loader_cacheDirectory_true_presets_env_modules_false_targets_browsers_2_uglify_true_plugins_transform_object_rest_spread_transform_runtime_polyfill_false_helpers_false_node_modules_vue_loader_lib_selector_type_script_index_0_FileuploadComponent_vue__ = __webpack_require__(11);
+/* empty harmony namespace reexport */
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__node_modules_vue_loader_lib_template_compiler_index_id_data_v_a15b9f4e_hasScoped_false_optionsId_0_buble_transforms_node_modules_vue_loader_lib_selector_type_template_index_0_FileuploadComponent_vue__ = __webpack_require__(43);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__node_modules_vue_loader_lib_runtime_component_normalizer__ = __webpack_require__(1);
 var disposed = false
-var normalizeComponent = __webpack_require__(1)
 /* script */
-var __vue_script__ = __webpack_require__(38)
+
+
 /* template */
-var __vue_template__ = __webpack_require__(39)
+
 /* template functional */
 var __vue_template_functional__ = false
 /* styles */
@@ -13581,9 +15609,11 @@ var __vue_styles__ = null
 var __vue_scopeId__ = null
 /* moduleIdentifier (server only) */
 var __vue_module_identifier__ = null
-var Component = normalizeComponent(
-  __vue_script__,
-  __vue_template__,
+
+var Component = Object(__WEBPACK_IMPORTED_MODULE_2__node_modules_vue_loader_lib_runtime_component_normalizer__["a" /* default */])(
+  __WEBPACK_IMPORTED_MODULE_0__babel_loader_cacheDirectory_true_presets_env_modules_false_targets_browsers_2_uglify_true_plugins_transform_object_rest_spread_transform_runtime_polyfill_false_helpers_false_node_modules_vue_loader_lib_selector_type_script_index_0_FileuploadComponent_vue__["a" /* default */],
+  __WEBPACK_IMPORTED_MODULE_1__node_modules_vue_loader_lib_template_compiler_index_id_data_v_a15b9f4e_hasScoped_false_optionsId_0_buble_transforms_node_modules_vue_loader_lib_selector_type_template_index_0_FileuploadComponent_vue__["a" /* render */],
+  __WEBPACK_IMPORTED_MODULE_1__node_modules_vue_loader_lib_template_compiler_index_id_data_v_a15b9f4e_hasScoped_false_optionsId_0_buble_transforms_node_modules_vue_loader_lib_selector_type_template_index_0_FileuploadComponent_vue__["b" /* staticRenderFns */],
   __vue_template_functional__,
   __vue_styles__,
   __vue_scopeId__,
@@ -13607,83 +15637,16 @@ if (false) {(function () {
   })
 })()}
 
-module.exports = Component.exports
+/* harmony default export */ __webpack_exports__["default"] = (Component.exports);
 
 
 /***/ }),
-/* 38 */
+/* 43 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-
-/* harmony default export */ __webpack_exports__["default"] = ({
-    props: ['lunit'],
-
-    data: function data() {
-        return {
-            file: '',
-            files: []
-        };
-    },
-    mounted: function mounted() {},
-
-
-    methods: {
-        getFiles: function getFiles() {
-            var _this = this;
-
-            axios.get('http://localhost/sft-lk/public/' + this.lunit + '/files').then(function (response) {
-                _this.files = response.data.files;
-                console.log(response);
-            }).catch(function (error) {
-                console.log(error);
-            });
-        },
-        uploadFile: function uploadFile(e) {
-            var _this2 = this;
-
-            this.file = e.target.files[0];
-            var formData = new FormData();
-            formData.append('file', this.file);
-            var route = 'http://localhost/sft-lk/public/files/add/' + this.lunit;
-            axios.post(route, formData).then(function (response) {
-                console.log(response.data);
-                _this2.files.push(response.data.file);
-            }).catch(function (error) {
-                console.log(error);
-            });
-        }
-    }
-});
-
-/***/ }),
-/* 39 */
-/***/ (function(module, exports, __webpack_require__) {
-
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return render; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "b", function() { return staticRenderFns; });
 var render = function() {
   var _vm = this
   var _h = _vm.$createElement
@@ -13727,35 +15690,47 @@ var render = function() {
 }
 var staticRenderFns = []
 render._withStripped = true
-module.exports = { render: render, staticRenderFns: staticRenderFns }
+
 if (false) {
   module.hot.accept()
   if (module.hot.data) {
-    require("vue-hot-reload-api")      .rerender("data-v-a15b9f4e", module.exports)
+    require("vue-hot-reload-api")      .rerender("data-v-a15b9f4e", { render: render, staticRenderFns: staticRenderFns })
   }
 }
 
 /***/ }),
-/* 40 */
-/***/ (function(module, exports, __webpack_require__) {
+/* 44 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
 
+"use strict";
+Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__babel_loader_cacheDirectory_true_presets_env_modules_false_targets_browsers_2_uglify_true_plugins_transform_object_rest_spread_transform_runtime_polyfill_false_helpers_false_node_modules_vue_loader_lib_selector_type_script_index_0_SelectProduct_vue__ = __webpack_require__(12);
+/* empty harmony namespace reexport */
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__node_modules_vue_loader_lib_template_compiler_index_id_data_v_57736628_hasScoped_false_optionsId_0_buble_transforms_node_modules_vue_loader_lib_selector_type_template_index_0_SelectProduct_vue__ = __webpack_require__(45);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__node_modules_vue_loader_lib_runtime_component_normalizer__ = __webpack_require__(1);
 var disposed = false
-var normalizeComponent = __webpack_require__(1)
+function injectStyle (context) {
+  if (disposed) return
+  __webpack_require__(65)
+}
 /* script */
-var __vue_script__ = __webpack_require__(41)
+
+
 /* template */
-var __vue_template__ = __webpack_require__(42)
+
 /* template functional */
 var __vue_template_functional__ = false
 /* styles */
-var __vue_styles__ = null
+var __vue_styles__ = injectStyle
 /* scopeId */
 var __vue_scopeId__ = null
 /* moduleIdentifier (server only) */
 var __vue_module_identifier__ = null
-var Component = normalizeComponent(
-  __vue_script__,
-  __vue_template__,
+
+var Component = Object(__WEBPACK_IMPORTED_MODULE_2__node_modules_vue_loader_lib_runtime_component_normalizer__["a" /* default */])(
+  __WEBPACK_IMPORTED_MODULE_0__babel_loader_cacheDirectory_true_presets_env_modules_false_targets_browsers_2_uglify_true_plugins_transform_object_rest_spread_transform_runtime_polyfill_false_helpers_false_node_modules_vue_loader_lib_selector_type_script_index_0_SelectProduct_vue__["a" /* default */],
+  __WEBPACK_IMPORTED_MODULE_1__node_modules_vue_loader_lib_template_compiler_index_id_data_v_57736628_hasScoped_false_optionsId_0_buble_transforms_node_modules_vue_loader_lib_selector_type_template_index_0_SelectProduct_vue__["a" /* render */],
+  __WEBPACK_IMPORTED_MODULE_1__node_modules_vue_loader_lib_template_compiler_index_id_data_v_57736628_hasScoped_false_optionsId_0_buble_transforms_node_modules_vue_loader_lib_selector_type_template_index_0_SelectProduct_vue__["b" /* staticRenderFns */],
   __vue_template_functional__,
   __vue_styles__,
   __vue_scopeId__,
@@ -13779,232 +15754,829 @@ if (false) {(function () {
   })
 })()}
 
-module.exports = Component.exports
+/* harmony default export */ __webpack_exports__["default"] = (Component.exports);
 
 
 /***/ }),
-/* 41 */
+/* 45 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-
-/* harmony default export */ __webpack_exports__["default"] = ({
-    props: ['applicator', 'productranges'],
-
-    data: function data() {
-        return {
-            currentBrand: '',
-            currentGrammage: '',
-            currentFormat: '',
-            brands: ['SFT-11', 'SFT-2', 'SFT-3'],
-            grammages: ['110', '120', '140', '150', '180'],
-            formats: ['2100', '3400', '3000'],
-            showGrammage: 'false',
-            showFortmat: 'false'
-        };
-    },
-    mounted: function mounted() {
-        console.log('Component mounted.');
-    },
-
-
-    methods: {
-        getGrammage: function getGrammage() {
-            this.showGrammage = true;
-        },
-        getFormat: function getFormat() {
-            this.showFormat = true;
-        }
-    }
-});
-
-/***/ }),
-/* 42 */
-/***/ (function(module, exports, __webpack_require__) {
-
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return render; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "b", function() { return staticRenderFns; });
 var render = function() {
   var _vm = this
   var _h = _vm.$createElement
   var _c = _vm._self._c || _h
-  return _c("div", [
-    _c("div", { staticClass: "receiver-title" }, [_vm._v("Выберите марку")]),
-    _vm._v(" "),
+  return _c("div", {}, [
     _c(
-      "select",
-      {
-        directives: [
-          {
-            name: "model",
-            rawName: "v-model",
-            value: _vm.currentBrand,
-            expression: "currentBrand"
-          }
-        ],
-        staticClass: "js-selectize-controle form__select-tiny",
-        on: {
-          change: [
-            function($event) {
-              var $$selectedVal = Array.prototype.filter
-                .call($event.target.options, function(o) {
-                  return o.selected
-                })
-                .map(function(o) {
-                  var val = "_value" in o ? o._value : o.value
-                  return val
-                })
-              _vm.currentBrand = $event.target.multiple
-                ? $$selectedVal
-                : $$selectedVal[0]
-            },
-            _vm.getGrammage
-          ]
-        }
-      },
-      _vm._l(_vm.brands, function(brand, index) {
-        return _c("option", { domProps: { value: brand } }, [
-          _vm._v(" " + _vm._s(brand) + " ")
-        ])
-      })
-    ),
-    _vm._v(" "),
-    _c("div", { staticClass: "receiver-title" }, [_vm._v("Выберите граммаж")]),
-    _vm._v(" "),
-    _c(
-      "select",
-      {
-        directives: [
-          {
-            name: "model",
-            rawName: "v-model",
-            value: _vm.currentGrammage,
-            expression: "currentGrammage"
-          }
-        ],
-        staticClass: "js-selectize-controle form__select-tiny",
-        on: {
-          change: [
-            function($event) {
-              var $$selectedVal = Array.prototype.filter
-                .call($event.target.options, function(o) {
-                  return o.selected
-                })
-                .map(function(o) {
-                  var val = "_value" in o ? o._value : o.value
-                  return val
-                })
-              _vm.currentGrammage = $event.target.multiple
-                ? $$selectedVal
-                : $$selectedVal[0]
-            },
-            _vm.getFormat
-          ]
-        }
-      },
+      "form",
+      { staticClass: "form", attrs: { action: "" } },
       [
-        _vm._v(
-          '\n                                :disabled="showGrammage"\n                                   '
-        ),
-        _vm._l(_vm.grammages, function(grammage, index) {
-          return _c("option", { domProps: { value: grammage } }, [
-            _vm._v(" " + _vm._s(grammage) + " ")
-          ])
-        })
-      ],
-      2
-    ),
-    _vm._v(" "),
-    _c("div", { staticClass: "receiver-title" }, [_vm._v("Выберите формат")]),
-    _vm._v(" "),
-    _c(
-      "select",
-      {
-        directives: [
+        _vm.step >= 0 && _vm.step < 2
+          ? _c("div", { staticClass: "step", attrs: { id: "step0" } }, [
+              _vm._m(0),
+              _vm._v(" "),
+              _c("div", { staticClass: "anew-form-wrapper" }, [
+                _c("fieldset", { staticClass: "form__fieldset" }, [
+                  _c("div", { staticClass: "info-title" }, [
+                    _vm._v("Период отгрузки")
+                  ]),
+                  _vm._v(" "),
+                  _c("div", { staticClass: "flex date" }, [
+                    _c(
+                      "div",
+                      { staticClass: "date__month" },
+                      [
+                        _c("drop-down", {
+                          attrs: {
+                            list:
+                              _vm.infoOnApplication.shipmentPeriod.month.list,
+                            placeholder: "Месяц",
+                            "default-selected":
+                              _vm.infoOnApplication.shipmentPeriod.month
+                                .selected,
+                            disabled: false
+                          },
+                          on: {
+                            change: function($event) {
+                              _vm.infoOnApplication.shipmentPeriod.month.selected = $event
+                            }
+                          }
+                        })
+                      ],
+                      1
+                    ),
+                    _vm._v(" "),
+                    _c(
+                      "div",
+                      { staticClass: "date__year" },
+                      [
+                        _c("drop-down", {
+                          attrs: {
+                            list:
+                              _vm.infoOnApplication.shipmentPeriod.year.list,
+                            placeholder: "Год",
+                            "default-selected":
+                              _vm.infoOnApplication.shipmentPeriod.year
+                                .selected,
+                            disabled:
+                              _vm.infoOnApplication.shipmentPeriod.month
+                                .selected < 0
+                          },
+                          on: {
+                            change: function($event) {
+                              _vm.infoOnApplication.shipmentPeriod.year.selected = $event
+                            }
+                          }
+                        })
+                      ],
+                      1
+                    )
+                  ])
+                ]),
+                _vm._v(" "),
+                _c(
+                  "fieldset",
+                  { staticClass: "form__fieldset form__fieldset_mb" },
+                  [
+                    _c("div", { staticClass: "info-title" }, [
+                      _vm._v("Получатель")
+                    ]),
+                    _vm._v(" "),
+                    _c("drop-down", {
+                      attrs: {
+                        list: _vm.infoOnApplication.recipient.list,
+                        placeholder: "Получатель",
+                        "default-selected":
+                          _vm.infoOnApplication.recipient.selected,
+                        disabled:
+                          _vm.infoOnApplication.shipmentPeriod.year.selected < 0
+                      },
+                      on: {
+                        change: function($event) {
+                          _vm.infoOnApplication.recipient.selected = $event
+                        }
+                      }
+                    })
+                  ],
+                  1
+                ),
+                _vm._v(" "),
+                _c(
+                  "fieldset",
+                  { staticClass: "form__fieldset" },
+                  [
+                    _c("div", { staticClass: "info-title" }, [
+                      _vm._v("Поставщик")
+                    ]),
+                    _vm._v(" "),
+                    _c("drop-down", {
+                      attrs: {
+                        list: _vm.infoOnApplication.provider.list,
+                        placeholder: "Поставщик",
+                        "default-selected":
+                          _vm.infoOnApplication.provider.selected,
+                        disabled: _vm.infoOnApplication.recipient.selected < 0
+                      },
+                      on: {
+                        change: function($event) {
+                          _vm.infoOnApplication.provider.selected = $event
+                        }
+                      }
+                    })
+                  ],
+                  1
+                ),
+                _vm._v(" "),
+                _c(
+                  "fieldset",
+                  { staticClass: "form__fieldset" },
+                  [
+                    _c("div", { staticClass: "info-title" }, [
+                      _vm._v("Способ доставки")
+                    ]),
+                    _vm._v(" "),
+                    _c("drop-down", {
+                      attrs: {
+                        list: _vm.infoOnApplication.deliveryMethod.list,
+                        placeholder: "Способ доставки",
+                        "default-selected":
+                          _vm.infoOnApplication.deliveryMethod.selected,
+                        disabled: _vm.infoOnApplication.provider.selected < 0
+                      },
+                      on: {
+                        change: function($event) {
+                          _vm.infoOnApplication.deliveryMethod.selected = $event
+                        }
+                      }
+                    })
+                  ],
+                  1
+                ),
+                _vm._v(" "),
+                _c("div", { staticClass: "anew-next" }, [
+                  _c(
+                    "a",
+                    {
+                      staticClass: "btn btn_next",
+                      class: {
+                        disabled:
+                          _vm.infoOnApplication.deliveryMethod.selected < 0
+                      },
+                      attrs: { href: "" },
+                      on: {
+                        click: function($event) {
+                          $event.preventDefault()
+                          _vm.nextStep(1)
+                        }
+                      }
+                    },
+                    [_vm._v("Далее")]
+                  )
+                ])
+              ])
+            ])
+          : _vm._e(),
+        _vm._v(" "),
+        _c(
+          "transition",
           {
-            name: "model",
-            rawName: "v-model",
-            value: _vm.currentFormat,
-            expression: "currentFormat"
-          }
-        ],
-        staticClass: "js-selectize-controle form__select-tiny",
-        on: {
-          change: [
-            function($event) {
-              var $$selectedVal = Array.prototype.filter
-                .call($event.target.options, function(o) {
-                  return o.selected
-                })
-                .map(function(o) {
-                  var val = "_value" in o ? o._value : o.value
-                  return val
-                })
-              _vm.currentFormat = $event.target.multiple
-                ? $$selectedVal
-                : $$selectedVal[0]
-            },
-            _vm.getGrammage
+            on: {
+              "after-enter": _vm.scrollStep,
+              "before-leave": _vm.scrollStep
+            }
+          },
+          [
+            _vm.step >= 1 && _vm.step < 2
+              ? _c("div", { staticClass: "step", attrs: { id: "step1" } }, [
+                  _c("div", { staticClass: "a-title a-title_mb" }, [
+                    _c("div", { staticClass: "a-title__h3" }, [
+                      _vm._v("Выбор продукции")
+                    ])
+                  ]),
+                  _vm._v(" "),
+                  _c(
+                    "div",
+                    { staticClass: "products " },
+                    [
+                      _c("div", { staticClass: "products__row" }, [
+                        _c("div", {
+                          staticClass: "products__td products__td-number"
+                        }),
+                        _vm._v(" "),
+                        _c(
+                          "div",
+                          { staticClass: "products__td products__td-product" },
+                          [
+                            _c(
+                              "div",
+                              {
+                                staticClass: "info-title products__info-title"
+                              },
+                              [_vm._v("Товары")]
+                            )
+                          ]
+                        ),
+                        _vm._v(" "),
+                        _c(
+                          "div",
+                          { staticClass: "products__td products__td-decade" },
+                          [
+                            _c(
+                              "div",
+                              {
+                                staticClass: "info-title products__info-title"
+                              },
+                              [_vm._v("Декада")]
+                            )
+                          ]
+                        ),
+                        _vm._v(" "),
+                        _c(
+                          "div",
+                          { staticClass: "products__td products__td-volume" },
+                          [
+                            _c(
+                              "div",
+                              {
+                                staticClass: "info-title products__info-title"
+                              },
+                              [_vm._v("Объём")]
+                            )
+                          ]
+                        ),
+                        _vm._v(" "),
+                        _c(
+                          "div",
+                          { staticClass: "products__td products__td-diameter" },
+                          [
+                            _c(
+                              "div",
+                              {
+                                staticClass: "info-title products__info-title"
+                              },
+                              [_vm._v("Диаметр рулона")]
+                            )
+                          ]
+                        ),
+                        _vm._v(" "),
+                        _c(
+                          "div",
+                          { staticClass: "products__td products__td-price" },
+                          [
+                            _c(
+                              "div",
+                              {
+                                staticClass: "info-title products__info-title"
+                              },
+                              [_vm._v("Цена")]
+                            )
+                          ]
+                        ),
+                        _vm._v(" "),
+                        _c("div", {
+                          staticClass: "products__td products__td-remove"
+                        })
+                      ]),
+                      _vm._v(" "),
+                      _vm._l(_vm.productList, function(item, index) {
+                        return _c("div", { staticClass: "products__row " }, [
+                          _c("div", { staticClass: "products__td" }, [
+                            _c("span", { staticClass: "products__number" }, [
+                              _vm._v(
+                                _vm._s(index + 1) + "." + _vm._s(item.index)
+                              )
+                            ])
+                          ]),
+                          _vm._v(" "),
+                          _c(
+                            "div",
+                            { staticClass: "products__td" },
+                            [
+                              _c("drop-down", {
+                                attrs: {
+                                  list: _vm.products.list,
+                                  placeholder: "Товар",
+                                  "default-selected": item.product,
+                                  disabled: false
+                                },
+                                on: {
+                                  change: function($event) {
+                                    _vm.changeProduct(index, $event)
+                                  }
+                                }
+                              })
+                            ],
+                            1
+                          ),
+                          _vm._v(" "),
+                          _c(
+                            "div",
+                            { staticClass: "products__td" },
+                            [
+                              _c("drop-down", {
+                                attrs: {
+                                  list: _vm.products.list[item.product]
+                                    ? _vm.products.list[item.product].data
+                                        .decade.list
+                                    : false,
+                                  placeholder: _vm.products.list[item.product]
+                                    ? _vm.products.list[item.product].data
+                                        .decade.name
+                                    : "Декада",
+                                  "default-selected": item.decade,
+                                  disabled: _vm.products.list[item.product]
+                                    ? false
+                                    : true
+                                },
+                                on: {
+                                  change: function($event) {
+                                    item.decade = $event
+                                  }
+                                }
+                              })
+                            ],
+                            1
+                          ),
+                          _vm._v(" "),
+                          _c("div", { staticClass: "products__td" }, [
+                            _c("input", {
+                              directives: [
+                                {
+                                  name: "model",
+                                  rawName: "v-model",
+                                  value: item.volume,
+                                  expression: "item.volume"
+                                }
+                              ],
+                              staticClass: "form__input form__input_large",
+                              class: { disabled: item.volume === false },
+                              attrs: { type: "number", min: "1" },
+                              domProps: { value: item.volume },
+                              on: {
+                                input: function($event) {
+                                  if ($event.target.composing) {
+                                    return
+                                  }
+                                  _vm.$set(item, "volume", $event.target.value)
+                                }
+                              }
+                            })
+                          ]),
+                          _vm._v(" "),
+                          _c(
+                            "div",
+                            { staticClass: "products__td" },
+                            [
+                              _c("drop-down", {
+                                attrs: {
+                                  list: _vm.products.list[item.product]
+                                    ? _vm.products.list[item.product].data
+                                        .diameter.list
+                                    : false,
+                                  placeholder: _vm.products.list[item.product]
+                                    ? _vm.products.list[item.product].data
+                                        .diameter.name
+                                    : "Диаметр",
+                                  "default-selected": item.diameter,
+                                  disabled: _vm.products.list[item.product]
+                                    ? false
+                                    : true
+                                },
+                                on: {
+                                  change: function($event) {
+                                    item.diameter = $event
+                                  }
+                                }
+                              })
+                            ],
+                            1
+                          ),
+                          _vm._v(" "),
+                          _c("div", { staticClass: "products__td" }, [
+                            _c(
+                              "div",
+                              {
+                                staticClass:
+                                  "form__input form__input_large form__input_bold",
+                                attrs: { type: "text" }
+                              },
+                              [
+                                _vm._v(
+                                  "\n                                " +
+                                    _vm._s(_vm.calcPrice(index)) +
+                                    "\n                            "
+                                )
+                              ]
+                            )
+                          ]),
+                          _vm._v(" "),
+                          _c("div", { staticClass: "products__td" }, [
+                            _c("i", {
+                              staticClass: "icon icon-trash ",
+                              on: {
+                                click: function($event) {
+                                  $event.preventDefault()
+                                  _vm.delProduct(index)
+                                }
+                              }
+                            })
+                          ])
+                        ])
+                      })
+                    ],
+                    2
+                  ),
+                  _vm._v(" "),
+                  _c("div", { staticClass: "products-add" }, [
+                    _c(
+                      "a",
+                      {
+                        staticClass: "add-btn",
+                        attrs: { href: "" },
+                        on: {
+                          click: function($event) {
+                            $event.preventDefault()
+                            return _vm.addProduct($event)
+                          }
+                        }
+                      },
+                      [_vm._v("Добавить товар")]
+                    )
+                  ]),
+                  _vm._v(" "),
+                  _c("div", { staticClass: "anew-toolbar" }, [
+                    _c(
+                      "a",
+                      {
+                        staticClass: "btn btn_inversed",
+                        attrs: { href: "" },
+                        on: {
+                          click: function($event) {
+                            $event.preventDefault()
+                            _vm.prevStep()
+                          }
+                        }
+                      },
+                      [_vm._v("Отменить")]
+                    ),
+                    _vm._v(" "),
+                    _c(
+                      "a",
+                      {
+                        staticClass: "btn",
+                        attrs: { href: "" },
+                        on: {
+                          click: function($event) {
+                            $event.preventDefault()
+                            _vm.nextStep(2)
+                          }
+                        }
+                      },
+                      [_vm._v("Сохранить")]
+                    )
+                  ])
+                ])
+              : _vm._e()
           ]
-        }
-      },
-      [
-        _vm._v(
-          '\n                                   :disabled="showFormat"\n                                   '
         ),
-        _vm._l(_vm.formats, function(format, index) {
-          return _c("option", { domProps: { value: format } }, [
-            _vm._v(" " + _vm._s(format) + " ")
-          ])
-        })
+        _vm._v(" "),
+        _vm.step === 2
+          ? _c("div", { staticClass: "step", attrs: { id: "step2" } }, [
+              _c("div", { staticClass: "a-information" }, [
+                _vm._m(1),
+                _vm._v(" "),
+                _c("div", { staticClass: "flex info-flex" }, [
+                  _c("div", { staticClass: "flex__col info-flex__col" }, [
+                    _c("div", { staticClass: "info-title-small" }, [
+                      _vm._v("Период отгрузки")
+                    ]),
+                    _vm._v(" "),
+                    _c("span", { staticClass: "info-line" }, [
+                      _vm._v(
+                        _vm._s(
+                          _vm.infoOnApplication.shipmentPeriod.month.list[
+                            _vm.infoOnApplication.shipmentPeriod.month.selected
+                          ].name
+                        ) +
+                          " " +
+                          _vm._s(
+                            _vm.infoOnApplication.shipmentPeriod.year.list[
+                              _vm.infoOnApplication.shipmentPeriod.year.selected
+                            ].name
+                          )
+                      )
+                    ])
+                  ]),
+                  _vm._v(" "),
+                  _c("div", { staticClass: "flex__col info-flex__col" }, [
+                    _c("div", { staticClass: "info-title-small" }, [
+                      _vm._v("Способ доставки")
+                    ]),
+                    _vm._v(" "),
+                    _c("span", { staticClass: "info-line" }, [
+                      _vm._v(
+                        _vm._s(
+                          _vm.infoOnApplication.deliveryMethod.list[
+                            _vm.infoOnApplication.deliveryMethod.selected
+                          ].name
+                        )
+                      )
+                    ])
+                  ]),
+                  _vm._v(" "),
+                  _c("div", { staticClass: "flex__col info-flex__col" }, [
+                    _c("div", { staticClass: "info-title-small" }, [
+                      _vm._v("Грузополучатель")
+                    ]),
+                    _vm._v(" "),
+                    _c("span", { staticClass: "info-line" }, [
+                      _vm._v(
+                        _vm._s(
+                          _vm.infoOnApplication.recipient.list[
+                            _vm.infoOnApplication.recipient.selected
+                          ].name
+                        )
+                      )
+                    ])
+                  ]),
+                  _vm._v(" "),
+                  _c("div", { staticClass: "flex__col info-flex__col" }, [
+                    _c("div", { staticClass: "info-title-small" }, [
+                      _vm._v("Поставщик")
+                    ]),
+                    _vm._v(" "),
+                    _c("span", { staticClass: "info-line" }, [
+                      _vm._v(
+                        _vm._s(
+                          _vm.infoOnApplication.provider.list[
+                            _vm.infoOnApplication.provider.selected
+                          ].name
+                        )
+                      )
+                    ])
+                  ])
+                ])
+              ]),
+              _vm._v(" "),
+              _c("div", { staticClass: "a-goods" }, [
+                _vm._m(2),
+                _vm._v(" "),
+                _c("table", { staticClass: "table a-table" }, [
+                  _vm._m(3),
+                  _vm._v(" "),
+                  _c(
+                    "tbody",
+                    [
+                      _vm._l(_vm.productList, function(item, index) {
+                        return _c(
+                          "tr",
+                          [
+                            item.product > -1
+                              ? [
+                                  _c("td", { staticClass: "table__td" }, [
+                                    _vm._v(_vm._s(index + 1))
+                                  ]),
+                                  _vm._v(" "),
+                                  _c("td", { staticClass: "table__td" }, [
+                                    _vm._v(
+                                      _vm._s(
+                                        _vm.products.list[item.product].name
+                                      )
+                                    )
+                                  ]),
+                                  _vm._v(" "),
+                                  _c("td", { staticClass: "table__td" }, [
+                                    _vm._v(
+                                      _vm._s(
+                                        item.decade === 0 ? item.volume : "-"
+                                      )
+                                    )
+                                  ]),
+                                  _vm._v(" "),
+                                  _c("td", { staticClass: "table__td" }, [
+                                    _vm._v(
+                                      _vm._s(
+                                        item.decade === 1 ? item.volume : "-"
+                                      )
+                                    )
+                                  ]),
+                                  _vm._v(" "),
+                                  _c("td", { staticClass: "table__td" }, [
+                                    _vm._v(
+                                      _vm._s(
+                                        item.decade === 2 ? item.volume : "-"
+                                      )
+                                    )
+                                  ]),
+                                  _vm._v(" "),
+                                  _c("td", { staticClass: "table__td" }, [
+                                    _vm._v(_vm._s(item.volume))
+                                  ]),
+                                  _vm._v(" "),
+                                  _c("td", { staticClass: "table__td" }, [
+                                    _vm._v(_vm._s(item.price))
+                                  ])
+                                ]
+                              : _vm._e()
+                          ],
+                          2
+                        )
+                      }),
+                      _vm._v(" "),
+                      _c("tr", [
+                        _c(
+                          "td",
+                          {
+                            staticClass:
+                              "table__td table__td_summary table__td_left",
+                            attrs: { colspan: "7" }
+                          },
+                          [
+                            _c("div", { staticClass: "table__summary" }, [
+                              _c(
+                                "span",
+                                { staticClass: "table__summary-title" },
+                                [_vm._v("Итого:")]
+                              ),
+                              _vm._v(
+                                " " +
+                                  _vm._s(_vm.totalVolume) +
+                                  " т\n                            "
+                              )
+                            ]),
+                            _vm._v(" "),
+                            _c("div", { staticClass: "table__summary" }, [
+                              _c(
+                                "span",
+                                { staticClass: "table__summary-title" },
+                                [_vm._v("Итоговая сумма:")]
+                              ),
+                              _vm._v(" " + _vm._s(_vm.totalPrice) + " "),
+                              _c("span", { staticClass: "rouble" }, [
+                                _vm._v("q")
+                              ])
+                            ])
+                          ]
+                        )
+                      ])
+                    ],
+                    2
+                  )
+                ])
+              ]),
+              _vm._v(" "),
+              _c("div", { staticClass: "sh-toolbar" }, [
+                _c(
+                  "a",
+                  {
+                    staticClass: "btn btn_inversed",
+                    attrs: { href: "" },
+                    on: {
+                      click: function($event) {
+                        $event.preventDefault()
+                        _vm.prevStep()
+                      }
+                    }
+                  },
+                  [_vm._v("Редактировать")]
+                ),
+                _vm._v(" "),
+                _c(
+                  "a",
+                  {
+                    staticClass: "btn",
+                    attrs: { href: "" },
+                    on: {
+                      click: function($event) {
+                        $event.preventDefault()
+                        return _vm.sendForm($event)
+                      }
+                    }
+                  },
+                  [_vm._v("Отправить")]
+                )
+              ])
+            ])
+          : _vm._e()
       ],
-      2
+      1
     )
   ])
 }
-var staticRenderFns = []
+var staticRenderFns = [
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c("div", { staticClass: "a-title a-title_mb" }, [
+      _c("div", { staticClass: "a-title__h3" }, [
+        _vm._v("Информация по заявке")
+      ])
+    ])
+  },
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c("div", { staticClass: "a-title" }, [
+      _c("div", { staticClass: "a-title__h3" }, [
+        _vm._v("Информация по заявке")
+      ])
+    ])
+  },
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c("div", { staticClass: "a-title" }, [
+      _c("div", { staticClass: "a-title__h3" }, [_vm._v("Товары в заявке")])
+    ])
+  },
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c("thead", [
+      _c("tr", [
+        _c("th", { staticClass: "table__th", attrs: { rowspan: "2" } }, [
+          _vm._v("№")
+        ]),
+        _vm._v(" "),
+        _c(
+          "th",
+          {
+            staticClass: "table__th a-table__th-name",
+            attrs: { rowspan: "2" }
+          },
+          [_vm._v("Наименование товара")]
+        ),
+        _vm._v(" "),
+        _c("th", { staticClass: "table__th", attrs: { colspan: "3" } }, [
+          _vm._v("Кол-во и срок отгрузки")
+        ]),
+        _vm._v(" "),
+        _c(
+          "th",
+          {
+            staticClass: "table__th a-table__th-total",
+            attrs: { rowspan: "2" }
+          },
+          [_vm._v("Итого")]
+        ),
+        _vm._v(" "),
+        _c(
+          "th",
+          {
+            staticClass: "table__th a-table__th-price",
+            attrs: { rowspan: "2" }
+          },
+          [_vm._v("Цена")]
+        )
+      ]),
+      _vm._v(" "),
+      _c("tr", [
+        _c("th", { staticClass: "table__th a-table__th-number" }, [
+          _vm._v("01-10")
+        ]),
+        _vm._v(" "),
+        _c("th", { staticClass: "table__th a-table__th-number" }, [
+          _vm._v("11-20")
+        ]),
+        _vm._v(" "),
+        _c("th", { staticClass: "table__th a-table__th-number" }, [
+          _vm._v("21-31")
+        ])
+      ])
+    ])
+  }
+]
 render._withStripped = true
-module.exports = { render: render, staticRenderFns: staticRenderFns }
+
 if (false) {
   module.hot.accept()
   if (module.hot.data) {
-    require("vue-hot-reload-api")      .rerender("data-v-57736628", module.exports)
+    require("vue-hot-reload-api")      .rerender("data-v-57736628", { render: render, staticRenderFns: staticRenderFns })
   }
 }
 
 /***/ }),
-/* 43 */
-/***/ (function(module, exports, __webpack_require__) {
+/* 46 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
 
+"use strict";
+Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__babel_loader_cacheDirectory_true_presets_env_modules_false_targets_browsers_2_uglify_true_plugins_transform_object_rest_spread_transform_runtime_polyfill_false_helpers_false_node_modules_vue_loader_lib_selector_type_script_index_0_ExampleComponent_vue__ = __webpack_require__(14);
+/* empty harmony namespace reexport */
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__node_modules_vue_loader_lib_template_compiler_index_id_data_v_0ca92eac_hasScoped_false_optionsId_0_buble_transforms_node_modules_vue_loader_lib_selector_type_template_index_0_ExampleComponent_vue__ = __webpack_require__(47);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__node_modules_vue_loader_lib_runtime_component_normalizer__ = __webpack_require__(1);
 var disposed = false
-var normalizeComponent = __webpack_require__(1)
 /* script */
-var __vue_script__ = __webpack_require__(44)
+
+
 /* template */
-var __vue_template__ = __webpack_require__(45)
+
 /* template functional */
 var __vue_template_functional__ = false
 /* styles */
@@ -14013,9 +16585,11 @@ var __vue_styles__ = null
 var __vue_scopeId__ = null
 /* moduleIdentifier (server only) */
 var __vue_module_identifier__ = null
-var Component = normalizeComponent(
-  __vue_script__,
-  __vue_template__,
+
+var Component = Object(__WEBPACK_IMPORTED_MODULE_2__node_modules_vue_loader_lib_runtime_component_normalizer__["a" /* default */])(
+  __WEBPACK_IMPORTED_MODULE_0__babel_loader_cacheDirectory_true_presets_env_modules_false_targets_browsers_2_uglify_true_plugins_transform_object_rest_spread_transform_runtime_polyfill_false_helpers_false_node_modules_vue_loader_lib_selector_type_script_index_0_ExampleComponent_vue__["a" /* default */],
+  __WEBPACK_IMPORTED_MODULE_1__node_modules_vue_loader_lib_template_compiler_index_id_data_v_0ca92eac_hasScoped_false_optionsId_0_buble_transforms_node_modules_vue_loader_lib_selector_type_template_index_0_ExampleComponent_vue__["a" /* render */],
+  __WEBPACK_IMPORTED_MODULE_1__node_modules_vue_loader_lib_template_compiler_index_id_data_v_0ca92eac_hasScoped_false_optionsId_0_buble_transforms_node_modules_vue_loader_lib_selector_type_template_index_0_ExampleComponent_vue__["b" /* staticRenderFns */],
   __vue_template_functional__,
   __vue_styles__,
   __vue_scopeId__,
@@ -14039,42 +16613,16 @@ if (false) {(function () {
   })
 })()}
 
-module.exports = Component.exports
+/* harmony default export */ __webpack_exports__["default"] = (Component.exports);
 
 
 /***/ }),
-/* 44 */
+/* 47 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-
-/* harmony default export */ __webpack_exports__["default"] = ({
-    mounted: function mounted() {
-        console.log('Component mounted.');
-    }
-});
-
-/***/ }),
-/* 45 */
-/***/ (function(module, exports, __webpack_require__) {
-
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return render; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "b", function() { return staticRenderFns; });
 var render = function() {
   var _vm = this
   var _h = _vm.$createElement
@@ -14106,19 +16654,592 @@ var staticRenderFns = [
   }
 ]
 render._withStripped = true
-module.exports = { render: render, staticRenderFns: staticRenderFns }
+
 if (false) {
   module.hot.accept()
   if (module.hot.data) {
-    require("vue-hot-reload-api")      .rerender("data-v-0ca92eac", module.exports)
+    require("vue-hot-reload-api")      .rerender("data-v-0ca92eac", { render: render, staticRenderFns: staticRenderFns })
   }
 }
 
 /***/ }),
-/* 46 */
+/* 48 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__babel_loader_cacheDirectory_true_presets_env_modules_false_targets_browsers_2_uglify_true_plugins_transform_object_rest_spread_transform_runtime_polyfill_false_helpers_false_node_modules_vue_loader_lib_selector_type_script_index_0_DropDown_vue__ = __webpack_require__(15);
+/* empty harmony namespace reexport */
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__node_modules_vue_loader_lib_template_compiler_index_id_data_v_66975e28_hasScoped_false_optionsId_0_buble_transforms_node_modules_vue_loader_lib_selector_type_template_index_0_DropDown_vue__ = __webpack_require__(49);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__node_modules_vue_loader_lib_runtime_component_normalizer__ = __webpack_require__(1);
+var disposed = false
+/* script */
+
+
+/* template */
+
+/* template functional */
+var __vue_template_functional__ = false
+/* styles */
+var __vue_styles__ = null
+/* scopeId */
+var __vue_scopeId__ = null
+/* moduleIdentifier (server only) */
+var __vue_module_identifier__ = null
+
+var Component = Object(__WEBPACK_IMPORTED_MODULE_2__node_modules_vue_loader_lib_runtime_component_normalizer__["a" /* default */])(
+  __WEBPACK_IMPORTED_MODULE_0__babel_loader_cacheDirectory_true_presets_env_modules_false_targets_browsers_2_uglify_true_plugins_transform_object_rest_spread_transform_runtime_polyfill_false_helpers_false_node_modules_vue_loader_lib_selector_type_script_index_0_DropDown_vue__["a" /* default */],
+  __WEBPACK_IMPORTED_MODULE_1__node_modules_vue_loader_lib_template_compiler_index_id_data_v_66975e28_hasScoped_false_optionsId_0_buble_transforms_node_modules_vue_loader_lib_selector_type_template_index_0_DropDown_vue__["a" /* render */],
+  __WEBPACK_IMPORTED_MODULE_1__node_modules_vue_loader_lib_template_compiler_index_id_data_v_66975e28_hasScoped_false_optionsId_0_buble_transforms_node_modules_vue_loader_lib_selector_type_template_index_0_DropDown_vue__["b" /* staticRenderFns */],
+  __vue_template_functional__,
+  __vue_styles__,
+  __vue_scopeId__,
+  __vue_module_identifier__
+)
+Component.options.__file = "resources\\assets\\js\\components\\DropDown.vue"
+
+/* hot reload */
+if (false) {(function () {
+  var hotAPI = require("vue-hot-reload-api")
+  hotAPI.install(require("vue"), false)
+  if (!hotAPI.compatible) return
+  module.hot.accept()
+  if (!module.hot.data) {
+    hotAPI.createRecord("data-v-66975e28", Component.options)
+  } else {
+    hotAPI.reload("data-v-66975e28", Component.options)
+  }
+  module.hot.dispose(function (data) {
+    disposed = true
+  })
+})()}
+
+/* harmony default export */ __webpack_exports__["default"] = (Component.exports);
+
+
+/***/ }),
+/* 49 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return render; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "b", function() { return staticRenderFns; });
+var render = function() {
+  var _vm = this
+  var _h = _vm.$createElement
+  var _c = _vm._self._c || _h
+  return _c("div", [
+    _c("div", { staticClass: "selectize-control form__select-large single" }, [
+      _c(
+        "label",
+        {
+          staticClass: "selectize-input items not-full has-options",
+          class: { disabled: _vm.disabled }
+        },
+        [
+          _c("input", {
+            directives: [
+              {
+                name: "model",
+                rawName: "v-model",
+                value: _vm.searchSelect,
+                expression: "searchSelect"
+              }
+            ],
+            attrs: {
+              options: _vm.list,
+              placeholder: _vm.placeholder,
+              autocomplete: "off",
+              type: "text"
+            },
+            domProps: { value: _vm.searchSelect },
+            on: {
+              focus: function($event) {
+                _vm.selectFocus($event)
+              },
+              blur: function($event) {
+                _vm.selectBlur($event)
+              },
+              input: function($event) {
+                if ($event.target.composing) {
+                  return
+                }
+                _vm.searchSelect = $event.target.value
+              }
+            }
+          })
+        ]
+      ),
+      _vm._v(" "),
+      _c(
+        "div",
+        {
+          staticClass: "selectize-dropdown single form__select-large",
+          staticStyle: { display: "none" }
+        },
+        [
+          _c(
+            "div",
+            { staticClass: "selectize-dropdown-content" },
+            _vm._l(_vm.list, function(item, index) {
+              return _c(
+                "div",
+                _vm._b(
+                  {
+                    directives: [
+                      {
+                        name: "show",
+                        rawName: "v-show",
+                        value:
+                          _vm.listShow.indexOf(index) > -1 ||
+                          _vm.listShow.length === 0,
+                        expression:
+                          "(listShow.indexOf(index)>-1 || listShow.length === 0)"
+                      }
+                    ],
+                    staticClass: "option",
+                    attrs: { "data-selectable": "" },
+                    on: {
+                      click: function($event) {
+                        _vm.selectChange(index)
+                      }
+                    }
+                  },
+                  "div",
+                  { "data-value": item.val },
+                  false
+                ),
+                [
+                  _vm._v(
+                    "\n                " +
+                      _vm._s(item.name) +
+                      "\n                "
+                  )
+                ]
+              )
+            })
+          )
+        ]
+      )
+    ])
+  ])
+}
+var staticRenderFns = []
+render._withStripped = true
+
+if (false) {
+  module.hot.accept()
+  if (module.hot.data) {
+    require("vue-hot-reload-api")      .rerender("data-v-66975e28", { render: render, staticRenderFns: staticRenderFns })
+  }
+}
+
+/***/ }),
+/* 50 */
 /***/ (function(module, exports) {
 
 // removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 51 */,
+/* 52 */,
+/* 53 */
+/***/ (function(module, exports) {
+
+/*
+	MIT License http://www.opensource.org/licenses/mit-license.php
+	Author Tobias Koppers @sokra
+*/
+// css base code, injected by the css-loader
+module.exports = function(useSourceMap) {
+	var list = [];
+
+	// return the list of modules as css string
+	list.toString = function toString() {
+		return this.map(function (item) {
+			var content = cssWithMappingToString(item, useSourceMap);
+			if(item[2]) {
+				return "@media " + item[2] + "{" + content + "}";
+			} else {
+				return content;
+			}
+		}).join("");
+	};
+
+	// import a list of modules into the list
+	list.i = function(modules, mediaQuery) {
+		if(typeof modules === "string")
+			modules = [[null, modules, ""]];
+		var alreadyImportedModules = {};
+		for(var i = 0; i < this.length; i++) {
+			var id = this[i][0];
+			if(typeof id === "number")
+				alreadyImportedModules[id] = true;
+		}
+		for(i = 0; i < modules.length; i++) {
+			var item = modules[i];
+			// skip already imported module
+			// this implementation is not 100% perfect for weird media query combinations
+			//  when a module is imported multiple times with different media queries.
+			//  I hope this will never occur (Hey this way we have smaller bundles)
+			if(typeof item[0] !== "number" || !alreadyImportedModules[item[0]]) {
+				if(mediaQuery && !item[2]) {
+					item[2] = mediaQuery;
+				} else if(mediaQuery) {
+					item[2] = "(" + item[2] + ") and (" + mediaQuery + ")";
+				}
+				list.push(item);
+			}
+		}
+	};
+	return list;
+};
+
+function cssWithMappingToString(item, useSourceMap) {
+	var content = item[1] || '';
+	var cssMapping = item[3];
+	if (!cssMapping) {
+		return content;
+	}
+
+	if (useSourceMap && typeof btoa === 'function') {
+		var sourceMapping = toComment(cssMapping);
+		var sourceURLs = cssMapping.sources.map(function (source) {
+			return '/*# sourceURL=' + cssMapping.sourceRoot + source + ' */'
+		});
+
+		return [content].concat(sourceURLs).concat([sourceMapping]).join('\n');
+	}
+
+	return [content].join('\n');
+}
+
+// Adapted from convert-source-map (MIT)
+function toComment(sourceMap) {
+	// eslint-disable-next-line no-undef
+	var base64 = btoa(unescape(encodeURIComponent(JSON.stringify(sourceMap))));
+	var data = 'sourceMappingURL=data:application/json;charset=utf-8;base64,' + base64;
+
+	return '/*# ' + data + ' */';
+}
+
+
+/***/ }),
+/* 54 */,
+/* 55 */,
+/* 56 */,
+/* 57 */,
+/* 58 */,
+/* 59 */,
+/* 60 */,
+/* 61 */,
+/* 62 */,
+/* 63 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
+/* harmony export (immutable) */ __webpack_exports__["default"] = addStylesClient;
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__listToStyles__ = __webpack_require__(64);
+/*
+  MIT License http://www.opensource.org/licenses/mit-license.php
+  Author Tobias Koppers @sokra
+  Modified by Evan You @yyx990803
+*/
+
+
+
+var hasDocument = typeof document !== 'undefined'
+
+if (typeof DEBUG !== 'undefined' && DEBUG) {
+  if (!hasDocument) {
+    throw new Error(
+    'vue-style-loader cannot be used in a non-browser environment. ' +
+    "Use { target: 'node' } in your Webpack config to indicate a server-rendering environment."
+  ) }
+}
+
+/*
+type StyleObject = {
+  id: number;
+  parts: Array<StyleObjectPart>
+}
+
+type StyleObjectPart = {
+  css: string;
+  media: string;
+  sourceMap: ?string
+}
+*/
+
+var stylesInDom = {/*
+  [id: number]: {
+    id: number,
+    refs: number,
+    parts: Array<(obj?: StyleObjectPart) => void>
+  }
+*/}
+
+var head = hasDocument && (document.head || document.getElementsByTagName('head')[0])
+var singletonElement = null
+var singletonCounter = 0
+var isProduction = false
+var noop = function () {}
+var options = null
+var ssrIdKey = 'data-vue-ssr-id'
+
+// Force single-tag solution on IE6-9, which has a hard limit on the # of <style>
+// tags it will allow on a page
+var isOldIE = typeof navigator !== 'undefined' && /msie [6-9]\b/.test(navigator.userAgent.toLowerCase())
+
+function addStylesClient (parentId, list, _isProduction, _options) {
+  isProduction = _isProduction
+
+  options = _options || {}
+
+  var styles = Object(__WEBPACK_IMPORTED_MODULE_0__listToStyles__["a" /* default */])(parentId, list)
+  addStylesToDom(styles)
+
+  return function update (newList) {
+    var mayRemove = []
+    for (var i = 0; i < styles.length; i++) {
+      var item = styles[i]
+      var domStyle = stylesInDom[item.id]
+      domStyle.refs--
+      mayRemove.push(domStyle)
+    }
+    if (newList) {
+      styles = Object(__WEBPACK_IMPORTED_MODULE_0__listToStyles__["a" /* default */])(parentId, newList)
+      addStylesToDom(styles)
+    } else {
+      styles = []
+    }
+    for (var i = 0; i < mayRemove.length; i++) {
+      var domStyle = mayRemove[i]
+      if (domStyle.refs === 0) {
+        for (var j = 0; j < domStyle.parts.length; j++) {
+          domStyle.parts[j]()
+        }
+        delete stylesInDom[domStyle.id]
+      }
+    }
+  }
+}
+
+function addStylesToDom (styles /* Array<StyleObject> */) {
+  for (var i = 0; i < styles.length; i++) {
+    var item = styles[i]
+    var domStyle = stylesInDom[item.id]
+    if (domStyle) {
+      domStyle.refs++
+      for (var j = 0; j < domStyle.parts.length; j++) {
+        domStyle.parts[j](item.parts[j])
+      }
+      for (; j < item.parts.length; j++) {
+        domStyle.parts.push(addStyle(item.parts[j]))
+      }
+      if (domStyle.parts.length > item.parts.length) {
+        domStyle.parts.length = item.parts.length
+      }
+    } else {
+      var parts = []
+      for (var j = 0; j < item.parts.length; j++) {
+        parts.push(addStyle(item.parts[j]))
+      }
+      stylesInDom[item.id] = { id: item.id, refs: 1, parts: parts }
+    }
+  }
+}
+
+function createStyleElement () {
+  var styleElement = document.createElement('style')
+  styleElement.type = 'text/css'
+  head.appendChild(styleElement)
+  return styleElement
+}
+
+function addStyle (obj /* StyleObjectPart */) {
+  var update, remove
+  var styleElement = document.querySelector('style[' + ssrIdKey + '~="' + obj.id + '"]')
+
+  if (styleElement) {
+    if (isProduction) {
+      // has SSR styles and in production mode.
+      // simply do nothing.
+      return noop
+    } else {
+      // has SSR styles but in dev mode.
+      // for some reason Chrome can't handle source map in server-rendered
+      // style tags - source maps in <style> only works if the style tag is
+      // created and inserted dynamically. So we remove the server rendered
+      // styles and inject new ones.
+      styleElement.parentNode.removeChild(styleElement)
+    }
+  }
+
+  if (isOldIE) {
+    // use singleton mode for IE9.
+    var styleIndex = singletonCounter++
+    styleElement = singletonElement || (singletonElement = createStyleElement())
+    update = applyToSingletonTag.bind(null, styleElement, styleIndex, false)
+    remove = applyToSingletonTag.bind(null, styleElement, styleIndex, true)
+  } else {
+    // use multi-style-tag mode in all other cases
+    styleElement = createStyleElement()
+    update = applyToTag.bind(null, styleElement)
+    remove = function () {
+      styleElement.parentNode.removeChild(styleElement)
+    }
+  }
+
+  update(obj)
+
+  return function updateStyle (newObj /* StyleObjectPart */) {
+    if (newObj) {
+      if (newObj.css === obj.css &&
+          newObj.media === obj.media &&
+          newObj.sourceMap === obj.sourceMap) {
+        return
+      }
+      update(obj = newObj)
+    } else {
+      remove()
+    }
+  }
+}
+
+var replaceText = (function () {
+  var textStore = []
+
+  return function (index, replacement) {
+    textStore[index] = replacement
+    return textStore.filter(Boolean).join('\n')
+  }
+})()
+
+function applyToSingletonTag (styleElement, index, remove, obj) {
+  var css = remove ? '' : obj.css
+
+  if (styleElement.styleSheet) {
+    styleElement.styleSheet.cssText = replaceText(index, css)
+  } else {
+    var cssNode = document.createTextNode(css)
+    var childNodes = styleElement.childNodes
+    if (childNodes[index]) styleElement.removeChild(childNodes[index])
+    if (childNodes.length) {
+      styleElement.insertBefore(cssNode, childNodes[index])
+    } else {
+      styleElement.appendChild(cssNode)
+    }
+  }
+}
+
+function applyToTag (styleElement, obj) {
+  var css = obj.css
+  var media = obj.media
+  var sourceMap = obj.sourceMap
+
+  if (media) {
+    styleElement.setAttribute('media', media)
+  }
+  if (options.ssrId) {
+    styleElement.setAttribute(ssrIdKey, obj.id)
+  }
+
+  if (sourceMap) {
+    // https://developer.chrome.com/devtools/docs/javascript-debugging
+    // this makes source maps inside style tags work properly in Chrome
+    css += '\n/*# sourceURL=' + sourceMap.sources[0] + ' */'
+    // http://stackoverflow.com/a/26603875
+    css += '\n/*# sourceMappingURL=data:application/json;base64,' + btoa(unescape(encodeURIComponent(JSON.stringify(sourceMap)))) + ' */'
+  }
+
+  if (styleElement.styleSheet) {
+    styleElement.styleSheet.cssText = css
+  } else {
+    while (styleElement.firstChild) {
+      styleElement.removeChild(styleElement.firstChild)
+    }
+    styleElement.appendChild(document.createTextNode(css))
+  }
+}
+
+
+/***/ }),
+/* 64 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (immutable) */ __webpack_exports__["a"] = listToStyles;
+/**
+ * Translates the list format produced by css-loader into something
+ * easier to manipulate.
+ */
+function listToStyles (parentId, list) {
+  var styles = []
+  var newStyles = {}
+  for (var i = 0; i < list.length; i++) {
+    var item = list[i]
+    var id = item[0]
+    var css = item[1]
+    var media = item[2]
+    var sourceMap = item[3]
+    var part = {
+      id: parentId + ':' + i,
+      css: css,
+      media: media,
+      sourceMap: sourceMap
+    }
+    if (!newStyles[id]) {
+      styles.push(newStyles[id] = { id: id, parts: [part] })
+    } else {
+      newStyles[id].parts.push(part)
+    }
+  }
+  return styles
+}
+
+
+/***/ }),
+/* 65 */
+/***/ (function(module, exports, __webpack_require__) {
+
+// style-loader: Adds some css to the DOM by adding a <style> tag
+
+// load the styles
+var content = __webpack_require__(66);
+if(typeof content === 'string') content = [[module.i, content, '']];
+if(content.locals) module.exports = content.locals;
+// add the styles to the DOM
+var add = __webpack_require__(63).default
+var update = add("b509f970", content, false, {});
+// Hot Module Replacement
+if(false) {
+ // When the styles change, update the <style> tags
+ if(!content.locals) {
+   module.hot.accept("!!../../../../node_modules/css-loader/index.js!../../../../node_modules/vue-loader/lib/style-compiler/index.js?{\"optionsId\":\"0\",\"vue\":true,\"scoped\":false,\"sourceMap\":false}!../../../../node_modules/vue-loader/lib/selector.js?type=styles&index=0!./SelectProduct.vue", function() {
+     var newContent = require("!!../../../../node_modules/css-loader/index.js!../../../../node_modules/vue-loader/lib/style-compiler/index.js?{\"optionsId\":\"0\",\"vue\":true,\"scoped\":false,\"sourceMap\":false}!../../../../node_modules/vue-loader/lib/selector.js?type=styles&index=0!./SelectProduct.vue");
+     if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+     update(newContent);
+   });
+ }
+ // When the module is disposed, remove the <style> tags
+ module.hot.dispose(function() { update(); });
+}
+
+/***/ }),
+/* 66 */
+/***/ (function(module, exports, __webpack_require__) {
+
+exports = module.exports = __webpack_require__(53)(false);
+// imports
+
+
+// module
+exports.push([module.i, "\n.form__select-large input {\n    color: #26231f;\n    width: 100%;\n}\n.disabled {\n    opacity: .5;\n    pointer-events: none;\n}\n", ""]);
+
+// exports
+
 
 /***/ })
 /******/ ]);

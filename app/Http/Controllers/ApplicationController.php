@@ -65,6 +65,11 @@ class ApplicationController extends Controller
             ['applicator' => $applicator, 'date_month' => $date_month, 'date_year' => $date_year, 'user' => $applicator->user]);
     }
 
+    public function newApp(Applicator $applicator)
+    {
+        return view('templates.applications.new', $applicator);
+    }
+
     /**
      * Store a newly created resource in storage.
      *

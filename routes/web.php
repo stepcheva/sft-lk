@@ -33,7 +33,11 @@ Route::group(['prefix' => 'user/{applicator}'], function () {
     Route::get('/consigneers', 'ApplicatorController@showConsigneers');
     Route::get('get/productranges/{consigneer_id}', 'ApplicatorController@getProducts');
 
+
+
 });
+
+Route::get('applications/new', 'ApplicationController@newApp')->name('applications.new');
 
 Route::any('applications/{application}', 'ApplicationController@createProductVolume')->name('applications.product');
 Route::post('applications/{application}/confirm', 'ApplicationController@confirmApplication')->name('applications.confirm');

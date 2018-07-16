@@ -1,6 +1,15 @@
 /node_modules
 /public/hot
 /public/storage
+/public/js/addons
+/public/js/libs
+/public/js/plugins
+/public/lk
+/public/css/fonts/
+/public/css/plugins/
+/public/fonts/
+/public/img/
+
 /storage/*.key
 /vendor
 /.idea
@@ -13,3 +22,7 @@ yarn-error.log
 composer.lock
 sft-lk_.sql
 sft-lk.sql
+package-lock.json
+new dump
+sft-lk-26_06_18.png
+/public/storage.lnk

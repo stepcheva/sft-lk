@@ -16,13 +16,17 @@ let token = document.head.querySelector('meta[name="csrf-token"]');
  * the page. Then, you may begin adding components to this application
  * or customize the JavaScript scaffolding to fit your unique needs.
  */
+Vue.component('drop-down', require('./components/DropDown.vue').default);
+Vue.component('consigneer-component', require('./components/ConsigneerComponent.vue').default);
+Vue.component('fileupload-component', require('./components/FileuploadComponent.vue').default);
+Vue.component('select-product', require('./components/SelectProduct.vue').default);
 
-Vue.component('consigneer-component', require('./components/ConsigneerComponent.vue'));
-Vue.component('fileupload-component', require('./components/FileuploadComponent.vue'));
-//Vue.component('transportupload-component', require('./components/TransportuploadComponent.vue'));
-Vue.component('select-product', require('./components/SelectProduct.vue'));
-Vue.component('example-component', require('./components/ExampleComponent.vue'));
+Vue.component('example-component', require('./components/ExampleComponent.vue').default);
+
 
 const app = new Vue({
     el: '#root-wrapper'
 });
+
+
+
