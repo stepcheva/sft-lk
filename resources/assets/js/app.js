@@ -20,6 +20,7 @@ Vue.component('drop-down', require('./components/DropDown.vue').default);
 Vue.component('consigneer-component', require('./components/ConsigneerComponent.vue').default);
 Vue.component('fileupload-component', require('./components/FileuploadComponent.vue').default);
 Vue.component('select-product', require('./components/SelectProduct.vue').default);
+Vue.component('select-products', require('./components/SelectProducts.vue').default);
 
 Vue.component('example-component', require('./components/ExampleComponent.vue').default);
 

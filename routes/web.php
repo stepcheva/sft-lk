@@ -40,7 +40,8 @@ Route::group(['prefix' => 'user/{applicator}'], function () {
 Route::get('applications/new', 'ApplicationController@newApp')->name('applications.new');
 
 Route::any('applications/{application}', 'ApplicationController@createProductVolume')->name('applications.product');
-Route::post('applications/{application}/confirm', 'ApplicationController@confirmApplication')->name('applications.confirm');
+Route::post('
+', 'ApplicationController@confirmApplication')->name('applications.confirm');
 Route::post('applications/{application}/send', 'ApplicationController@createOrder')->name('applications.send');
 Route::any('applications/{application}/duplicate', 'ApplicationController@duplicate')->name('applications.duplicate');
 Route::get('application/{application}/lunits', 'LunitsController@show')->name('shipments');

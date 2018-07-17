@@ -1,3 +1,4 @@
+@php  @endphp
 <li class="b-topnav__item">
     <a href="{{ route('applications.index', ['applicator_id' => $user->applicator->id, 'param' => 'current' ]) }}" class="b-topnav__link
     {{ in_array(Route::currentRouteName(), ['applications.index', 'applications.create']) ? ' active': '' }}">Мои заявки</a>

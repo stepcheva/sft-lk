@@ -1,6 +1,6 @@
 <template>
     <div>
-        <div class="selectize-control form__select-large single">
+        <div class="selectize-control form__select-large single ">
         <label class="selectize-input items not-full has-options" :class="{ disabled: disabled }">
             <input @focus="selectFocus($event)"
             @blur="selectBlur($event)"

@@ -7,8 +7,6 @@
     @include('flashes')
     <h1 class="ai-title">Новая заявка</h1>
     <div class="a-body">
-        <select-product>компонент</select-product>
-
         <form action=" //route('applications.store', ['applicator' => $applicator]) }}" class="form" method="POST">
             {{ csrf_field() }}
             <div class="js-step app-new-step active">
@@ -66,9 +64,7 @@
             </div>
         </form>
 
-        @isset($data)
-            @include('templates.applications.create_step2', ['data' => $data])
-        @endisset
+
     </div>
 
 @endsection

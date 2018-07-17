@@ -11,6 +11,7 @@ use App\Models\Productrange;
 use App\Models\Unit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Mail;
 
@@ -67,7 +68,10 @@ class ApplicationController extends Controller
 
     public function newApp(Applicator $applicator)
     {
-        return view('templates.applications.new', $applicator);
+        $applicator = Applicator::find(7);
+        $user = $applicator->user;
+
+        return view('templates.applications.step2', compact('user' , 'applicator'));
     }
 
     /**
@@ -238,6 +242,7 @@ class ApplicationController extends Controller
 
     public function confirmApplication(Application $application, Request $request)
     {
+        dd($request);
         $products = $request->productranges;
 
         foreach ($products as $key => $product) {
