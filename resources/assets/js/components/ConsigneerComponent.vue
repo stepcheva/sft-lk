@@ -3,8 +3,8 @@
         <div class="receivers__col receivers__col-left">
             <div v-if="showSelect">
                 <div class="receiver-title">Выберите грузополучателя</div>
-                <select class="js-selectize-controle form__select-tiny" v-model="selected" @change="getProduct">
-                    <option v-for="(option, index) in options" :value="option"> {{ option.name }} </option>
+                <select class="form__select-large single selectize-input" v-model="selected" @change="getProduct">
+                    <option class="selectize-dropdown-content" v-for="(option, index) in options" :value="option"> {{ option.name }} </option>
                 </select>
             </div>
             <div v-else class="receiver-title">{{ selected.name }}</div>
