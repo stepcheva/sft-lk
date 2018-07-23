@@ -20,3 +20,7 @@
     <a class="tabs_controls_link"
        href="{{route('applications.index', ['applicator_id' => $applicator->id, 'param' => 'draft']) }}">Черновик</a>
 </li>
+<li class="tabs_controls_item {{ (isset($active) && $active === 'canceled') ? 'active': ''}}">
+    <a class="tabs_controls_link"
+       href="{{route('applications.index', ['applicator_id' => $applicator->id, 'param' => 'canceled']) }}">Отмененные</a>
+</li>

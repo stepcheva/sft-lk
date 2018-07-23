@@ -7,11 +7,12 @@ use App\Models\Applicator;
 use App\Models\Lunit;
 use App\Models\OrderApplication;
 use App\Models\ProductApplication;
+use App\Models\ConsigneerDelivery;
+use App\Models\CooperationProductrange;
 use App\Models\Productrange;
-use App\Models\Unit;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Mail;
 
@@ -32,6 +33,7 @@ class ApplicationController extends Controller
             case 'new':
             case 'done':
             case 'draft':
+            case 'canceled':
                 $applications = $applicator->getApplications($request->param);
                 break;
             default:
@@ -41,7 +43,7 @@ class ApplicationController extends Controller
         $user = $applicator->user;
         $active = $request->param;
 
-        return view('templates.applications.index', compact('user', 'applicator', 'applications','active'));
+        return view('templates.applications.index', compact('user', 'applicator', 'applications', 'active'));
     }
 
     /**
@@ -62,16 +64,12 @@ class ApplicationController extends Controller
             $date_month[] = Carbon::now()->addMonth($i)->format('F');
         }
 
-        return view('templates.applications.create',
-            ['applicator' => $applicator, 'date_month' => $date_month, 'date_year' => $date_year, 'user' => $applicator->user]);
-    }
-
-    public function newApp(Applicator $applicator)
-    {
-        $applicator = Applicator::find(7);
-        $user = $applicator->user;
-
-        return view('templates.applications.step2', compact('user' , 'applicator'));
+        return view('templates.applications.create', [
+                'applicator' => $applicator,
+                'date_month' => $date_month,
+                'date_year' => $date_year,
+                'user' => $applicator->user
+            ]);
     }
 
     /**
@@ -94,10 +92,330 @@ class ApplicationController extends Controller
             'period' => $date->format('Y-m-d'),
         ]);
 
-        $productranges = Productrange::where('provider_id', $request->provider_id)->paginate(15);
+        $products = $this->getProducts($application);
 
-        return view('templates.applications.productrange', compact('productranges', 'application'));
+        return view('templates.applications.step2', compact('application', 'products'));
     }
+
+    public function getProducts(Application $application)
+    {
+        $products = [
+            "name" => "Товар",
+            "selected" =>  -1,
+            "brand" => [
+                '0' => [
+                    "placeholder" => "Марка",
+                    "name" => 'M (SFT Medium)',
+                    "selected" => -1,
+                    "grammage" => [
+                        '0' => [
+                            "placeholder" => "Граммаж",
+                            "name" => '100',
+                            "selected" => -1,
+                            "format" => [
+                                '0' => [
+                                    "placeholder" => "Формат",
+                                    "name" => '2100',
+                                    "id" => '63',
+                                    "min_lot" => '30',
+                                    "deliveries" => [
+                                        '0' => [
+                                            "name" => 'Авто',
+                                            "delivery_id" => '1',
+                                            "price" => '33250',
+                                        ],
+                                        '1' => [
+                                            "name" => 'ЖД',
+                                            "delivery_id" => '2',
+                                            "price" => '33670',
+                                        ]
+                                    ]
+                                ],
+                                '1' => [
+                                    "placeholder" => "Формат",
+                                    "name" => '2200',
+                                    "id" => '64',
+                                    "min_lot" => '30',
+                                    "deliveries" => [
+                                        '0' => [
+                                            "name" => 'Авто',
+                                            "delivery_id" => '1',
+                                            "price" => '33250',
+                                        ],
+                                        '1' => [
+                                            "name" => 'ЖД',
+                                            "delivery_id" => '2',
+                                            "price" => '33670',
+                                        ]
+                                    ]
+                                ]
+                            ]
+                        ],
+                        '1' => [
+                            "placeholder" => "Граммаж",
+                            "name" => '110',
+                            "selected" => -1,
+                            "format" => [
+                                '0' => [
+                                    "placeholder" => "Формат",
+                                    "name" => '2100',
+                                    "id" => '65',
+                                    "min_lot" => '30',
+                                    "deliveries" => [
+                                        '0' => [
+                                            "name" => 'Авто',
+                                            "delivery_id" => '1',
+                                            "price" => '33250',
+                                        ],
+                                        '1' => [
+                                            "name" => 'ЖД',
+                                            "delivery_id" => '2',
+                                            "price" => '33670',
+                                        ]
+                                    ]
+                                ],
+                                '1' => [
+                                    "placeholder" => "Формат",
+                                    "name" => '2200',
+                                    "id" => '66',
+                                    "min_lot" => '30',
+                                    "deliveries" => [
+                                        '0' => [
+                                            "name" => 'Авто',
+                                            "delivery_id" => '1',
+                                            "price" => '33250',
+                                        ],
+                                        '1' => [
+                                            "name" => 'ЖД',
+                                            "delivery_id" => '2',
+                                            "price" => '33670',
+                                        ]
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ]
+                ],
+                '1' => [
+                    "placeholder" => "Марка",
+                    "name" => 'L (SFT Large)',
+                    "selected" => -1,
+                    "grammage" => [
+                        '0' => [
+                            "placeholder" => "Граммаж",
+                            "name" => '100',
+                            "selected" => -1,
+                            "format" => [
+                                '0' => [
+                                    "placeholder" => "Формат",
+                                    "name" => '2100',
+                                    "id" => '67',
+                                    "min_lot" => '30',
+                                    "deliveries" => [
+                                        '0' => [
+                                            "name" => 'Авто',
+                                            "delivery_id" => '1',
+                                            "price" => '33250',
+                                        ],
+                                        '1' => [
+                                            "name" => 'ЖД',
+                                            "delivery_id" => '2',
+                                            "price" => '33670',
+                                        ]
+                                    ]
+                                ],
+                                '1' => [
+                                    "placeholder" => "Формат",
+                                    "name" => '2200',
+                                    "id" => '63',
+                                    "min_lot" => '30',
+                                    "deliveries" => [
+                                        '0' => [
+                                            "name" => 'Авто',
+                                            "delivery_id" => '1',
+                                            "price" => '33250',
+                                        ],
+                                        '1' => [
+                                            "name" => 'ЖД',
+                                            "delivery_id" => '2',
+                                            "price" => '33670',
+                                        ]
+                                    ]
+                                ]
+                            ]
+                        ],
+                        '1' => [
+                            "placeholder" => "Граммаж",
+                            "name" => '110',
+                            "selected" => -1,
+                            "format" => [
+                                '0' => [
+                                    "placeholder" => "Формат",
+                                    "name" => '2100',
+                                    "id" => '68',
+                                    "min_lot" => '30',
+                                    "deliveries" => [
+                                        '0' => [
+                                            "name" => 'Авто',
+                                            "delivery_id" => '1',
+                                            "price" => '33250',
+                                        ],
+                                        '1' => [
+                                            "name" => 'ЖД',
+                                            "delivery_id" => '2',
+                                            "price" => '33670',
+                                        ]
+                                    ]
+                                ],
+                                '1' => [
+                                    "placeholder" => "Формат",
+                                    "name" => '2100',
+                                    "id" => '69',
+                                    "min_lot" => '30',
+                                    "deliveries" => [
+                                        '0' => [
+                                            "name" => 'Авто',
+                                            "delivery_id" => '1',
+                                            "price" => '33250',
+                                        ],
+                                        '1' => [
+                                            "name" => 'ЖД',
+                                            "delivery_id" => '2',
+                                            "price" => '33670',
+                                        ]
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ]
+                ]
+            ]
+        ];
+        return response()->json([
+            'products' => $products,
+        ]);
+
+    /*
+        $consigneer_id = $application->consigneer_id;
+        $products_id = CooperationProductrange::where('cooperation_id',
+            Applicator::find($application->applicator_id)->cooperation->id)->pluck('productrange_id');
+        $productranges = Productrange::find($products_id);
+
+        //products tree generating
+        $products =  $productranges->groupBy('brand')->map(function ($key, $item) {
+            $name = $item;
+            return compact('name');
+        })->values();
+
+        $grammage = $productranges->groupBy('brand')->map(function ($item) {
+            return $item->groupBy('grammage')->map(function ($key, $i) {
+                $name = $i;
+                $placeholder = 'Граммаж';
+                return compact('name', 'placeholder');
+            })->values();
+        })->values();
+
+        $format = $productranges->groupBy('brand')->map(function ($item) {
+            return $item->groupBy('grammage')->map(function ($i) {
+                return $i->groupBy('format')->map(function ($key, $j)  {
+                    $name = $j;
+                    $placeholder = 'Формат';
+                    return compact('name', 'placeholder');
+                })->values();
+            })->values();
+        })->values();
+
+        $products->toArray();
+        $grammage->toArray();
+        $format->toArray();
+        dd($grammage->toArray());
+        */
+        /*
+        $products = $productranges->groupBy('brand')->map(function ($item) {
+            return $item->groupBy('grammage')->map(function ($i) {
+                return $i->groupBy('format')->map(function ($j)  {
+                    return $j;
+                });
+            });
+        });
+        */
+   /*
+        foreach ($products as $b => $collection) {
+            foreach ($collection as $g => $item) {
+                foreach ($item as $f => $j) {
+                    foreach($j as $productrange) {
+                        $consigneer_delivery = $productrange->consigneerDeliveries;
+                        foreach ($consigneer_delivery as $key => $value) {
+                            $placeholder = "Способ доставки";
+                            $name = $value->delivery->name;
+                            $delivery_id = $value->delivery->id;
+                            $price = $value->price;
+                            $deliveries[] = compact('placeholder', 'name', 'delivery_id', 'price');
+                        }
+                        $placeholder = "Формат";
+                        $name = $f;
+                        $id = $productrange->id;
+                        $min_lot = $productrange->min_lot;
+                        $format[] = compact('placeholder', 'name', 'id', 'min_lot', 'deliveries');
+                    }
+                }
+                $placeholder = "Граммаж";
+                $name = $g;
+                $selected = -1;
+                $grammage[] = compact('placeholder', 'name', 'selected', 'format');
+            }
+            $placeholder = "Марка";
+            $name = $b;
+            $selected = -1;
+            $brand[] = compact('placeholder', 'name', 'selected', 'grammage');
+        }
+        $name = "Товар";
+        $selected = -1;
+        $result[] = compact( 'name', 'selected', 'brand');
+
+        dd($products);
+
+
+
+        /*
+        $products = [
+            "name" => "Товар",
+            "selected" =>  -1,
+            "brand" => [
+                '0' => [
+                    "placeholder" => "Марка",
+                    "name" => '',
+                    "selected" => -1,
+                    "grammage" => [
+                        '0' => [
+                            "placeholder" => "Граммаж",
+                            "name" => '',
+                            "selected" => -1,
+                            "format" => [
+                                '0' => [
+                                    "placeholder" => "Формат",
+                                    "name" => '',
+                                    "id" => '',
+                                    "min_lot" => '',
+                                    "deliveries" => [
+                                        '0' => [
+                                            "placeholder" => "Способ доставки",
+                                            "name" => '',
+                                            "delivery_id" => '',
+                                            "price" => '',
+                                        ]
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ]
+                ]
+            ]
+        ]
+    */
+
+  }
+
 
     /**
      * Display the specified resource.
@@ -109,12 +427,13 @@ class ApplicationController extends Controller
     {
         $product_applications = $application->order_applications;
         $user = $applicator->user;
-        if($application->lunits) {
+        if ($application->lunits) {
             $active = (isset($request->active)) ? $request->active : '1';
             $lunits = $application->getLunits($active);
             $data = compact('applicator', 'application', 'product_applications', 'lunits', 'active', 'user');
-        } else
+        } else {
             $data = compact('applicator', 'application', 'product_applications', 'user');
+        }
 
         //dd(compact('applicator', 'application', 'product_applications', 'lunits', 'active', 'user'));
 
@@ -136,6 +455,7 @@ class ApplicationController extends Controller
         ]);
         //view('templates.applications.edit', compact('applicator','application', 'order_applications'));
     }
+
     public function duplicate(Application $application)
     {
         $new_application = Application::create([
@@ -167,12 +487,17 @@ class ApplicationController extends Controller
 
             if (!$send) {
                 session()->flash('alert', 'Ошибка отправки писем.');
-                return redirect()->route('applications.index', ['applicator' => $application->applicator->id, 'user' => $application->applicator->id]);
+                return redirect()->route('applications.index',
+                    ['applicator' => $application->applicator->id, 'user' => $application->applicator->id]);
             } else {
                 session()->flash('success', 'Уведомление отправлено на email.');
             }
         }
-        return redirect()->route('applications.index', ['applicator' => $application->applicator->id, 'user' => $application->applicator->id, 'active' => $new_application->status ]);
+        return redirect()->route('applications.index', [
+            'applicator' => $application->applicator->id,
+            'user' => $application->applicator->id,
+            'active' => $new_application->status
+        ]);
     }
 
     /**
@@ -271,7 +596,8 @@ class ApplicationController extends Controller
         } else {
             foreach ($products as $product) {
                 $product_application = new ProductApplication($application->id, $product['productrange_id'],
-                    $product['volume_1'], $product['volume_2'], $product['volume_3'], $product['consigneer_delivery_id']);
+                    $product['volume_1'], $product['volume_2'], $product['volume_3'],
+                    $product['consigneer_delivery_id']);
                 $product_application->setPrice();
                 $price[] = $product_application->price;
                 $volume[] = $product_application->getVolume();
@@ -289,7 +615,7 @@ class ApplicationController extends Controller
         $products = $request->query('product_applications');
         $price = $request->query('price');
 
-        if(null !== ($request->query('comment'))) {
+        if (null !== ($request->query('comment'))) {
             $application->contactquery()->create([
                 'application_id' => $application->id,
                 'theme' => "Комментарий к заявке $application->number",
@@ -325,7 +651,11 @@ class ApplicationController extends Controller
         }
 
 
-        return redirect()->route('applications.index', ['applicator' => $application->applicator->id, 'user' => $application->applicator->id, 'active' => $application->status ]);
+        return redirect()->route('applications.index', [
+            'applicator' => $application->applicator->id,
+            'user' => $application->applicator->id,
+            'active' => $application->status
+        ]);
     }
 
     public function createFromUnits($units)
@@ -343,7 +673,7 @@ class ApplicationController extends Controller
         //dd(compact('number','volume', 'consigneer_id','status','plan_data','shipment_data', 'delivery_data' , 'price' , 'application_id'));
 
         $lunit = Lunit::create([
-            'number' => rand(100,200),
+            'number' => rand(100, 200),
             'consigneer_id' => $consigneer_id,
             'status' => 0,
             'volume' => $volume,
@@ -362,11 +692,12 @@ class ApplicationController extends Controller
 
         return $lunit->units;
     }
+
     public function getCalendar(Application $application)
     {
         $shipments = [];
         $lunits = $application->lunits;
-        foreach($lunits as $lunit) {
+        foreach ($lunits as $lunit) {
             $key = Carbon::createFromFormat('Y-m-d', $lunit->plan_data)->day;
             $shipments["$key"][] = $lunit;
         }
