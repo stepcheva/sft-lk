@@ -18,7 +18,7 @@ Route::get('logout', 'AuthController@logout')->name('logout');
 
 Route::get('home', 'UserController@index')->name('home');
 
-
+//работа с пользователями
 Route::resource('users', 'UserController');
 Route::resource('applicators', 'ApplicatorController');
 
@@ -29,19 +29,19 @@ Route::group(['prefix' => 'user/{applicator}'], function () {
     Route::resource('contactquery', 'ContactqueryController');
     Route::get('productranges/{consigneer_id}', 'ApplicatorController@showProductranges')->name('productranges.list');
 
-    //json на фронт
+    //json на фронт (страница Номенклатура)
     Route::get('/consigneers', 'ApplicatorController@showConsigneers');
     Route::get('get/productranges/{consigneer_id}', 'ApplicatorController@getProducts');
+
+    //json на фронт (страница Новой заявки)
+    Route::get('get/products/', 'ApplicationController@getProducts');
 
 
 
 });
 
-Route::get('applications/new', 'ApplicationController@newApp')->name('applications.new');
-
 Route::any('applications/{application}', 'ApplicationController@createProductVolume')->name('applications.product');
-Route::post('
-', 'ApplicationController@confirmApplication')->name('applications.confirm');
+Route::post('applications/{application}', 'ApplicationController@confirmApplication')->name('applications.confirm');
 Route::post('applications/{application}/send', 'ApplicationController@createOrder')->name('applications.send');
 Route::any('applications/{application}/duplicate', 'ApplicationController@duplicate')->name('applications.duplicate');
 Route::get('application/{application}/lunits', 'LunitsController@show')->name('shipments');
