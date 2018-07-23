@@ -5,9 +5,10 @@
 @section('content')
 
     @include('flashes')
+
     <h1 class="ai-title">Новая заявка</h1>
     <div class="a-body">
-        <form action=" //route('applications.store', ['applicator' => $applicator]) }}" class="form" method="POST">
+        <form action="{{ route('applications.store', ['applicator' => $applicator]) }}" class="form" method="POST">
             {{ csrf_field() }}
             <div class="js-step app-new-step active">
                 <div class="a-title a-title_mb">
@@ -63,12 +64,5 @@
                 </div>
             </div>
         </form>
-
-
     </div>
-
 @endsection
-
-@push('script')
-    <script src="{{ asset('js/app.js') }}"></script>
-@endpush
