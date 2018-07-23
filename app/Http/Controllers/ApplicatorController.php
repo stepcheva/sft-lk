@@ -57,7 +57,6 @@ class ApplicatorController extends Controller
             $products[] = compact('id', 'brand', 'grammage', 'format', 'min_lot', 'deliveries');
         }
 
-        $consigneers = Applicator::find($applicator)->getConsigneers();
         return response()->json([
             'products' => $products,
         ]);
