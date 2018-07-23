@@ -60,7 +60,7 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 19);
+/******/ 	return __webpack_require__(__webpack_require__.s = 18);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -70,8 +70,8 @@
 "use strict";
 
 
-var bind = __webpack_require__(7);
-var isBuffer = __webpack_require__(26);
+var bind = __webpack_require__(5);
+var isBuffer = __webpack_require__(25);
 
 /*global toString:true*/
 
@@ -517,7 +517,7 @@ module.exports = g;
 /* WEBPACK VAR INJECTION */(function(process) {
 
 var utils = __webpack_require__(0);
-var normalizeHeaderName = __webpack_require__(28);
+var normalizeHeaderName = __webpack_require__(27);
 
 var DEFAULT_CONTENT_TYPE = {
   'Content-Type': 'application/x-www-form-urlencoded'
@@ -533,10 +533,10 @@ function getDefaultAdapter() {
   var adapter;
   if (typeof XMLHttpRequest !== 'undefined') {
     // For browsers use XHR adapter
-    adapter = __webpack_require__(8);
+    adapter = __webpack_require__(6);
   } else if (typeof process !== 'undefined') {
     // For node use HTTP adapter
-    adapter = __webpack_require__(8);
+    adapter = __webpack_require__(6);
   }
   return adapter;
 }
@@ -607,10 +607,468 @@ utils.forEach(['post', 'put', 'patch'], function forEachMethodWithData(method) {
 
 module.exports = defaults;
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(6)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(4)))
 
 /***/ }),
 /* 4 */
+/***/ (function(module, exports) {
+
+// shim for using process in browser
+var process = module.exports = {};
+
+// cached from whatever global is present so that test runners that stub it
+// don't break things.  But we need to wrap it in a try catch in case it is
+// wrapped in strict mode code which doesn't define any globals.  It's inside a
+// function because try/catches deoptimize in certain engines.
+
+var cachedSetTimeout;
+var cachedClearTimeout;
+
+function defaultSetTimout() {
+    throw new Error('setTimeout has not been defined');
+}
+function defaultClearTimeout () {
+    throw new Error('clearTimeout has not been defined');
+}
+(function () {
+    try {
+        if (typeof setTimeout === 'function') {
+            cachedSetTimeout = setTimeout;
+        } else {
+            cachedSetTimeout = defaultSetTimout;
+        }
+    } catch (e) {
+        cachedSetTimeout = defaultSetTimout;
+    }
+    try {
+        if (typeof clearTimeout === 'function') {
+            cachedClearTimeout = clearTimeout;
+        } else {
+            cachedClearTimeout = defaultClearTimeout;
+        }
+    } catch (e) {
+        cachedClearTimeout = defaultClearTimeout;
+    }
+} ())
+function runTimeout(fun) {
+    if (cachedSetTimeout === setTimeout) {
+        //normal enviroments in sane situations
+        return setTimeout(fun, 0);
+    }
+    // if setTimeout wasn't available but was latter defined
+    if ((cachedSetTimeout === defaultSetTimout || !cachedSetTimeout) && setTimeout) {
+        cachedSetTimeout = setTimeout;
+        return setTimeout(fun, 0);
+    }
+    try {
+        // when when somebody has screwed with setTimeout but no I.E. maddness
+        return cachedSetTimeout(fun, 0);
+    } catch(e){
+        try {
+            // When we are in I.E. but the script has been evaled so I.E. doesn't trust the global object when called normally
+            return cachedSetTimeout.call(null, fun, 0);
+        } catch(e){
+            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error
+            return cachedSetTimeout.call(this, fun, 0);
+        }
+    }
+
+
+}
+function runClearTimeout(marker) {
+    if (cachedClearTimeout === clearTimeout) {
+        //normal enviroments in sane situations
+        return clearTimeout(marker);
+    }
+    // if clearTimeout wasn't available but was latter defined
+    if ((cachedClearTimeout === defaultClearTimeout || !cachedClearTimeout) && clearTimeout) {
+        cachedClearTimeout = clearTimeout;
+        return clearTimeout(marker);
+    }
+    try {
+        // when when somebody has screwed with setTimeout but no I.E. maddness
+        return cachedClearTimeout(marker);
+    } catch (e){
+        try {
+            // When we are in I.E. but the script has been evaled so I.E. doesn't  trust the global object when called normally
+            return cachedClearTimeout.call(null, marker);
+        } catch (e){
+            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error.
+            // Some versions of I.E. have different rules for clearTimeout vs setTimeout
+            return cachedClearTimeout.call(this, marker);
+        }
+    }
+
+
+
+}
+var queue = [];
+var draining = false;
+var currentQueue;
+var queueIndex = -1;
+
+function cleanUpNextTick() {
+    if (!draining || !currentQueue) {
+        return;
+    }
+    draining = false;
+    if (currentQueue.length) {
+        queue = currentQueue.concat(queue);
+    } else {
+        queueIndex = -1;
+    }
+    if (queue.length) {
+        drainQueue();
+    }
+}
+
+function drainQueue() {
+    if (draining) {
+        return;
+    }
+    var timeout = runTimeout(cleanUpNextTick);
+    draining = true;
+
+    var len = queue.length;
+    while(len) {
+        currentQueue = queue;
+        queue = [];
+        while (++queueIndex < len) {
+            if (currentQueue) {
+                currentQueue[queueIndex].run();
+            }
+        }
+        queueIndex = -1;
+        len = queue.length;
+    }
+    currentQueue = null;
+    draining = false;
+    runClearTimeout(timeout);
+}
+
+process.nextTick = function (fun) {
+    var args = new Array(arguments.length - 1);
+    if (arguments.length > 1) {
+        for (var i = 1; i < arguments.length; i++) {
+            args[i - 1] = arguments[i];
+        }
+    }
+    queue.push(new Item(fun, args));
+    if (queue.length === 1 && !draining) {
+        runTimeout(drainQueue);
+    }
+};
+
+// v8 likes predictible objects
+function Item(fun, array) {
+    this.fun = fun;
+    this.array = array;
+}
+Item.prototype.run = function () {
+    this.fun.apply(null, this.array);
+};
+process.title = 'browser';
+process.browser = true;
+process.env = {};
+process.argv = [];
+process.version = ''; // empty string to avoid regexp issues
+process.versions = {};
+
+function noop() {}
+
+process.on = noop;
+process.addListener = noop;
+process.once = noop;
+process.off = noop;
+process.removeListener = noop;
+process.removeAllListeners = noop;
+process.emit = noop;
+process.prependListener = noop;
+process.prependOnceListener = noop;
+
+process.listeners = function (name) { return [] }
+
+process.binding = function (name) {
+    throw new Error('process.binding is not supported');
+};
+
+process.cwd = function () { return '/' };
+process.chdir = function (dir) {
+    throw new Error('process.chdir is not supported');
+};
+process.umask = function() { return 0; };
+
+
+/***/ }),
+/* 5 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+module.exports = function bind(fn, thisArg) {
+  return function wrap() {
+    var args = new Array(arguments.length);
+    for (var i = 0; i < args.length; i++) {
+      args[i] = arguments[i];
+    }
+    return fn.apply(thisArg, args);
+  };
+};
+
+
+/***/ }),
+/* 6 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var utils = __webpack_require__(0);
+var settle = __webpack_require__(28);
+var buildURL = __webpack_require__(30);
+var parseHeaders = __webpack_require__(31);
+var isURLSameOrigin = __webpack_require__(32);
+var createError = __webpack_require__(7);
+var btoa = (typeof window !== 'undefined' && window.btoa && window.btoa.bind(window)) || __webpack_require__(33);
+
+module.exports = function xhrAdapter(config) {
+  return new Promise(function dispatchXhrRequest(resolve, reject) {
+    var requestData = config.data;
+    var requestHeaders = config.headers;
+
+    if (utils.isFormData(requestData)) {
+      delete requestHeaders['Content-Type']; // Let the browser set it
+    }
+
+    var request = new XMLHttpRequest();
+    var loadEvent = 'onreadystatechange';
+    var xDomain = false;
+
+    // For IE 8/9 CORS support
+    // Only supports POST and GET calls and doesn't returns the response headers.
+    // DON'T do this for testing b/c XMLHttpRequest is mocked, not XDomainRequest.
+    if ("development" !== 'test' &&
+        typeof window !== 'undefined' &&
+        window.XDomainRequest && !('withCredentials' in request) &&
+        !isURLSameOrigin(config.url)) {
+      request = new window.XDomainRequest();
+      loadEvent = 'onload';
+      xDomain = true;
+      request.onprogress = function handleProgress() {};
+      request.ontimeout = function handleTimeout() {};
+    }
+
+    // HTTP basic authentication
+    if (config.auth) {
+      var username = config.auth.username || '';
+      var password = config.auth.password || '';
+      requestHeaders.Authorization = 'Basic ' + btoa(username + ':' + password);
+    }
+
+    request.open(config.method.toUpperCase(), buildURL(config.url, config.params, config.paramsSerializer), true);
+
+    // Set the request timeout in MS
+    request.timeout = config.timeout;
+
+    // Listen for ready state
+    request[loadEvent] = function handleLoad() {
+      if (!request || (request.readyState !== 4 && !xDomain)) {
+        return;
+      }
+
+      // The request errored out and we didn't get a response, this will be
+      // handled by onerror instead
+      // With one exception: request that using file: protocol, most browsers
+      // will return status as 0 even though it's a successful request
+      if (request.status === 0 && !(request.responseURL && request.responseURL.indexOf('file:') === 0)) {
+        return;
+      }
+
+      // Prepare the response
+      var responseHeaders = 'getAllResponseHeaders' in request ? parseHeaders(request.getAllResponseHeaders()) : null;
+      var responseData = !config.responseType || config.responseType === 'text' ? request.responseText : request.response;
+      var response = {
+        data: responseData,
+        // IE sends 1223 instead of 204 (https://github.com/axios/axios/issues/201)
+        status: request.status === 1223 ? 204 : request.status,
+        statusText: request.status === 1223 ? 'No Content' : request.statusText,
+        headers: responseHeaders,
+        config: config,
+        request: request
+      };
+
+      settle(resolve, reject, response);
+
+      // Clean up request
+      request = null;
+    };
+
+    // Handle low level network errors
+    request.onerror = function handleError() {
+      // Real errors are hidden from us by the browser
+      // onerror should only fire if it's a network error
+      reject(createError('Network Error', config, null, request));
+
+      // Clean up request
+      request = null;
+    };
+
+    // Handle timeout
+    request.ontimeout = function handleTimeout() {
+      reject(createError('timeout of ' + config.timeout + 'ms exceeded', config, 'ECONNABORTED',
+        request));
+
+      // Clean up request
+      request = null;
+    };
+
+    // Add xsrf header
+    // This is only done if running in a standard browser environment.
+    // Specifically not if we're in a web worker, or react-native.
+    if (utils.isStandardBrowserEnv()) {
+      var cookies = __webpack_require__(34);
+
+      // Add xsrf header
+      var xsrfValue = (config.withCredentials || isURLSameOrigin(config.url)) && config.xsrfCookieName ?
+          cookies.read(config.xsrfCookieName) :
+          undefined;
+
+      if (xsrfValue) {
+        requestHeaders[config.xsrfHeaderName] = xsrfValue;
+      }
+    }
+
+    // Add headers to the request
+    if ('setRequestHeader' in request) {
+      utils.forEach(requestHeaders, function setRequestHeader(val, key) {
+        if (typeof requestData === 'undefined' && key.toLowerCase() === 'content-type') {
+          // Remove Content-Type if data is undefined
+          delete requestHeaders[key];
+        } else {
+          // Otherwise add header to the request
+          request.setRequestHeader(key, val);
+        }
+      });
+    }
+
+    // Add withCredentials to request if needed
+    if (config.withCredentials) {
+      request.withCredentials = true;
+    }
+
+    // Add responseType to request if needed
+    if (config.responseType) {
+      try {
+        request.responseType = config.responseType;
+      } catch (e) {
+        // Expected DOMException thrown by browsers not compatible XMLHttpRequest Level 2.
+        // But, this can be suppressed for 'json' type as it can be parsed by default 'transformResponse' function.
+        if (config.responseType !== 'json') {
+          throw e;
+        }
+      }
+    }
+
+    // Handle progress if needed
+    if (typeof config.onDownloadProgress === 'function') {
+      request.addEventListener('progress', config.onDownloadProgress);
+    }
+
+    // Not all browsers support upload events
+    if (typeof config.onUploadProgress === 'function' && request.upload) {
+      request.upload.addEventListener('progress', config.onUploadProgress);
+    }
+
+    if (config.cancelToken) {
+      // Handle cancellation
+      config.cancelToken.promise.then(function onCanceled(cancel) {
+        if (!request) {
+          return;
+        }
+
+        request.abort();
+        reject(cancel);
+        // Clean up request
+        request = null;
+      });
+    }
+
+    if (requestData === undefined) {
+      requestData = null;
+    }
+
+    // Send the request
+    request.send(requestData);
+  });
+};
+
+
+/***/ }),
+/* 7 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var enhanceError = __webpack_require__(29);
+
+/**
+ * Create an Error with the specified message, config, error code, request and response.
+ *
+ * @param {string} message The error message.
+ * @param {Object} config The config.
+ * @param {string} [code] The error code (for example, 'ECONNABORTED').
+ * @param {Object} [request] The request.
+ * @param {Object} [response] The response.
+ * @returns {Error} The created error.
+ */
+module.exports = function createError(message, config, code, request, response) {
+  var error = new Error(message);
+  return enhanceError(error, config, code, request, response);
+};
+
+
+/***/ }),
+/* 8 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+module.exports = function isCancel(value) {
+  return !!(value && value.__CANCEL__);
+};
+
+
+/***/ }),
+/* 9 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+/**
+ * A `Cancel` is an object that is thrown when an operation is canceled.
+ *
+ * @class
+ * @param {string=} message The message.
+ */
+function Cancel(message) {
+  this.message = message;
+}
+
+Cancel.prototype.toString = function toString() {
+  return 'Cancel' + (this.message ? ': ' + this.message : '');
+};
+
+Cancel.prototype.__CANCEL__ = true;
+
+module.exports = Cancel;
+
+
+/***/ }),
+/* 10 */
 /***/ (function(module, exports) {
 
 /*
@@ -692,13 +1150,13 @@ function toComment(sourceMap) {
 
 
 /***/ }),
-/* 5 */
+/* 11 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony export (immutable) */ __webpack_exports__["default"] = addStylesClient;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__listToStyles__ = __webpack_require__(52);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__listToStyles__ = __webpack_require__(45);
 /*
   MIT License http://www.opensource.org/licenses/mit-license.php
   Author Tobias Koppers @sokra
@@ -924,464 +1382,6 @@ function applyToTag (styleElement, obj) {
 
 
 /***/ }),
-/* 6 */
-/***/ (function(module, exports) {
-
-// shim for using process in browser
-var process = module.exports = {};
-
-// cached from whatever global is present so that test runners that stub it
-// don't break things.  But we need to wrap it in a try catch in case it is
-// wrapped in strict mode code which doesn't define any globals.  It's inside a
-// function because try/catches deoptimize in certain engines.
-
-var cachedSetTimeout;
-var cachedClearTimeout;
-
-function defaultSetTimout() {
-    throw new Error('setTimeout has not been defined');
-}
-function defaultClearTimeout () {
-    throw new Error('clearTimeout has not been defined');
-}
-(function () {
-    try {
-        if (typeof setTimeout === 'function') {
-            cachedSetTimeout = setTimeout;
-        } else {
-            cachedSetTimeout = defaultSetTimout;
-        }
-    } catch (e) {
-        cachedSetTimeout = defaultSetTimout;
-    }
-    try {
-        if (typeof clearTimeout === 'function') {
-            cachedClearTimeout = clearTimeout;
-        } else {
-            cachedClearTimeout = defaultClearTimeout;
-        }
-    } catch (e) {
-        cachedClearTimeout = defaultClearTimeout;
-    }
-} ())
-function runTimeout(fun) {
-    if (cachedSetTimeout === setTimeout) {
-        //normal enviroments in sane situations
-        return setTimeout(fun, 0);
-    }
-    // if setTimeout wasn't available but was latter defined
-    if ((cachedSetTimeout === defaultSetTimout || !cachedSetTimeout) && setTimeout) {
-        cachedSetTimeout = setTimeout;
-        return setTimeout(fun, 0);
-    }
-    try {
-        // when when somebody has screwed with setTimeout but no I.E. maddness
-        return cachedSetTimeout(fun, 0);
-    } catch(e){
-        try {
-            // When we are in I.E. but the script has been evaled so I.E. doesn't trust the global object when called normally
-            return cachedSetTimeout.call(null, fun, 0);
-        } catch(e){
-            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error
-            return cachedSetTimeout.call(this, fun, 0);
-        }
-    }
-
-
-}
-function runClearTimeout(marker) {
-    if (cachedClearTimeout === clearTimeout) {
-        //normal enviroments in sane situations
-        return clearTimeout(marker);
-    }
-    // if clearTimeout wasn't available but was latter defined
-    if ((cachedClearTimeout === defaultClearTimeout || !cachedClearTimeout) && clearTimeout) {
-        cachedClearTimeout = clearTimeout;
-        return clearTimeout(marker);
-    }
-    try {
-        // when when somebody has screwed with setTimeout but no I.E. maddness
-        return cachedClearTimeout(marker);
-    } catch (e){
-        try {
-            // When we are in I.E. but the script has been evaled so I.E. doesn't  trust the global object when called normally
-            return cachedClearTimeout.call(null, marker);
-        } catch (e){
-            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error.
-            // Some versions of I.E. have different rules for clearTimeout vs setTimeout
-            return cachedClearTimeout.call(this, marker);
-        }
-    }
-
-
-
-}
-var queue = [];
-var draining = false;
-var currentQueue;
-var queueIndex = -1;
-
-function cleanUpNextTick() {
-    if (!draining || !currentQueue) {
-        return;
-    }
-    draining = false;
-    if (currentQueue.length) {
-        queue = currentQueue.concat(queue);
-    } else {
-        queueIndex = -1;
-    }
-    if (queue.length) {
-        drainQueue();
-    }
-}
-
-function drainQueue() {
-    if (draining) {
-        return;
-    }
-    var timeout = runTimeout(cleanUpNextTick);
-    draining = true;
-
-    var len = queue.length;
-    while(len) {
-        currentQueue = queue;
-        queue = [];
-        while (++queueIndex < len) {
-            if (currentQueue) {
-                currentQueue[queueIndex].run();
-            }
-        }
-        queueIndex = -1;
-        len = queue.length;
-    }
-    currentQueue = null;
-    draining = false;
-    runClearTimeout(timeout);
-}
-
-process.nextTick = function (fun) {
-    var args = new Array(arguments.length - 1);
-    if (arguments.length > 1) {
-        for (var i = 1; i < arguments.length; i++) {
-            args[i - 1] = arguments[i];
-        }
-    }
-    queue.push(new Item(fun, args));
-    if (queue.length === 1 && !draining) {
-        runTimeout(drainQueue);
-    }
-};
-
-// v8 likes predictible objects
-function Item(fun, array) {
-    this.fun = fun;
-    this.array = array;
-}
-Item.prototype.run = function () {
-    this.fun.apply(null, this.array);
-};
-process.title = 'browser';
-process.browser = true;
-process.env = {};
-process.argv = [];
-process.version = ''; // empty string to avoid regexp issues
-process.versions = {};
-
-function noop() {}
-
-process.on = noop;
-process.addListener = noop;
-process.once = noop;
-process.off = noop;
-process.removeListener = noop;
-process.removeAllListeners = noop;
-process.emit = noop;
-process.prependListener = noop;
-process.prependOnceListener = noop;
-
-process.listeners = function (name) { return [] }
-
-process.binding = function (name) {
-    throw new Error('process.binding is not supported');
-};
-
-process.cwd = function () { return '/' };
-process.chdir = function (dir) {
-    throw new Error('process.chdir is not supported');
-};
-process.umask = function() { return 0; };
-
-
-/***/ }),
-/* 7 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-module.exports = function bind(fn, thisArg) {
-  return function wrap() {
-    var args = new Array(arguments.length);
-    for (var i = 0; i < args.length; i++) {
-      args[i] = arguments[i];
-    }
-    return fn.apply(thisArg, args);
-  };
-};
-
-
-/***/ }),
-/* 8 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var utils = __webpack_require__(0);
-var settle = __webpack_require__(29);
-var buildURL = __webpack_require__(31);
-var parseHeaders = __webpack_require__(32);
-var isURLSameOrigin = __webpack_require__(33);
-var createError = __webpack_require__(9);
-var btoa = (typeof window !== 'undefined' && window.btoa && window.btoa.bind(window)) || __webpack_require__(34);
-
-module.exports = function xhrAdapter(config) {
-  return new Promise(function dispatchXhrRequest(resolve, reject) {
-    var requestData = config.data;
-    var requestHeaders = config.headers;
-
-    if (utils.isFormData(requestData)) {
-      delete requestHeaders['Content-Type']; // Let the browser set it
-    }
-
-    var request = new XMLHttpRequest();
-    var loadEvent = 'onreadystatechange';
-    var xDomain = false;
-
-    // For IE 8/9 CORS support
-    // Only supports POST and GET calls and doesn't returns the response headers.
-    // DON'T do this for testing b/c XMLHttpRequest is mocked, not XDomainRequest.
-    if ("development" !== 'test' &&
-        typeof window !== 'undefined' &&
-        window.XDomainRequest && !('withCredentials' in request) &&
-        !isURLSameOrigin(config.url)) {
-      request = new window.XDomainRequest();
-      loadEvent = 'onload';
-      xDomain = true;
-      request.onprogress = function handleProgress() {};
-      request.ontimeout = function handleTimeout() {};
-    }
-
-    // HTTP basic authentication
-    if (config.auth) {
-      var username = config.auth.username || '';
-      var password = config.auth.password || '';
-      requestHeaders.Authorization = 'Basic ' + btoa(username + ':' + password);
-    }
-
-    request.open(config.method.toUpperCase(), buildURL(config.url, config.params, config.paramsSerializer), true);
-
-    // Set the request timeout in MS
-    request.timeout = config.timeout;
-
-    // Listen for ready state
-    request[loadEvent] = function handleLoad() {
-      if (!request || (request.readyState !== 4 && !xDomain)) {
-        return;
-      }
-
-      // The request errored out and we didn't get a response, this will be
-      // handled by onerror instead
-      // With one exception: request that using file: protocol, most browsers
-      // will return status as 0 even though it's a successful request
-      if (request.status === 0 && !(request.responseURL && request.responseURL.indexOf('file:') === 0)) {
-        return;
-      }
-
-      // Prepare the response
-      var responseHeaders = 'getAllResponseHeaders' in request ? parseHeaders(request.getAllResponseHeaders()) : null;
-      var responseData = !config.responseType || config.responseType === 'text' ? request.responseText : request.response;
-      var response = {
-        data: responseData,
-        // IE sends 1223 instead of 204 (https://github.com/axios/axios/issues/201)
-        status: request.status === 1223 ? 204 : request.status,
-        statusText: request.status === 1223 ? 'No Content' : request.statusText,
-        headers: responseHeaders,
-        config: config,
-        request: request
-      };
-
-      settle(resolve, reject, response);
-
-      // Clean up request
-      request = null;
-    };
-
-    // Handle low level network errors
-    request.onerror = function handleError() {
-      // Real errors are hidden from us by the browser
-      // onerror should only fire if it's a network error
-      reject(createError('Network Error', config, null, request));
-
-      // Clean up request
-      request = null;
-    };
-
-    // Handle timeout
-    request.ontimeout = function handleTimeout() {
-      reject(createError('timeout of ' + config.timeout + 'ms exceeded', config, 'ECONNABORTED',
-        request));
-
-      // Clean up request
-      request = null;
-    };
-
-    // Add xsrf header
-    // This is only done if running in a standard browser environment.
-    // Specifically not if we're in a web worker, or react-native.
-    if (utils.isStandardBrowserEnv()) {
-      var cookies = __webpack_require__(35);
-
-      // Add xsrf header
-      var xsrfValue = (config.withCredentials || isURLSameOrigin(config.url)) && config.xsrfCookieName ?
-          cookies.read(config.xsrfCookieName) :
-          undefined;
-
-      if (xsrfValue) {
-        requestHeaders[config.xsrfHeaderName] = xsrfValue;
-      }
-    }
-
-    // Add headers to the request
-    if ('setRequestHeader' in request) {
-      utils.forEach(requestHeaders, function setRequestHeader(val, key) {
-        if (typeof requestData === 'undefined' && key.toLowerCase() === 'content-type') {
-          // Remove Content-Type if data is undefined
-          delete requestHeaders[key];
-        } else {
-          // Otherwise add header to the request
-          request.setRequestHeader(key, val);
-        }
-      });
-    }
-
-    // Add withCredentials to request if needed
-    if (config.withCredentials) {
-      request.withCredentials = true;
-    }
-
-    // Add responseType to request if needed
-    if (config.responseType) {
-      try {
-        request.responseType = config.responseType;
-      } catch (e) {
-        // Expected DOMException thrown by browsers not compatible XMLHttpRequest Level 2.
-        // But, this can be suppressed for 'json' type as it can be parsed by default 'transformResponse' function.
-        if (config.responseType !== 'json') {
-          throw e;
-        }
-      }
-    }
-
-    // Handle progress if needed
-    if (typeof config.onDownloadProgress === 'function') {
-      request.addEventListener('progress', config.onDownloadProgress);
-    }
-
-    // Not all browsers support upload events
-    if (typeof config.onUploadProgress === 'function' && request.upload) {
-      request.upload.addEventListener('progress', config.onUploadProgress);
-    }
-
-    if (config.cancelToken) {
-      // Handle cancellation
-      config.cancelToken.promise.then(function onCanceled(cancel) {
-        if (!request) {
-          return;
-        }
-
-        request.abort();
-        reject(cancel);
-        // Clean up request
-        request = null;
-      });
-    }
-
-    if (requestData === undefined) {
-      requestData = null;
-    }
-
-    // Send the request
-    request.send(requestData);
-  });
-};
-
-
-/***/ }),
-/* 9 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var enhanceError = __webpack_require__(30);
-
-/**
- * Create an Error with the specified message, config, error code, request and response.
- *
- * @param {string} message The error message.
- * @param {Object} config The config.
- * @param {string} [code] The error code (for example, 'ECONNABORTED').
- * @param {Object} [request] The request.
- * @param {Object} [response] The response.
- * @returns {Error} The created error.
- */
-module.exports = function createError(message, config, code, request, response) {
-  var error = new Error(message);
-  return enhanceError(error, config, code, request, response);
-};
-
-
-/***/ }),
-/* 10 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-module.exports = function isCancel(value) {
-  return !!(value && value.__CANCEL__);
-};
-
-
-/***/ }),
-/* 11 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-/**
- * A `Cancel` is an object that is thrown when an operation is canceled.
- *
- * @class
- * @param {string=} message The message.
- */
-function Cancel(message) {
-  this.message = message;
-}
-
-Cancel.prototype.toString = function toString() {
-  return 'Cancel' + (this.message ? ': ' + this.message : '');
-};
-
-Cancel.prototype.__CANCEL__ = true;
-
-module.exports = Cancel;
-
-
-/***/ }),
 /* 12 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -1436,9 +1436,6 @@ module.exports = Cancel;
             this.searchSelect = this.list[this.selected].name;
         }
         // console.log(this.defaultSelected);
-    },
-    mounted: function mounted() {
-        //this.getConsigneers();
     },
 
     methods: {
@@ -3474,7 +3471,6 @@ module.exports = Cancel;
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__node_modules_vue_multiselect_src_Multiselect_vue__ = __webpack_require__(57);
 //
 //
 //
@@ -3582,1999 +3578,101 @@ module.exports = Cancel;
 //
 //
 //
-
-
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
 
 /* harmony default export */ __webpack_exports__["a"] = ({
-    components: { VueMultiselect: __WEBPACK_IMPORTED_MODULE_0__node_modules_vue_multiselect_src_Multiselect_vue__["a" /* default */] },
-    props: ['applicator', 'provider_id', 'consigneer_id'],
+    props: ['application', 'applicator'],
     data: function data() {
         return {
             title: 'Новая заявка',
-            step: '0',
-            /*infoOnApplication: {
-                shipmentPeriod: {
-                    month: {
-                        name: 'Месяц',
-                        list: [
-                            {name: 'Январь', val: 'month-01'},
-                            {name: 'Февраль', val: 'month-02'},
-                            {name: 'Март', val: 'month-03'},
-                            {name: 'Апрель', val: 'month-04'},
-                            {name: 'Май', val: 'month-05'},
-                            {name: 'Июнь', val: 'month-06'},
-                            {name: 'Июль', val: 'month-07'},
-                            {name: 'Август', val: 'month-08'},
-                            {name: 'Сентябрь', val: 'month-09'},
-                            {name: 'Октябрь', val: 'month-10'},
-                            {name: 'Ноябрь', val: 'month-11'},
-                            {name: 'Декабрь', val: 'month-12'}
-                        ],
-                        selected: -1
-                    },
-                    year: {
-                        name: 'Год',
-                        list: [
-                            {name: '2018', val: 'year-2018'},
-                            {name: '2019', val: 'year-2019'}
-                        ],
-                        selected: -1
-                    }
-                },
-                recipient: {
-                    name: 'Получатель',
-                    list: [
-                        {name: 'АО "Фамадар Картона Лимитед"', val: 'АО "Фамадар Картона Лимитед"'}
-                    ],
-                    selected: -1
-                },
-                provider: {
-                    name: 'Поставщик',
-                    list: [
-                        {name: 'АО «Каменская БКФ»', val: 'АО «Каменская БКФ»'}
-                    ],
-                    selected: -1
-                },
-                deliveryMethod: {
-                    name: 'Способ доставки',
-                    list: [
-                        {name: 'Автомобильная', val: 'delivery-type-01'},
-                        {name: 'Железнодорожная', val: 'delivery-type-02'},
-                        {name: 'Самовывоз', val: 'delivery-type-03'}
-                    ],
-                    selected: -1
-                }
-            },/*
-            /*
-            products: {
-                name: 'Товар',
-                selected: -1,
-                list: [
-                    {
-                        name: 'M 100 (1700мм)',
-                        val: '01',
-                        data: {
-                            decade: {
-                                name: 'Декада',
-                                selected: -1,
-                                list: [
-                                    {name: '1-ая декада', val: 'product-decade_01'},
-                                    {name: '2-ая декада', val: 'product-decade_02'},
-                                    {name: '3-ая декада', val: 'product-decade_03'}
-                                ]
-                            },
-                            volume: {
-                                name: 'Объём',
-                                val: '1500'
-                            },
-                            diameter: {
-                                name: 'Диаметр рулона',
-                                selected: -1,
-                                list: [
-                                    {name: '1 330 мм', val: 'product-diameter_01'}
-                                ]
-                            },
-                            price: {
-                                withDelivery: 32424,
-                                withoutDelivery: 30854
-                            }
-                        }
-                    },
-                    {
-                        name: 'M 100 (2000мм)',
-                        val: '01',
-                        data: {
-                            decade: {
-                                name: 'Декада',
-                                selected: -1,
-                                list: [
-                                    {name: '1-ая декада', val: 'product-decade_01'},
-                                    {name: '2-ая декада', val: 'product-decade_02'},
-                                    {name: '3-ая декада', val: 'product-decade_03'}
-                                ]
-                            },
-                            volume: {
-                                name: 'Объём',
-                                val: '1500'
-                            },
-                            diameter: {
-                                name: 'Диаметр рулона',
-                                selected: -1,
-                                list: [
-                                    {name: '1 330 мм', val: 'product-diameter_01'}
-                                ]
-                            },
-                            price: {
-                                withDelivery: 32424,
-                                withoutDelivery: 30854
-                            }
-                        }
-                    },
-                    {
-                        name: 'M 100 (2100мм)',
-                        val: '01',
-                        data: {
-                            decade: {
-                                name: 'Декада',
-                                selected: -1,
-                                list: [
-                                    {name: '1-ая декада', val: 'product-decade_01'},
-                                    {name: '2-ая декада', val: 'product-decade_02'},
-                                    {name: '3-ая декада', val: 'product-decade_03'}
-                                ]
-                            },
-                            volume: {
-                                name: 'Объём',
-                                val: '1500'
-                            },
-                            diameter: {
-                                name: 'Диаметр рулона',
-                                selected: -1,
-                                list: [
-                                    {name: '1 330 мм', val: 'product-diameter_01'}
-                                ]
-                            },
-                            price: {
-                                withDelivery: 32424,
-                                withoutDelivery: 30854
-                            }
-                        }
-                    },
-                    {
-                        name: 'M 100 (2200мм)',
-                        val: '01',
-                        data: {
-                            decade: {
-                                name: 'Декада',
-                                selected: -1,
-                                list: [
-                                    {name: '1-ая декада', val: 'product-decade_01'},
-                                    {name: '2-ая декада', val: 'product-decade_02'},
-                                    {name: '3-ая декада', val: 'product-decade_03'}
-                                ]
-                            },
-                            volume: {
-                                name: 'Объём',
-                                val: '1500'
-                            },
-                            diameter: {
-                                name: 'Диаметр рулона',
-                                selected: -1,
-                                list: [
-                                    {name: '1 330 мм', val: 'product-diameter_01'}
-                                ]
-                            },
-                            price: {
-                                withDelivery: 32424,
-                                withoutDelivery: 30854
-                            }
-                        }
-                    },
-                    {
-                        name: 'M 100 (2500мм)',
-                        val: '01',
-                        data: {
-                            decade: {
-                                name: 'Декада',
-                                selected: -1,
-                                list: [
-                                    {name: '1-ая декада', val: 'product-decade_01'},
-                                    {name: '2-ая декада', val: 'product-decade_02'},
-                                    {name: '3-ая декада', val: 'product-decade_03'}
-                                ]
-                            },
-                            volume: {
-                                name: 'Объём',
-                                val: '1500'
-                            },
-                            diameter: {
-                                name: 'Диаметр рулона',
-                                selected: -1,
-                                list: [
-                                    {name: '1 330 мм', val: 'product-diameter_01'}
-                                ]
-                            },
-                            price: {
-                                withDelivery: 32424,
-                                withoutDelivery: 30854
-                            }
-                        }
-                    },
-                    {
-                        name: 'M 110 (1700мм)',
-                        val: '01',
-                        data: {
-                            decade: {
-                                name: 'Декада',
-                                selected: -1,
-                                list: [
-                                    {name: '1-ая декада', val: 'product-decade_01'},
-                                    {name: '2-ая декада', val: 'product-decade_02'},
-                                    {name: '3-ая декада', val: 'product-decade_03'}
-                                ]
-                            },
-                            volume: {
-                                name: 'Объём',
-                                val: '1500'
-                            },
-                            diameter: {
-                                name: 'Диаметр рулона',
-                                selected: -1,
-                                list: [
-                                    {name: '1 330 мм', val: 'product-diameter_01'}
-                                ]
-                            },
-                            price: {
-                                withDelivery: 32424,
-                                withoutDelivery: 30854
-                            }
-                        }
-                    },
-                    {
-                        name: 'M 110 (2000мм)',
-                        val: '01',
-                        data: {
-                            decade: {
-                                name: 'Декада',
-                                selected: -1,
-                                list: [
-                                    {name: '1-ая декада', val: 'product-decade_01'},
-                                    {name: '2-ая декада', val: 'product-decade_02'},
-                                    {name: '3-ая декада', val: 'product-decade_03'}
-                                ]
-                            },
-                            volume: {
-                                name: 'Объём',
-                                val: '1500'
-                            },
-                            diameter: {
-                                name: 'Диаметр рулона',
-                                selected: -1,
-                                list: [
-                                    {name: '1 330 мм', val: 'product-diameter_01'}
-                                ]
-                            },
-                            price: {
-                                withDelivery: 32424,
-                                withoutDelivery: 30854
-                            }
-                        }
-                    },
-                    {
-                        name: 'M 110 (2100мм)',
-                        val: '01',
-                        data: {
-                            decade: {
-                                name: 'Декада',
-                                selected: -1,
-                                list: [
-                                    {name: '1-ая декада', val: 'product-decade_01'},
-                                    {name: '2-ая декада', val: 'product-decade_02'},
-                                    {name: '3-ая декада', val: 'product-decade_03'}
-                                ]
-                            },
-                            volume: {
-                                name: 'Объём',
-                                val: '1500'
-                            },
-                            diameter: {
-                                name: 'Диаметр рулона',
-                                selected: -1,
-                                list: [
-                                    {name: '1 330 мм', val: 'product-diameter_01'}
-                                ]
-                            },
-                            price: {
-                                withDelivery: 32424,
-                                withoutDelivery: 30854
-                            }
-                        }
-                    },
-                    {
-                        name: 'M 110 (2200мм)',
-                        val: '01',
-                        data: {
-                            decade: {
-                                name: 'Декада',
-                                selected: -1,
-                                list: [
-                                    {name: '1-ая декада', val: 'product-decade_01'},
-                                    {name: '2-ая декада', val: 'product-decade_02'},
-                                    {name: '3-ая декада', val: 'product-decade_03'}
-                                ]
-                            },
-                            volume: {
-                                name: 'Объём',
-                                val: '1500'
-                            },
-                            diameter: {
-                                name: 'Диаметр рулона',
-                                selected: -1,
-                                list: [
-                                    {name: '1 330 мм', val: 'product-diameter_01'}
-                                ]
-                            },
-                            price: {
-                                withDelivery: 32424,
-                                withoutDelivery: 30854
-                            }
-                        }
-                    },
-                    {
-                        name: 'M 110 (2500мм)',
-                        val: '01',
-                        data: {
-                            decade: {
-                                name: 'Декада',
-                                selected: -1,
-                                list: [
-                                    {name: '1-ая декада', val: 'product-decade_01'},
-                                    {name: '2-ая декада', val: 'product-decade_02'},
-                                    {name: '3-ая декада', val: 'product-decade_03'}
-                                ]
-                            },
-                            volume: {
-                                name: 'Объём',
-                                val: '1500'
-                            },
-                            diameter: {
-                                name: 'Диаметр рулона',
-                                selected: -1,
-                                list: [
-                                    {name: '1 330 мм', val: 'product-diameter_01'}
-                                ]
-                            },
-                            price: {
-                                withDelivery: 32424,
-                                withoutDelivery: 30854
-                            }
-                        }
-                    },
-                    {
-                        name: 'M 120 (1700мм)',
-                        val: '01',
-                        data: {
-                            decade: {
-                                name: 'Декада',
-                                selected: -1,
-                                list: [
-                                    {name: '1-ая декада', val: 'product-decade_01'},
-                                    {name: '2-ая декада', val: 'product-decade_02'},
-                                    {name: '3-ая декада', val: 'product-decade_03'}
-                                ]
-                            },
-                            volume: {
-                                name: 'Объём',
-                                val: '1500'
-                            },
-                            diameter: {
-                                name: 'Диаметр рулона',
-                                selected: -1,
-                                list: [
-                                    {name: '1 330 мм', val: 'product-diameter_01'}
-                                ]
-                            },
-                            price: {
-                                withDelivery: 32224,
-                                withoutDelivery: 30654
-                            }
-                        }
-                    },
-                    {
-                        name: 'M 120 (2000мм)',
-                        val: '01',
-                        data: {
-                            decade: {
-                                name: 'Декада',
-                                selected: -1,
-                                list: [
-                                    {name: '1-ая декада', val: 'product-decade_01'},
-                                    {name: '2-ая декада', val: 'product-decade_02'},
-                                    {name: '3-ая декада', val: 'product-decade_03'}
-                                ]
-                            },
-                            volume: {
-                                name: 'Объём',
-                                val: '1500'
-                            },
-                            diameter: {
-                                name: 'Диаметр рулона',
-                                selected: -1,
-                                list: [
-                                    {name: '1 330 мм', val: 'product-diameter_01'}
-                                ]
-                            },
-                            price: {
-                                withDelivery: 32224,
-                                withoutDelivery: 30654
-                            }
-                        }
-                    },
-                    {
-                        name: 'M 120 (2100мм)',
-                        val: '01',
-                        data: {
-                            decade: {
-                                name: 'Декада',
-                                selected: -1,
-                                list: [
-                                    {name: '1-ая декада', val: 'product-decade_01'},
-                                    {name: '2-ая декада', val: 'product-decade_02'},
-                                    {name: '3-ая декада', val: 'product-decade_03'}
-                                ]
-                            },
-                            volume: {
-                                name: 'Объём',
-                                val: '1500'
-                            },
-                            diameter: {
-                                name: 'Диаметр рулона',
-                                selected: -1,
-                                list: [
-                                    {name: '1 330 мм', val: 'product-diameter_01'}
-                                ]
-                            },
-                            price: {
-                                withDelivery: 32224,
-                                withoutDelivery: 30654
-                            }
-                        }
-                    },
-                    {
-                        name: 'M 120 (2200мм)',
-                        val: '01',
-                        data: {
-                            decade: {
-                                name: 'Декада',
-                                selected: -1,
-                                list: [
-                                    {name: '1-ая декада', val: 'product-decade_01'},
-                                    {name: '2-ая декада', val: 'product-decade_02'},
-                                    {name: '3-ая декада', val: 'product-decade_03'}
-                                ]
-                            },
-                            volume: {
-                                name: 'Объём',
-                                val: '1500'
-                            },
-                            diameter: {
-                                name: 'Диаметр рулона',
-                                selected: -1,
-                                list: [
-                                    {name: '1 330 мм', val: 'product-diameter_01'}
-                                ]
-                            },
-                            price: {
-                                withDelivery: 32224,
-                                withoutDelivery: 30654
-                            }
-                        }
-                    },
-                    {
-                        name: 'M 120 (2500мм)',
-                        val: '01',
-                        data: {
-                            decade: {
-                                name: 'Декада',
-                                selected: -1,
-                                list: [
-                                    {name: '1-ая декада', val: 'product-decade_01'},
-                                    {name: '2-ая декада', val: 'product-decade_02'},
-                                    {name: '3-ая декада', val: 'product-decade_03'}
-                                ]
-                            },
-                            volume: {
-                                name: 'Объём',
-                                val: '1500'
-                            },
-                            diameter: {
-                                name: 'Диаметр рулона',
-                                selected: -1,
-                                list: [
-                                    {name: '1 330 мм', val: 'product-diameter_01'}
-                                ]
-                            },
-                            price: {
-                                withDelivery: 32224,
-                                withoutDelivery: 30654
-                            }
-                        }
-                    },
-                    {
-                        name: 'M 135 (1700мм)',
-                        val: '01',
-                        data: {
-                            decade: {
-                                name: 'Декада',
-                                selected: -1,
-                                list: [
-                                    {name: '1-ая декада', val: 'product-decade_01'},
-                                    {name: '2-ая декада', val: 'product-decade_02'},
-                                    {name: '3-ая декада', val: 'product-decade_03'}
-                                ]
-                            },
-                            volume: {
-                                name: 'Объём',
-                                val: '1500'
-                            },
-                            diameter: {
-                                name: 'Диаметр рулона',
-                                selected: -1,
-                                list: [
-                                    {name: '1 330 мм', val: 'product-diameter_01'}
-                                ]
-                            },
-                            price: {
-                                withDelivery: 32024,
-                                withoutDelivery: 30454
-                            }
-                        }
-                    },
-                    {
-                        name: 'M 135 (2000мм)',
-                        val: '01',
-                        data: {
-                            decade: {
-                                name: 'Декада',
-                                selected: -1,
-                                list: [
-                                    {name: '1-ая декада', val: 'product-decade_01'},
-                                    {name: '2-ая декада', val: 'product-decade_02'},
-                                    {name: '3-ая декада', val: 'product-decade_03'}
-                                ]
-                            },
-                            volume: {
-                                name: 'Объём',
-                                val: '1500'
-                            },
-                            diameter: {
-                                name: 'Диаметр рулона',
-                                selected: -1,
-                                list: [
-                                    {name: '1 330 мм', val: 'product-diameter_01'}
-                                ]
-                            },
-                            price: {
-                                withDelivery: 32024,
-                                withoutDelivery: 30454
-                            }
-                        }
-                    },
-                    {
-                        name: 'M 135 (2100мм)',
-                        val: '01',
-                        data: {
-                            decade: {
-                                name: 'Декада',
-                                selected: -1,
-                                list: [
-                                    {name: '1-ая декада', val: 'product-decade_01'},
-                                    {name: '2-ая декада', val: 'product-decade_02'},
-                                    {name: '3-ая декада', val: 'product-decade_03'}
-                                ]
-                            },
-                            volume: {
-                                name: 'Объём',
-                                val: '1500'
-                            },
-                            diameter: {
-                                name: 'Диаметр рулона',
-                                selected: -1,
-                                list: [
-                                    {name: '1 330 мм', val: 'product-diameter_01'}
-                                ]
-                            },
-                            price: {
-                                withDelivery: 32024,
-                                withoutDelivery: 30454
-                            }
-                        }
-                    },
-                    {
-                        name: 'M 135 (2200мм)',
-                        val: '01',
-                        data: {
-                            decade: {
-                                name: 'Декада',
-                                selected: -1,
-                                list: [
-                                    {name: '1-ая декада', val: 'product-decade_01'},
-                                    {name: '2-ая декада', val: 'product-decade_02'},
-                                    {name: '3-ая декада', val: 'product-decade_03'}
-                                ]
-                            },
-                            volume: {
-                                name: 'Объём',
-                                val: '1500'
-                            },
-                            diameter: {
-                                name: 'Диаметр рулона',
-                                selected: -1,
-                                list: [
-                                    {name: '1 330 мм', val: 'product-diameter_01'}
-                                ]
-                            },
-                            price: {
-                                withDelivery: 32024,
-                                withoutDelivery: 30454
-                            }
-                        }
-                    },
-                    {
-                        name: 'M 135 (2500мм)',
-                        val: '01',
-                        data: {
-                            decade: {
-                                name: 'Декада',
-                                selected: -1,
-                                list: [
-                                    {name: '1-ая декада', val: 'product-decade_01'},
-                                    {name: '2-ая декада', val: 'product-decade_02'},
-                                    {name: '3-ая декада', val: 'product-decade_03'}
-                                ]
-                            },
-                            volume: {
-                                name: 'Объём',
-                                val: '1500'
-                            },
-                            diameter: {
-                                name: 'Диаметр рулона',
-                                selected: -1,
-                                list: [
-                                    {name: '1 330 мм', val: 'product-diameter_01'}
-                                ]
-                            },
-                            price: {
-                                withDelivery: 32024,
-                                withoutDelivery: 30454
-                            }
-                        }
-                    },
-                    {
-                        name: 'M 150 (1700мм)',
-                        val: '01',
-                        data: {
-                            decade: {
-                                name: 'Декада',
-                                selected: -1,
-                                list: [
-                                    {name: '1-ая декада', val: 'product-decade_01'},
-                                    {name: '2-ая декада', val: 'product-decade_02'},
-                                    {name: '3-ая декада', val: 'product-decade_03'}
-                                ]
-                            },
-                            volume: {
-                                name: 'Объём',
-                                val: '1500'
-                            },
-                            diameter: {
-                                name: 'Диаметр рулона',
-                                selected: -1,
-                                list: [
-                                    {name: '1 330 мм', val: 'product-diameter_01'}
-                                ]
-                            },
-                            price: {
-                                withDelivery: 31824,
-                                withoutDelivery: 30254
-                            }
-                        }
-                    },
-                    {
-                        name: 'M 150 (2000мм)',
-                        val: '01',
-                        data: {
-                            decade: {
-                                name: 'Декада',
-                                selected: -1,
-                                list: [
-                                    {name: '1-ая декада', val: 'product-decade_01'},
-                                    {name: '2-ая декада', val: 'product-decade_02'},
-                                    {name: '3-ая декада', val: 'product-decade_03'}
-                                ]
-                            },
-                            volume: {
-                                name: 'Объём',
-                                val: '1500'
-                            },
-                            diameter: {
-                                name: 'Диаметр рулона',
-                                selected: -1,
-                                list: [
-                                    {name: '1 330 мм', val: 'product-diameter_01'}
-                                ]
-                            },
-                            price: {
-                                withDelivery: 31824,
-                                withoutDelivery: 30254
-                            }
-                        }
-                    },
-                    {
-                        name: 'M 150 (2100мм)',
-                        val: '01',
-                        data: {
-                            decade: {
-                                name: 'Декада',
-                                selected: -1,
-                                list: [
-                                    {name: '1-ая декада', val: 'product-decade_01'},
-                                    {name: '2-ая декада', val: 'product-decade_02'},
-                                    {name: '3-ая декада', val: 'product-decade_03'}
-                                ]
-                            },
-                            volume: {
-                                name: 'Объём',
-                                val: '1500'
-                            },
-                            diameter: {
-                                name: 'Диаметр рулона',
-                                selected: -1,
-                                list: [
-                                    {name: '1 330 мм', val: 'product-diameter_01'}
-                                ]
-                            },
-                            price: {
-                                withDelivery: 31824,
-                                withoutDelivery: 30254
-                            }
-                        }
-                    },
-                    {
-                        name: 'M 150 (2200мм)',
-                        val: '01',
-                        data: {
-                            decade: {
-                                name: 'Декада',
-                                selected: -1,
-                                list: [
-                                    {name: '1-ая декада', val: 'product-decade_01'},
-                                    {name: '2-ая декада', val: 'product-decade_02'},
-                                    {name: '3-ая декада', val: 'product-decade_03'}
-                                ]
-                            },
-                            volume: {
-                                name: 'Объём',
-                                val: '1500'
-                            },
-                            diameter: {
-                                name: 'Диаметр рулона',
-                                selected: -1,
-                                list: [
-                                    {name: '1 330 мм', val: 'product-diameter_01'}
-                                ]
-                            },
-                            price: {
-                                withDelivery: 31824,
-                                withoutDelivery: 30254
-                            }
-                        }
-                    },
-                    {
-                        name: 'M 150 (2500мм)',
-                        val: '01',
-                        data: {
-                            decade: {
-                                name: 'Декада',
-                                selected: -1,
-                                list: [
-                                    {name: '1-ая декада', val: 'product-decade_01'},
-                                    {name: '2-ая декада', val: 'product-decade_02'},
-                                    {name: '3-ая декада', val: 'product-decade_03'}
-                                ]
-                            },
-                            volume: {
-                                name: 'Объём',
-                                val: '1500'
-                            },
-                            diameter: {
-                                name: 'Диаметр рулона',
-                                selected: -1,
-                                list: [
-                                    {name: '1 330 мм', val: 'product-diameter_01'}
-                                ]
-                            },
-                            price: {
-                                withDelivery: 31824,
-                                withoutDelivery: 30254
-                            }
-                        }
-                    },
-                    {
-                        name: 'M3 100 (1700мм)',
-                        val: '01',
-                        data: {
-                            decade: {
-                                name: 'Декада',
-                                selected: -1,
-                                list: [
-                                    {name: '1-ая декада', val: 'product-decade_01'},
-                                    {name: '2-ая декада', val: 'product-decade_02'},
-                                    {name: '3-ая декада', val: 'product-decade_03'}
-                                ]
-                            },
-                            volume: {
-                                name: 'Объём',
-                                val: '1500'
-                            },
-                            diameter: {
-                                name: 'Диаметр рулона',
-                                selected: -1,
-                                list: [
-                                    {name: '1 330 мм', val: 'product-diameter_01'}
-                                ]
-                            },
-                            price: {
-                                withDelivery: 25750,
-                                withoutDelivery: 24180
-                            }
-                        }
-                    },
-                    {
-                        name: 'M3 100 (2000мм)',
-                        val: '01',
-                        data: {
-                            decade: {
-                                name: 'Декада',
-                                selected: -1,
-                                list: [
-                                    {name: '1-ая декада', val: 'product-decade_01'},
-                                    {name: '2-ая декада', val: 'product-decade_02'},
-                                    {name: '3-ая декада', val: 'product-decade_03'}
-                                ]
-                            },
-                            volume: {
-                                name: 'Объём',
-                                val: '1500'
-                            },
-                            diameter: {
-                                name: 'Диаметр рулона',
-                                selected: -1,
-                                list: [
-                                    {name: '1 330 мм', val: 'product-diameter_01'}
-                                ]
-                            },
-                            price: {
-                                withDelivery: 25750,
-                                withoutDelivery: 24180
-                            }
-                        }
-                    },
-                    {
-                        name: 'M3 100 (2100мм)',
-                        val: '01',
-                        data: {
-                            decade: {
-                                name: 'Декада',
-                                selected: -1,
-                                list: [
-                                    {name: '1-ая декада', val: 'product-decade_01'},
-                                    {name: '2-ая декада', val: 'product-decade_02'},
-                                    {name: '3-ая декада', val: 'product-decade_03'}
-                                ]
-                            },
-                            volume: {
-                                name: 'Объём',
-                                val: '1500'
-                            },
-                            diameter: {
-                                name: 'Диаметр рулона',
-                                selected: -1,
-                                list: [
-                                    {name: '1 330 мм', val: 'product-diameter_01'}
-                                ]
-                            },
-                            price: {
-                                withDelivery: 25750,
-                                withoutDelivery: 24180
-                            }
-                        }
-                    },
-                    {
-                        name: 'M3 100 (2200мм)',
-                        val: '01',
-                        data: {
-                            decade: {
-                                name: 'Декада',
-                                selected: -1,
-                                list: [
-                                    {name: '1-ая декада', val: 'product-decade_01'},
-                                    {name: '2-ая декада', val: 'product-decade_02'},
-                                    {name: '3-ая декада', val: 'product-decade_03'}
-                                ]
-                            },
-                            volume: {
-                                name: 'Объём',
-                                val: '1500'
-                            },
-                            diameter: {
-                                name: 'Диаметр рулона',
-                                selected: -1,
-                                list: [
-                                    {name: '1 330 мм', val: 'product-diameter_01'}
-                                ]
-                            },
-                            price: {
-                                withDelivery: 25750,
-                                withoutDelivery: 24180
-                            }
-                        }
-                    },
-                    {
-                        name: 'M3 100 (2500мм)',
-                        val: '01',
-                        data: {
-                            decade: {
-                                name: 'Декада',
-                                selected: -1,
-                                list: [
-                                    {name: '1-ая декада', val: 'product-decade_01'},
-                                    {name: '2-ая декада', val: 'product-decade_02'},
-                                    {name: '3-ая декада', val: 'product-decade_03'}
-                                ]
-                            },
-                            volume: {
-                                name: 'Объём',
-                                val: '1500'
-                            },
-                            diameter: {
-                                name: 'Диаметр рулона',
-                                selected: -1,
-                                list: [
-                                    {name: '1 330 мм', val: 'product-diameter_01'}
-                                ]
-                            },
-                            price: {
-                                withDelivery: 25750,
-                                withoutDelivery: 24180
-                            }
-                        }
-                    },
-                    {
-                        name: 'M3 110 (1700мм)',
-                        val: '01',
-                        data: {
-                            decade: {
-                                name: 'Декада',
-                                selected: -1,
-                                list: [
-                                    {name: '1-ая декада', val: 'product-decade_01'},
-                                    {name: '2-ая декада', val: 'product-decade_02'},
-                                    {name: '3-ая декада', val: 'product-decade_03'}
-                                ]
-                            },
-                            volume: {
-                                name: 'Объём',
-                                val: '1500'
-                            },
-                            diameter: {
-                                name: 'Диаметр рулона',
-                                selected: -1,
-                                list: [
-                                    {name: '1 330 мм', val: 'product-diameter_01'}
-                                ]
-                            },
-                            price: {
-                                withDelivery: 25750,
-                                withoutDelivery: 24180
-                            }
-                        }
-                    },
-                    {
-                        name: 'M3 110 (2000мм)',
-                        val: '01',
-                        data: {
-                            decade: {
-                                name: 'Декада',
-                                selected: -1,
-                                list: [
-                                    {name: '1-ая декада', val: 'product-decade_01'},
-                                    {name: '2-ая декада', val: 'product-decade_02'},
-                                    {name: '3-ая декада', val: 'product-decade_03'}
-                                ]
-                            },
-                            volume: {
-                                name: 'Объём',
-                                val: '1500'
-                            },
-                            diameter: {
-                                name: 'Диаметр рулона',
-                                selected: -1,
-                                list: [
-                                    {name: '1 330 мм', val: 'product-diameter_01'}
-                                ]
-                            },
-                            price: {
-                                withDelivery: 25750,
-                                withoutDelivery: 24180
-                            }
-                        }
-                    },
-                    {
-                        name: 'M3 110 (2100мм)',
-                        val: '01',
-                        data: {
-                            decade: {
-                                name: 'Декада',
-                                selected: -1,
-                                list: [
-                                    {name: '1-ая декада', val: 'product-decade_01'},
-                                    {name: '2-ая декада', val: 'product-decade_02'},
-                                    {name: '3-ая декада', val: 'product-decade_03'}
-                                ]
-                            },
-                            volume: {
-                                name: 'Объём',
-                                val: '1500'
-                            },
-                            diameter: {
-                                name: 'Диаметр рулона',
-                                selected: -1,
-                                list: [
-                                    {name: '1 330 мм', val: 'product-diameter_01'}
-                                ]
-                            },
-                            price: {
-                                withDelivery: 25750,
-                                withoutDelivery: 24180
-                            }
-                        }
-                    },
-                    {
-                        name: 'M3 110 (2200мм)',
-                        val: '01',
-                        data: {
-                            decade: {
-                                name: 'Декада',
-                                selected: -1,
-                                list: [
-                                    {name: '1-ая декада', val: 'product-decade_01'},
-                                    {name: '2-ая декада', val: 'product-decade_02'},
-                                    {name: '3-ая декада', val: 'product-decade_03'}
-                                ]
-                            },
-                            volume: {
-                                name: 'Объём',
-                                val: '1500'
-                            },
-                            diameter: {
-                                name: 'Диаметр рулона',
-                                selected: -1,
-                                list: [
-                                    {name: '1 330 мм', val: 'product-diameter_01'}
-                                ]
-                            },
-                            price: {
-                                withDelivery: 25750,
-                                withoutDelivery: 24180
-                            }
-                        }
-                    },
-                    {
-                        name: 'M3 110 (2500мм)',
-                        val: '01',
-                        data: {
-                            decade: {
-                                name: 'Декада',
-                                selected: -1,
-                                list: [
-                                    {name: '1-ая декада', val: 'product-decade_01'},
-                                    {name: '2-ая декада', val: 'product-decade_02'},
-                                    {name: '3-ая декада', val: 'product-decade_03'}
-                                ]
-                            },
-                            volume: {
-                                name: 'Объём',
-                                val: '1500'
-                            },
-                            diameter: {
-                                name: 'Диаметр рулона',
-                                selected: -1,
-                                list: [
-                                    {name: '1 330 мм', val: 'product-diameter_01'}
-                                ]
-                            },
-                            price: {
-                                withDelivery: 25750,
-                                withoutDelivery: 24180
-                            }
-                        }
-                    },
-                    {
-                        name: 'L2 110 (1700мм)',
-                        val: '01',
-                        data: {
-                            decade: {
-                                name: 'Декада',
-                                selected: -1,
-                                list: [
-                                    {name: '1-ая декада', val: 'product-decade_01'},
-                                    {name: '2-ая декада', val: 'product-decade_02'},
-                                    {name: '3-ая декада', val: 'product-decade_03'}
-                                ]
-                            },
-                            volume: {
-                                name: 'Объём',
-                                val: '1500'
-                            },
-                            diameter: {
-                                name: 'Диаметр рулона',
-                                selected: -1,
-                                list: [
-                                    {name: '1 330 мм', val: 'product-diameter_01'}
-                                ]
-                            },
-                            price: {
-                                withDelivery: 32824,
-                                withoutDelivery: 31254
-                            }
-                        }
-                    },
-                    {
-                        name: 'L2 110 (2000мм)',
-                        val: '01',
-                        data: {
-                            decade: {
-                                name: 'Декада',
-                                selected: -1,
-                                list: [
-                                    {name: '1-ая декада', val: 'product-decade_01'},
-                                    {name: '2-ая декада', val: 'product-decade_02'},
-                                    {name: '3-ая декада', val: 'product-decade_03'}
-                                ]
-                            },
-                            volume: {
-                                name: 'Объём',
-                                val: '1500'
-                            },
-                            diameter: {
-                                name: 'Диаметр рулона',
-                                selected: -1,
-                                list: [
-                                    {name: '1 330 мм', val: 'product-diameter_01'}
-                                ]
-                            },
-                            price: {
-                                withDelivery: 32824,
-                                withoutDelivery: 31254
-                            }
-                        }
-                    },
-                    {
-                        name: 'L2 110 (2100мм)',
-                        val: '01',
-                        data: {
-                            decade: {
-                                name: 'Декада',
-                                selected: -1,
-                                list: [
-                                    {name: '1-ая декада', val: 'product-decade_01'},
-                                    {name: '2-ая декада', val: 'product-decade_02'},
-                                    {name: '3-ая декада', val: 'product-decade_03'}
-                                ]
-                            },
-                            volume: {
-                                name: 'Объём',
-                                val: '1500'
-                            },
-                            diameter: {
-                                name: 'Диаметр рулона',
-                                selected: -1,
-                                list: [
-                                    {name: '1 330 мм', val: 'product-diameter_01'}
-                                ]
-                            },
-                            price: {
-                                withDelivery: 32824,
-                                withoutDelivery: 31254
-                            }
-                        }
-                    },
-                    {
-                        name: 'L2 110 (2200мм)',
-                        val: '01',
-                        data: {
-                            decade: {
-                                name: 'Декада',
-                                selected: -1,
-                                list: [
-                                    {name: '1-ая декада', val: 'product-decade_01'},
-                                    {name: '2-ая декада', val: 'product-decade_02'},
-                                    {name: '3-ая декада', val: 'product-decade_03'}
-                                ]
-                            },
-                            volume: {
-                                name: 'Объём',
-                                val: '1500'
-                            },
-                            diameter: {
-                                name: 'Диаметр рулона',
-                                selected: -1,
-                                list: [
-                                    {name: '1 330 мм', val: 'product-diameter_01'}
-                                ]
-                            },
-                            price: {
-                                withDelivery: 32824,
-                                withoutDelivery: 31254
-                            }
-                        }
-                    },
-                    {
-                        name: 'L2 110 (2500мм)',
-                        val: '01',
-                        data: {
-                            decade: {
-                                name: 'Декада',
-                                selected: -1,
-                                list: [
-                                    {name: '1-ая декада', val: 'product-decade_01'},
-                                    {name: '2-ая декада', val: 'product-decade_02'},
-                                    {name: '3-ая декада', val: 'product-decade_03'}
-                                ]
-                            },
-                            volume: {
-                                name: 'Объём',
-                                val: '1500'
-                            },
-                            diameter: {
-                                name: 'Диаметр рулона',
-                                selected: -1,
-                                list: [
-                                    {name: '1 330 мм', val: 'product-diameter_01'}
-                                ]
-                            },
-                            price: {
-                                withDelivery: 32824,
-                                withoutDelivery: 31254
-                            }
-                        }
-                    },
-                    {
-                        name: 'L2 120 (1700мм)',
-                        val: '01',
-                        data: {
-                            decade: {
-                                name: 'Декада',
-                                selected: -1,
-                                list: [
-                                    {name: '1-ая декада', val: 'product-decade_01'},
-                                    {name: '2-ая декада', val: 'product-decade_02'},
-                                    {name: '3-ая декада', val: 'product-decade_03'}
-                                ]
-                            },
-                            volume: {
-                                name: 'Объём',
-                                val: '1500'
-                            },
-                            diameter: {
-                                name: 'Диаметр рулона',
-                                selected: -1,
-                                list: [
-                                    {name: '1 330 мм', val: 'product-diameter_01'}
-                                ]
-                            },
-                            price: {
-                                withDelivery: 32624,
-                                withoutDelivery: 31054
-                            }
-                        }
-                    },
-                    {
-                        name: 'L2 120 (2000мм)',
-                        val: '01',
-                        data: {
-                            decade: {
-                                name: 'Декада',
-                                selected: -1,
-                                list: [
-                                    {name: '1-ая декада', val: 'product-decade_01'},
-                                    {name: '2-ая декада', val: 'product-decade_02'},
-                                    {name: '3-ая декада', val: 'product-decade_03'}
-                                ]
-                            },
-                            volume: {
-                                name: 'Объём',
-                                val: '1500'
-                            },
-                            diameter: {
-                                name: 'Диаметр рулона',
-                                selected: -1,
-                                list: [
-                                    {name: '1 330 мм', val: 'product-diameter_01'}
-                                ]
-                            },
-                            price: {
-                                withDelivery: 32624,
-                                withoutDelivery: 31054
-                            }
-                        }
-                    },
-                    {
-                        name: 'L2 120 (2100мм)',
-                        val: '01',
-                        data: {
-                            decade: {
-                                name: 'Декада',
-                                selected: -1,
-                                list: [
-                                    {name: '1-ая декада', val: 'product-decade_01'},
-                                    {name: '2-ая декада', val: 'product-decade_02'},
-                                    {name: '3-ая декада', val: 'product-decade_03'}
-                                ]
-                            },
-                            volume: {
-                                name: 'Объём',
-                                val: '1500'
-                            },
-                            diameter: {
-                                name: 'Диаметр рулона',
-                                selected: -1,
-                                list: [
-                                    {name: '1 330 мм', val: 'product-diameter_01'}
-                                ]
-                            },
-                            price: {
-                                withDelivery: 32624,
-                                withoutDelivery: 31054
-                            }
-                        }
-                    },
-                    {
-                        name: 'L2 120 (2200мм)',
-                        val: '01',
-                        data: {
-                            decade: {
-                                name: 'Декада',
-                                selected: -1,
-                                list: [
-                                    {name: '1-ая декада', val: 'product-decade_01'},
-                                    {name: '2-ая декада', val: 'product-decade_02'},
-                                    {name: '3-ая декада', val: 'product-decade_03'}
-                                ]
-                            },
-                            volume: {
-                                name: 'Объём',
-                                val: '1500'
-                            },
-                            diameter: {
-                                name: 'Диаметр рулона',
-                                selected: -1,
-                                list: [
-                                    {name: '1 330 мм', val: 'product-diameter_01'}
-                                ]
-                            },
-                            price: {
-                                withDelivery: 32624,
-                                withoutDelivery: 31054
-                            }
-                        }
-                    },
-                    {
-                        name: 'L2 120 (2500мм)',
-                        val: '01',
-                        data: {
-                            decade: {
-                                name: 'Декада',
-                                selected: -1,
-                                list: [
-                                    {name: '1-ая декада', val: 'product-decade_01'},
-                                    {name: '2-ая декада', val: 'product-decade_02'},
-                                    {name: '3-ая декада', val: 'product-decade_03'}
-                                ]
-                            },
-                            volume: {
-                                name: 'Объём',
-                                val: '1500'
-                            },
-                            diameter: {
-                                name: 'Диаметр рулона',
-                                selected: -1,
-                                list: [
-                                    {name: '1 330 мм', val: 'product-diameter_01'}
-                                ]
-                            },
-                            price: {
-                                withDelivery: 32624,
-                                withoutDelivery: 31054
-                            }
-                        }
-                    },
-                    {
-                        name: 'L2 135 (1700мм)',
-                        val: '01',
-                        data: {
-                            decade: {
-                                name: 'Декада',
-                                selected: -1,
-                                list: [
-                                    {name: '1-ая декада', val: 'product-decade_01'},
-                                    {name: '2-ая декада', val: 'product-decade_02'},
-                                    {name: '3-ая декада', val: 'product-decade_03'}
-                                ]
-                            },
-                            volume: {
-                                name: 'Объём',
-                                val: '1500'
-                            },
-                            diameter: {
-                                name: 'Диаметр рулона',
-                                selected: -1,
-                                list: [
-                                    {name: '1 330 мм', val: 'product-diameter_01'}
-                                ]
-                            },
-                            price: {
-                                withDelivery: 32424,
-                                withoutDelivery: 30854
-                            }
-                        }
-                    },
-                    {
-                        name: 'L2 135 (2000мм)',
-                        val: '01',
-                        data: {
-                            decade: {
-                                name: 'Декада',
-                                selected: -1,
-                                list: [
-                                    {name: '1-ая декада', val: 'product-decade_01'},
-                                    {name: '2-ая декада', val: 'product-decade_02'},
-                                    {name: '3-ая декада', val: 'product-decade_03'}
-                                ]
-                            },
-                            volume: {
-                                name: 'Объём',
-                                val: '1500'
-                            },
-                            diameter: {
-                                name: 'Диаметр рулона',
-                                selected: -1,
-                                list: [
-                                    {name: '1 330 мм', val: 'product-diameter_01'}
-                                ]
-                            },
-                            price: {
-                                withDelivery: 32424,
-                                withoutDelivery: 30854
-                            }
-                        }
-                    },
-                    {
-                        name: 'L2 135 (2100мм)',
-                        val: '01',
-                        data: {
-                            decade: {
-                                name: 'Декада',
-                                selected: -1,
-                                list: [
-                                    {name: '1-ая декада', val: 'product-decade_01'},
-                                    {name: '2-ая декада', val: 'product-decade_02'},
-                                    {name: '3-ая декада', val: 'product-decade_03'}
-                                ]
-                            },
-                            volume: {
-                                name: 'Объём',
-                                val: '1500'
-                            },
-                            diameter: {
-                                name: 'Диаметр рулона',
-                                selected: -1,
-                                list: [
-                                    {name: '1 330 мм', val: 'product-diameter_01'}
-                                ]
-                            },
-                            price: {
-                                withDelivery: 32424,
-                                withoutDelivery: 30854
-                            }
-                        }
-                    },
-                    {
-                        name: 'L2 135 (2200мм)',
-                        val: '01',
-                        data: {
-                            decade: {
-                                name: 'Декада',
-                                selected: -1,
-                                list: [
-                                    {name: '1-ая декада', val: 'product-decade_01'},
-                                    {name: '2-ая декада', val: 'product-decade_02'},
-                                    {name: '3-ая декада', val: 'product-decade_03'}
-                                ]
-                            },
-                            volume: {
-                                name: 'Объём',
-                                val: '1500'
-                            },
-                            diameter: {
-                                name: 'Диаметр рулона',
-                                selected: -1,
-                                list: [
-                                    {name: '1 330 мм', val: 'product-diameter_01'}
-                                ]
-                            },
-                            price: {
-                                withDelivery: 32424,
-                                withoutDelivery: 30854
-                            }
-                        }
-                    },
-                    {
-                        name: 'L2 135 (2500мм)',
-                        val: '01',
-                        data: {
-                            decade: {
-                                name: 'Декада',
-                                selected: -1,
-                                list: [
-                                    {name: '1-ая декада', val: 'product-decade_01'},
-                                    {name: '2-ая декада', val: 'product-decade_02'},
-                                    {name: '3-ая декада', val: 'product-decade_03'}
-                                ]
-                            },
-                            volume: {
-                                name: 'Объём',
-                                val: '1500'
-                            },
-                            diameter: {
-                                name: 'Диаметр рулона',
-                                selected: -1,
-                                list: [
-                                    {name: '1 330 мм', val: 'product-diameter_01'}
-                                ]
-                            },
-                            price: {
-                                withDelivery: 32424,
-                                withoutDelivery: 30854
-                            }
-                        }
-                    },
-                    {
-                        name: 'L2 150 (1700мм)',
-                        val: '01',
-                        data: {
-                            decade: {
-                                name: 'Декада',
-                                selected: -1,
-                                list: [
-                                    {name: '1-ая декада', val: 'product-decade_01'},
-                                    {name: '2-ая декада', val: 'product-decade_02'},
-                                    {name: '3-ая декада', val: 'product-decade_03'}
-                                ]
-                            },
-                            volume: {
-                                name: 'Объём',
-                                val: '1500'
-                            },
-                            diameter: {
-                                name: 'Диаметр рулона',
-                                selected: -1,
-                                list: [
-                                    {name: '1 330 мм', val: 'product-diameter_01'}
-                                ]
-                            },
-                            price: {
-                                withDelivery: 32224,
-                                withoutDelivery: 30654
-                            }
-                        }
-                    },
-                    {
-                        name: 'L2 150 (2000мм)',
-                        val: '01',
-                        data: {
-                            decade: {
-                                name: 'Декада',
-                                selected: -1,
-                                list: [
-                                    {name: '1-ая декада', val: 'product-decade_01'},
-                                    {name: '2-ая декада', val: 'product-decade_02'},
-                                    {name: '3-ая декада', val: 'product-decade_03'}
-                                ]
-                            },
-                            volume: {
-                                name: 'Объём',
-                                val: '1500'
-                            },
-                            diameter: {
-                                name: 'Диаметр рулона',
-                                selected: -1,
-                                list: [
-                                    {name: '1 330 мм', val: 'product-diameter_01'}
-                                ]
-                            },
-                            price: {
-                                withDelivery: 32224,
-                                withoutDelivery: 30654
-                            }
-                        }
-                    },
-                    {
-                        name: 'L2 150 (2100мм)',
-                        val: '01',
-                        data: {
-                            decade: {
-                                name: 'Декада',
-                                selected: -1,
-                                list: [
-                                    {name: '1-ая декада', val: 'product-decade_01'},
-                                    {name: '2-ая декада', val: 'product-decade_02'},
-                                    {name: '3-ая декада', val: 'product-decade_03'}
-                                ]
-                            },
-                            volume: {
-                                name: 'Объём',
-                                val: '1500'
-                            },
-                            diameter: {
-                                name: 'Диаметр рулона',
-                                selected: -1,
-                                list: [
-                                    {name: '1 330 мм', val: 'product-diameter_01'}
-                                ]
-                            },
-                            price: {
-                                withDelivery: 32224,
-                                withoutDelivery: 30654
-                            }
-                        }
-                    },
-                    {
-                        name: 'L2 150 (2200мм)',
-                        val: '01',
-                        data: {
-                            decade: {
-                                name: 'Декада',
-                                selected: -1,
-                                list: [
-                                    {name: '1-ая декада', val: 'product-decade_01'},
-                                    {name: '2-ая декада', val: 'product-decade_02'},
-                                    {name: '3-ая декада', val: 'product-decade_03'}
-                                ]
-                            },
-                            volume: {
-                                name: 'Объём',
-                                val: '1500'
-                            },
-                            diameter: {
-                                name: 'Диаметр рулона',
-                                selected: -1,
-                                list: [
-                                    {name: '1 330 мм', val: 'product-diameter_01'}
-                                ]
-                            },
-                            price: {
-                                withDelivery: 32224,
-                                withoutDelivery: 30654
-                            }
-                        }
-                    },
-                    {
-                        name: 'L2 150 (2500мм)',
-                        val: '01',
-                        data: {
-                            decade: {
-                                name: 'Декада',
-                                selected: -1,
-                                list: [
-                                    {name: '1-ая декада', val: 'product-decade_01'},
-                                    {name: '2-ая декада', val: 'product-decade_02'},
-                                    {name: '3-ая декада', val: 'product-decade_03'}
-                                ]
-                            },
-                            volume: {
-                                name: 'Объём',
-                                val: '1500'
-                            },
-                            diameter: {
-                                name: 'Диаметр рулона',
-                                selected: -1,
-                                list: [
-                                    {name: '1 330 мм', val: 'product-diameter_01'}
-                                ]
-                            },
-                            price: {
-                                withDelivery: 32224,
-                                withoutDelivery: 30654
-                            }
-                        }
-                    },
-                    {
-                        name: 'L2 175 (1700мм)',
-                        val: '01',
-                        data: {
-                            decade: {
-                                name: 'Декада',
-                                selected: -1,
-                                list: [
-                                    {name: '1-ая декада', val: 'product-decade_01'},
-                                    {name: '2-ая декада', val: 'product-decade_02'},
-                                    {name: '3-ая декада', val: 'product-decade_03'}
-                                ]
-                            },
-                            volume: {
-                                name: 'Объём',
-                                val: '1500'
-                            },
-                            diameter: {
-                                name: 'Диаметр рулона',
-                                selected: -1,
-                                list: [
-                                    {name: '1 330 мм', val: 'product-diameter_01'}
-                                ]
-                            },
-                            price: {
-                                withDelivery: 32224,
-                                withoutDelivery: 30654
-                            }
-                        }
-                    },
-                    {
-                        name: 'L2 175 (2000мм)',
-                        val: '01',
-                        data: {
-                            decade: {
-                                name: 'Декада',
-                                selected: -1,
-                                list: [
-                                    {name: '1-ая декада', val: 'product-decade_01'},
-                                    {name: '2-ая декада', val: 'product-decade_02'},
-                                    {name: '3-ая декада', val: 'product-decade_03'}
-                                ]
-                            },
-                            volume: {
-                                name: 'Объём',
-                                val: '1500'
-                            },
-                            diameter: {
-                                name: 'Диаметр рулона',
-                                selected: -1,
-                                list: [
-                                    {name: '1 330 мм', val: 'product-diameter_01'}
-                                ]
-                            },
-                            price: {
-                                withDelivery: 32224,
-                                withoutDelivery: 30654
-                            }
-                        }
-                    },
-                    {
-                        name: 'L2 175 (2100мм)',
-                        val: '01',
-                        data: {
-                            decade: {
-                                name: 'Декада',
-                                selected: -1,
-                                list: [
-                                    {name: '1-ая декада', val: 'product-decade_01'},
-                                    {name: '2-ая декада', val: 'product-decade_02'},
-                                    {name: '3-ая декада', val: 'product-decade_03'}
-                                ]
-                            },
-                            volume: {
-                                name: 'Объём',
-                                val: '1500'
-                            },
-                            diameter: {
-                                name: 'Диаметр рулона',
-                                selected: -1,
-                                list: [
-                                    {name: '1 330 мм', val: 'product-diameter_01'}
-                                ]
-                            },
-                            price: {
-                                withDelivery: 32224,
-                                withoutDelivery: 30654
-                            }
-                        }
-                    },
-                    {
-                        name: 'L2 175 (2200мм)',
-                        val: '01',
-                        data: {
-                            decade: {
-                                name: 'Декада',
-                                selected: -1,
-                                list: [
-                                    {name: '1-ая декада', val: 'product-decade_01'},
-                                    {name: '2-ая декада', val: 'product-decade_02'},
-                                    {name: '3-ая декада', val: 'product-decade_03'}
-                                ]
-                            },
-                            volume: {
-                                name: 'Объём',
-                                val: '1500'
-                            },
-                            diameter: {
-                                name: 'Диаметр рулона',
-                                selected: -1,
-                                list: [
-                                    {name: '1 330 мм', val: 'product-diameter_01'}
-                                ]
-                            },
-                            price: {
-                                withDelivery: 32224,
-                                withoutDelivery: 30654
-                            }
-                        }
-                    },
-                    {
-                        name: 'L2 175 (2500мм)',
-                        val: '01',
-                        data: {
-                            decade: {
-                                name: 'Декада',
-                                selected: -1,
-                                list: [
-                                    {name: '1-ая декада', val: 'product-decade_01'},
-                                    {name: '2-ая декада', val: 'product-decade_02'},
-                                    {name: '3-ая декада', val: 'product-decade_03'}
-                                ]
-                            },
-                            volume: {
-                                name: 'Объём',
-                                val: '1500'
-                            },
-                            diameter: {
-                                name: 'Диаметр рулона',
-                                selected: -1,
-                                list: [
-                                    {name: '1 330 мм', val: 'product-diameter_01'}
-                                ]
-                            },
-                            price: {
-                                withDelivery: 32224,
-                                withoutDelivery: 30654
-                            }
-                        }
-                    }
-                ]
-            }, */
-            products: {
-                name: 'Товар',
-                selected: -1,
-                brand: [{
-                    placeholder: 'Марка',
-                    name: 'M (SFT Medium)',
-                    selected: -1,
-                    grammage: [{
-                        placeholder: 'Граммаж',
-                        name: '100',
-                        selected: -1,
-                        format: [{
-                            placeholder: 'Формат',
-                            name: '2100',
-                            id: 62,
-                            min_lot: 30,
-                            deliveries: [{
-                                name: "ЖД",
-                                price: 33924
-                            }]
-                        }, {
-                            placeholder: 'Формат',
-                            name: '2200',
-                            id: 68,
-                            min_lot: 30,
-                            deliveries: [{
-                                name: "ЖД",
-                                price: 33924
-                            }]
-                        }]
-                    }, {
-                        placeholder: 'Граммаж',
-                        name: '110',
-                        selected: -1,
-                        format: [{
-                            placeholder: 'Формат',
-                            name: '2100',
-                            id: 63,
-                            min_lot: 20,
-                            deliveries: [{
-                                name: "ЖД",
-                                price: 33924
-                            }, {
-                                name: "АВИА",
-                                price: 38924
-                            }]
-                        }]
-                    }, {
-                        placeholder: 'Граммаж',
-                        name: '120',
-                        selected: -1,
-                        format: [{
-                            placeholder: 'Формат',
-                            name: '2100',
-                            id: 64,
-                            min_lot: 50,
-                            deliveries: [{
-                                name: "ЖД",
-                                price: 33924
-                            }, {
-                                name: "АВИА",
-                                price: 38924
-                            }]
-                        }]
-                    }]
-                }, {
-                    placeholder: 'Марка',
-                    name: 'L (SFT Medium)',
-                    selected: -1,
-                    grammage: [{
-                        placeholder: 'Граммаж',
-                        name: '100',
-                        selected: -1,
-                        format: [{
-                            placeholder: 'Формат',
-                            name: '2100',
-                            id: 62,
-                            min_lot: 30,
-                            deliveries: [{
-                                name: "ЖД",
-                                price: 33924
-                            }]
-                        }]
-                    }, {
-                        placeholder: 'Граммаж',
-                        name: '110',
-                        selected: -1,
-                        format: [{
-                            placeholder: 'Формат',
-                            name: '2100',
-                            id: 63,
-                            min_lot: 20,
-                            deliveries: [{
-                                name: "ЖД",
-                                price: 33924
-                            }, {
-                                name: "АВИА",
-                                price: 38924
-                            }]
-                        }]
-                    }, {
-                        placeholder: 'Граммаж',
-                        name: '120',
-                        selected: -1,
-                        format: [{
-                            placeholder: 'Формат',
-                            name: '2100',
-                            id: 64,
-                            min_lot: 50,
-                            deliveries: [{
-                                name: "ЖД",
-                                price: 33924
-                            }, {
-                                name: "АВИА",
-                                price: 38924
-                            }]
-                        }]
-                    }]
-                }]
-            },
-            productList: [{ id: 0, brand: 0, grammage: 0, format: 0, min_lot: 0, volume_1: '', volume_2: '', volume_3: '', delivery: '', price: 0 }]
+            step: '1',
+            products: [],
+            productList: [{
+                id: 0,
+                brand: 0,
+                grammage: 0,
+                format: 0,
+                min_lot: 0,
+                volume_1: '',
+                volume_2: '',
+                volume_3: '',
+                delivery: '',
+                price: 0
+            }]
         };
     },
+    mounted: function mounted() {
+        this.getProducts();
+    },
+
 
     computed: {
         totalPrice: function totalPrice() {
@@ -5592,8 +3690,26 @@ module.exports = Cancel;
             return volume;
         }
     },
+
     watch: {},
     methods: {
+        getProducts: function getProducts() {
+            var _this = this;
+
+            var route = 'http://localhost/sft-lk/public/user/' + this.applicator + '/get/products/';
+            axios.get(route).then(function (response) {
+                _this.products = response.data.products;
+                if (_this.products.length > 0) {
+                    _this.showProducts = true;
+                    console.log(response.data.products);
+                }
+            }).catch(function (error) {
+                _this.showProducts = false;
+                console.log(error);
+            });
+        },
+
+
         nextStep: function nextStep(i) {
             if (i === 1) {
                 this.step = i;
@@ -5648,7 +3764,18 @@ module.exports = Cancel;
         },
         addProduct: function addProduct(e) {
             console.log(e);
-            this.productList.push({ id: 0, brand: 0, grammage: 0, format: 0, min_lot: 0, volume_1: '', volume_2: '', volume_3: '', delivery: '', price: 0 });
+            this.productList.push({
+                id: 0,
+                brand: 0,
+                grammage: 0,
+                format: 0,
+                min_lot: 0,
+                volume_1: '',
+                volume_2: '',
+                volume_3: '',
+                delivery: '',
+                price: 0
+            });
         },
         delProduct: function delProduct(index) {
             this.productList.splice(index, 1);
@@ -5691,333 +3818,6 @@ module.exports = Cancel;
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__multiselectMixin__ = __webpack_require__(60);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__pointerMixin__ = __webpack_require__(61);
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-
-
-
-
-/* harmony default export */ __webpack_exports__["a"] = ({
-  name: 'vue-multiselect',
-  mixins: [__WEBPACK_IMPORTED_MODULE_0__multiselectMixin__["a" /* default */], __WEBPACK_IMPORTED_MODULE_1__pointerMixin__["a" /* default */]],
-  props: {
-
-    /**
-     * name attribute to match optional label element
-     * @default ''
-     * @type {String}
-     */
-    name: {
-      type: String,
-      default: ''
-    },
-    /**
-     * String to show when pointing to an option
-     * @default 'Press enter to select'
-     * @type {String}
-     */
-    selectLabel: {
-      type: String,
-      default: 'Press enter to select'
-    },
-    /**
-     * String to show when pointing to an option
-     * @default 'Press enter to select'
-     * @type {String}
-     */
-    selectGroupLabel: {
-      type: String,
-      default: 'Press enter to select group'
-    },
-    /**
-     * String to show next to selected option
-     * @default 'Selected'
-     * @type {String}
-    */
-    selectedLabel: {
-      type: String,
-      default: 'Selected'
-    },
-    /**
-     * String to show when pointing to an alredy selected option
-     * @default 'Press enter to remove'
-     * @type {String}
-    */
-    deselectLabel: {
-      type: String,
-      default: 'Press enter to remove'
-    },
-    /**
-     * String to show when pointing to an alredy selected option
-     * @default 'Press enter to remove'
-     * @type {String}
-    */
-    deselectGroupLabel: {
-      type: String,
-      default: 'Press enter to deselect group'
-    },
-    /**
-     * Decide whether to show pointer labels
-     * @default true
-     * @type {Boolean}
-    */
-    showLabels: {
-      type: Boolean,
-      default: true
-    },
-    /**
-     * Limit the display of selected options. The rest will be hidden within the limitText string.
-     * @default 99999
-     * @type {Integer}
-     */
-    limit: {
-      type: Number,
-      default: 99999
-    },
-    /**
-     * Sets maxHeight style value of the dropdown
-     * @default 300
-     * @type {Integer}
-     */
-    maxHeight: {
-      type: Number,
-      default: 300
-    },
-    /**
-     * Function that process the message shown when selected
-     * elements pass the defined limit.
-     * @default 'and * more'
-     * @param {Int} count Number of elements more than limit
-     * @type {Function}
-     */
-    limitText: {
-      type: Function,
-      default: function _default(count) {
-        return 'and ' + count + ' more';
-      }
-    },
-    /**
-     * Set true to trigger the loading spinner.
-     * @default False
-     * @type {Boolean}
-    */
-    loading: {
-      type: Boolean,
-      default: false
-    },
-    /**
-     * Disables the multiselect if true.
-     * @default false
-     * @type {Boolean}
-    */
-    disabled: {
-      type: Boolean,
-      default: false
-    },
-    /**
-     * Fixed opening direction
-     * @default ''
-     * @type {String}
-    */
-    openDirection: {
-      type: String,
-      default: ''
-    },
-    showNoResults: {
-      type: Boolean,
-      default: true
-    },
-    tabindex: {
-      type: Number,
-      default: 0
-    }
-  },
-  computed: {
-    isSingleLabelVisible: function isSingleLabelVisible() {
-      return this.singleValue && (!this.isOpen || !this.searchable) && !this.visibleValues.length;
-    },
-    isPlaceholderVisible: function isPlaceholderVisible() {
-      return !this.internalValue.length && (!this.searchable || !this.isOpen);
-    },
-    visibleValues: function visibleValues() {
-      return this.multiple ? this.internalValue.slice(0, this.limit) : [];
-    },
-    singleValue: function singleValue() {
-      return this.internalValue[0];
-    },
-    deselectLabelText: function deselectLabelText() {
-      return this.showLabels ? this.deselectLabel : '';
-    },
-    deselectGroupLabelText: function deselectGroupLabelText() {
-      return this.showLabels ? this.deselectGroupLabel : '';
-    },
-    selectLabelText: function selectLabelText() {
-      return this.showLabels ? this.selectLabel : '';
-    },
-    selectGroupLabelText: function selectGroupLabelText() {
-      return this.showLabels ? this.selectGroupLabel : '';
-    },
-    selectedLabelText: function selectedLabelText() {
-      return this.showLabels ? this.selectedLabel : '';
-    },
-    inputStyle: function inputStyle() {
-      if (this.multiple && this.value && this.value.length) {
-        // Hide input by setting the width to 0 allowing it to receive focus
-        return this.isOpen ? { 'width': 'auto' } : { 'width': '0', 'position': 'absolute', 'padding': '0' };
-      }
-    },
-    contentStyle: function contentStyle() {
-      return this.options.length ? { 'display': 'inline-block' } : { 'display': 'block' };
-    },
-    isAbove: function isAbove() {
-      if (this.openDirection === 'above' || this.openDirection === 'top') {
-        return true;
-      } else if (this.openDirection === 'below' || this.openDirection === 'bottom') {
-        return false;
-      } else {
-        return this.prefferedOpenDirection === 'above';
-      }
-    },
-    showSearchInput: function showSearchInput() {
-      return this.searchable && (this.hasSingleSelectedSlot && (this.visibleSingleValue || this.visibleSingleValue === 0) ? this.isOpen : true);
-    }
-  }
-});
-
-/***/ }),
-/* 18 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
 //
 //
 //
@@ -6042,15 +3842,15 @@ module.exports = Cancel;
 });
 
 /***/ }),
-/* 19 */
+/* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
-__webpack_require__(20);
-module.exports = __webpack_require__(66);
+__webpack_require__(19);
+module.exports = __webpack_require__(59);
 
 
 /***/ }),
-/* 20 */
+/* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
 
@@ -6060,8 +3860,8 @@ module.exports = __webpack_require__(66);
  * building robust, powerful web applications using Vue and Laravel.
  */
 
-window.Vue = __webpack_require__(21);
-window.axios = __webpack_require__(24);
+window.Vue = __webpack_require__(20);
+window.axios = __webpack_require__(23);
 
 var token = document.head.querySelector('meta[name="csrf-token"]');
 
@@ -6070,20 +3870,20 @@ var token = document.head.querySelector('meta[name="csrf-token"]');
  * the page. Then, you may begin adding components to this application
  * or customize the JavaScript scaffolding to fit your unique needs.
  */
-Vue.component('drop-down', __webpack_require__(43).default);
-Vue.component('consigneer-component', __webpack_require__(45).default);
-Vue.component('fileupload-component', __webpack_require__(47).default);
-Vue.component('select-product', __webpack_require__(49).default);
-Vue.component('select-products', __webpack_require__(54).default);
+Vue.component('drop-down', __webpack_require__(42).default);
+Vue.component('consigneer-component', __webpack_require__(47).default);
+Vue.component('fileupload-component', __webpack_require__(49).default);
+Vue.component('select-product', __webpack_require__(51).default);
+Vue.component('select-products', __webpack_require__(55).default);
 
-Vue.component('example-component', __webpack_require__(64).default);
+Vue.component('example-component', __webpack_require__(57).default);
 
 var app = new Vue({
   el: '#root-wrapper'
 });
 
 /***/ }),
-/* 21 */
+/* 20 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -17046,10 +14846,10 @@ Vue.compile = compileToFunctions;
 
 module.exports = Vue;
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(2), __webpack_require__(22).setImmediate))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(2), __webpack_require__(21).setImmediate))
 
 /***/ }),
-/* 22 */
+/* 21 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global) {var scope = (typeof global !== "undefined" && global) ||
@@ -17105,7 +14905,7 @@ exports._unrefActive = exports.active = function(item) {
 };
 
 // setimmediate attaches itself to the global object
-__webpack_require__(23);
+__webpack_require__(22);
 // On some exotic environments, it's not clear which object `setimmediate` was
 // able to install onto.  Search each possibility in the same order as the
 // `setimmediate` library.
@@ -17119,7 +14919,7 @@ exports.clearImmediate = (typeof self !== "undefined" && self.clearImmediate) ||
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(2)))
 
 /***/ }),
-/* 23 */
+/* 22 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global, process) {(function (global, undefined) {
@@ -17309,24 +15109,24 @@ exports.clearImmediate = (typeof self !== "undefined" && self.clearImmediate) ||
     attachTo.clearImmediate = clearImmediate;
 }(typeof self === "undefined" ? typeof global === "undefined" ? this : global : self));
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(2), __webpack_require__(6)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(2), __webpack_require__(4)))
+
+/***/ }),
+/* 23 */
+/***/ (function(module, exports, __webpack_require__) {
+
+module.exports = __webpack_require__(24);
 
 /***/ }),
 /* 24 */
-/***/ (function(module, exports, __webpack_require__) {
-
-module.exports = __webpack_require__(25);
-
-/***/ }),
-/* 25 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 var utils = __webpack_require__(0);
-var bind = __webpack_require__(7);
-var Axios = __webpack_require__(27);
+var bind = __webpack_require__(5);
+var Axios = __webpack_require__(26);
 var defaults = __webpack_require__(3);
 
 /**
@@ -17360,15 +15160,15 @@ axios.create = function create(instanceConfig) {
 };
 
 // Expose Cancel & CancelToken
-axios.Cancel = __webpack_require__(11);
-axios.CancelToken = __webpack_require__(41);
-axios.isCancel = __webpack_require__(10);
+axios.Cancel = __webpack_require__(9);
+axios.CancelToken = __webpack_require__(40);
+axios.isCancel = __webpack_require__(8);
 
 // Expose all/spread
 axios.all = function all(promises) {
   return Promise.all(promises);
 };
-axios.spread = __webpack_require__(42);
+axios.spread = __webpack_require__(41);
 
 module.exports = axios;
 
@@ -17377,7 +15177,7 @@ module.exports.default = axios;
 
 
 /***/ }),
-/* 26 */
+/* 25 */
 /***/ (function(module, exports) {
 
 /*!
@@ -17404,7 +15204,7 @@ function isSlowBuffer (obj) {
 
 
 /***/ }),
-/* 27 */
+/* 26 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -17412,8 +15212,8 @@ function isSlowBuffer (obj) {
 
 var defaults = __webpack_require__(3);
 var utils = __webpack_require__(0);
-var InterceptorManager = __webpack_require__(36);
-var dispatchRequest = __webpack_require__(37);
+var InterceptorManager = __webpack_require__(35);
+var dispatchRequest = __webpack_require__(36);
 
 /**
  * Create a new instance of Axios
@@ -17490,7 +15290,7 @@ module.exports = Axios;
 
 
 /***/ }),
-/* 28 */
+/* 27 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -17509,13 +15309,13 @@ module.exports = function normalizeHeaderName(headers, normalizedName) {
 
 
 /***/ }),
-/* 29 */
+/* 28 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var createError = __webpack_require__(9);
+var createError = __webpack_require__(7);
 
 /**
  * Resolve or reject a Promise based on response status.
@@ -17542,7 +15342,7 @@ module.exports = function settle(resolve, reject, response) {
 
 
 /***/ }),
-/* 30 */
+/* 29 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -17570,7 +15370,7 @@ module.exports = function enhanceError(error, config, code, request, response) {
 
 
 /***/ }),
-/* 31 */
+/* 30 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -17645,7 +15445,7 @@ module.exports = function buildURL(url, params, paramsSerializer) {
 
 
 /***/ }),
-/* 32 */
+/* 31 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -17705,7 +15505,7 @@ module.exports = function parseHeaders(headers) {
 
 
 /***/ }),
-/* 33 */
+/* 32 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -17780,7 +15580,7 @@ module.exports = (
 
 
 /***/ }),
-/* 34 */
+/* 33 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -17823,7 +15623,7 @@ module.exports = btoa;
 
 
 /***/ }),
-/* 35 */
+/* 34 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -17883,7 +15683,7 @@ module.exports = (
 
 
 /***/ }),
-/* 36 */
+/* 35 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -17942,18 +15742,18 @@ module.exports = InterceptorManager;
 
 
 /***/ }),
-/* 37 */
+/* 36 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 var utils = __webpack_require__(0);
-var transformData = __webpack_require__(38);
-var isCancel = __webpack_require__(10);
+var transformData = __webpack_require__(37);
+var isCancel = __webpack_require__(8);
 var defaults = __webpack_require__(3);
-var isAbsoluteURL = __webpack_require__(39);
-var combineURLs = __webpack_require__(40);
+var isAbsoluteURL = __webpack_require__(38);
+var combineURLs = __webpack_require__(39);
 
 /**
  * Throws a `Cancel` if cancellation has been requested.
@@ -18035,7 +15835,7 @@ module.exports = function dispatchRequest(config) {
 
 
 /***/ }),
-/* 38 */
+/* 37 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -18062,7 +15862,7 @@ module.exports = function transformData(data, headers, fns) {
 
 
 /***/ }),
-/* 39 */
+/* 38 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -18083,7 +15883,7 @@ module.exports = function isAbsoluteURL(url) {
 
 
 /***/ }),
-/* 40 */
+/* 39 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -18104,13 +15904,13 @@ module.exports = function combineURLs(baseURL, relativeURL) {
 
 
 /***/ }),
-/* 41 */
+/* 40 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var Cancel = __webpack_require__(11);
+var Cancel = __webpack_require__(9);
 
 /**
  * A `CancelToken` is an object that can be used to request cancellation of an operation.
@@ -18168,7 +15968,7 @@ module.exports = CancelToken;
 
 
 /***/ }),
-/* 42 */
+/* 41 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -18202,16 +16002,20 @@ module.exports = function spread(callback) {
 
 
 /***/ }),
-/* 43 */
+/* 42 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__babel_loader_cacheDirectory_true_presets_env_modules_false_targets_browsers_2_uglify_true_plugins_transform_object_rest_spread_transform_runtime_polyfill_false_helpers_false_node_modules_vue_loader_lib_selector_type_script_index_0_DropDown_vue__ = __webpack_require__(12);
 /* empty harmony namespace reexport */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__node_modules_vue_loader_lib_template_compiler_index_id_data_v_66975e28_hasScoped_false_optionsId_0_buble_transforms_node_modules_vue_loader_lib_selector_type_template_index_0_DropDown_vue__ = __webpack_require__(44);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__node_modules_vue_loader_lib_template_compiler_index_id_data_v_66975e28_hasScoped_false_optionsId_0_buble_transforms_node_modules_vue_loader_lib_selector_type_template_index_0_DropDown_vue__ = __webpack_require__(46);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__node_modules_vue_loader_lib_runtime_component_normalizer__ = __webpack_require__(1);
 var disposed = false
+function injectStyle (context) {
+  if (disposed) return
+  __webpack_require__(43)
+}
 /* script */
 
 
@@ -18220,7 +16024,7 @@ var disposed = false
 /* template functional */
 var __vue_template_functional__ = false
 /* styles */
-var __vue_styles__ = null
+var __vue_styles__ = injectStyle
 /* scopeId */
 var __vue_scopeId__ = null
 /* moduleIdentifier (server only) */
@@ -18257,7 +16061,83 @@ if (false) {(function () {
 
 
 /***/ }),
+/* 43 */
+/***/ (function(module, exports, __webpack_require__) {
+
+// style-loader: Adds some css to the DOM by adding a <style> tag
+
+// load the styles
+var content = __webpack_require__(44);
+if(typeof content === 'string') content = [[module.i, content, '']];
+if(content.locals) module.exports = content.locals;
+// add the styles to the DOM
+var add = __webpack_require__(11).default
+var update = add("343ba980", content, false, {});
+// Hot Module Replacement
+if(false) {
+ // When the styles change, update the <style> tags
+ if(!content.locals) {
+   module.hot.accept("!!../../../../node_modules/css-loader/index.js!../../../../node_modules/vue-loader/lib/style-compiler/index.js?{\"optionsId\":\"0\",\"vue\":true,\"scoped\":false,\"sourceMap\":false}!../../../../node_modules/vue-loader/lib/selector.js?type=styles&index=0!./DropDown.vue", function() {
+     var newContent = require("!!../../../../node_modules/css-loader/index.js!../../../../node_modules/vue-loader/lib/style-compiler/index.js?{\"optionsId\":\"0\",\"vue\":true,\"scoped\":false,\"sourceMap\":false}!../../../../node_modules/vue-loader/lib/selector.js?type=styles&index=0!./DropDown.vue");
+     if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+     update(newContent);
+   });
+ }
+ // When the module is disposed, remove the <style> tags
+ module.hot.dispose(function() { update(); });
+}
+
+/***/ }),
 /* 44 */
+/***/ (function(module, exports, __webpack_require__) {
+
+exports = module.exports = __webpack_require__(10)(false);
+// imports
+
+
+// module
+exports.push([module.i, "\n.form__select-large input {\n    color: #26231f;\n    width: 100%;\n}\n.disabled {\n    opacity: .5;\n    pointer-events: none;\n}\n", ""]);
+
+// exports
+
+
+/***/ }),
+/* 45 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (immutable) */ __webpack_exports__["a"] = listToStyles;
+/**
+ * Translates the list format produced by css-loader into something
+ * easier to manipulate.
+ */
+function listToStyles (parentId, list) {
+  var styles = []
+  var newStyles = {}
+  for (var i = 0; i < list.length; i++) {
+    var item = list[i]
+    var id = item[0]
+    var css = item[1]
+    var media = item[2]
+    var sourceMap = item[3]
+    var part = {
+      id: parentId + ':' + i,
+      css: css,
+      media: media,
+      sourceMap: sourceMap
+    }
+    if (!newStyles[id]) {
+      styles.push(newStyles[id] = { id: id, parts: [part] })
+    } else {
+      newStyles[id].parts.push(part)
+    }
+  }
+  return styles
+}
+
+
+/***/ }),
+/* 46 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -18268,11 +16148,11 @@ var render = function() {
   var _h = _vm.$createElement
   var _c = _vm._self._c || _h
   return _c("div", [
-    _c("div", { staticClass: "selectize-control form__select-large single " }, [
+    _c("div", { staticClass: "selectize-control form__select single" }, [
       _c(
         "label",
         {
-          staticClass: "selectize-input items not-full has-options",
+          staticClass: "selectize-input items not-full has-options has-items",
           class: { disabled: _vm.disabled }
         },
         [
@@ -18345,7 +16225,7 @@ var render = function() {
                     }
                   },
                   "div",
-                  { "data-value": item.val },
+                  { "data-value": item.selected },
                   false
                 ),
                 [
@@ -18374,14 +16254,14 @@ if (false) {
 }
 
 /***/ }),
-/* 45 */
+/* 47 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__babel_loader_cacheDirectory_true_presets_env_modules_false_targets_browsers_2_uglify_true_plugins_transform_object_rest_spread_transform_runtime_polyfill_false_helpers_false_node_modules_vue_loader_lib_selector_type_script_index_0_ConsigneerComponent_vue__ = __webpack_require__(13);
 /* empty harmony namespace reexport */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__node_modules_vue_loader_lib_template_compiler_index_id_data_v_7c04bd3a_hasScoped_false_optionsId_0_buble_transforms_node_modules_vue_loader_lib_selector_type_template_index_0_ConsigneerComponent_vue__ = __webpack_require__(46);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__node_modules_vue_loader_lib_template_compiler_index_id_data_v_7c04bd3a_hasScoped_false_optionsId_0_buble_transforms_node_modules_vue_loader_lib_selector_type_template_index_0_ConsigneerComponent_vue__ = __webpack_require__(48);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__node_modules_vue_loader_lib_runtime_component_normalizer__ = __webpack_require__(1);
 var disposed = false
 /* script */
@@ -18429,7 +16309,7 @@ if (false) {(function () {
 
 
 /***/ }),
-/* 46 */
+/* 48 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -18458,7 +16338,7 @@ var render = function() {
                     expression: "selected"
                   }
                 ],
-                staticClass: "js-selectize-controle form__select-tiny",
+                staticClass: "form__select-large single selectize-input",
                 on: {
                   change: [
                     function($event) {
@@ -18479,9 +16359,14 @@ var render = function() {
                 }
               },
               _vm._l(_vm.options, function(option, index) {
-                return _c("option", { domProps: { value: option } }, [
-                  _vm._v(" " + _vm._s(option.name) + " ")
-                ])
+                return _c(
+                  "option",
+                  {
+                    staticClass: "selectize-dropdown-content",
+                    domProps: { value: option }
+                  },
+                  [_vm._v(" " + _vm._s(option.name) + " ")]
+                )
               })
             )
           ])
@@ -18623,14 +16508,14 @@ if (false) {
 }
 
 /***/ }),
-/* 47 */
+/* 49 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__babel_loader_cacheDirectory_true_presets_env_modules_false_targets_browsers_2_uglify_true_plugins_transform_object_rest_spread_transform_runtime_polyfill_false_helpers_false_node_modules_vue_loader_lib_selector_type_script_index_0_FileuploadComponent_vue__ = __webpack_require__(14);
 /* empty harmony namespace reexport */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__node_modules_vue_loader_lib_template_compiler_index_id_data_v_a15b9f4e_hasScoped_false_optionsId_0_buble_transforms_node_modules_vue_loader_lib_selector_type_template_index_0_FileuploadComponent_vue__ = __webpack_require__(48);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__node_modules_vue_loader_lib_template_compiler_index_id_data_v_a15b9f4e_hasScoped_false_optionsId_0_buble_transforms_node_modules_vue_loader_lib_selector_type_template_index_0_FileuploadComponent_vue__ = __webpack_require__(50);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__node_modules_vue_loader_lib_runtime_component_normalizer__ = __webpack_require__(1);
 var disposed = false
 /* script */
@@ -18678,7 +16563,7 @@ if (false) {(function () {
 
 
 /***/ }),
-/* 48 */
+/* 50 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -18736,19 +16621,19 @@ if (false) {
 }
 
 /***/ }),
-/* 49 */
+/* 51 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__babel_loader_cacheDirectory_true_presets_env_modules_false_targets_browsers_2_uglify_true_plugins_transform_object_rest_spread_transform_runtime_polyfill_false_helpers_false_node_modules_vue_loader_lib_selector_type_script_index_0_SelectProduct_vue__ = __webpack_require__(15);
 /* empty harmony namespace reexport */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__node_modules_vue_loader_lib_template_compiler_index_id_data_v_57736628_hasScoped_false_optionsId_0_buble_transforms_node_modules_vue_loader_lib_selector_type_template_index_0_SelectProduct_vue__ = __webpack_require__(53);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__node_modules_vue_loader_lib_template_compiler_index_id_data_v_57736628_hasScoped_false_optionsId_0_buble_transforms_node_modules_vue_loader_lib_selector_type_template_index_0_SelectProduct_vue__ = __webpack_require__(54);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__node_modules_vue_loader_lib_runtime_component_normalizer__ = __webpack_require__(1);
 var disposed = false
 function injectStyle (context) {
   if (disposed) return
-  __webpack_require__(50)
+  __webpack_require__(52)
 }
 /* script */
 
@@ -18795,17 +16680,17 @@ if (false) {(function () {
 
 
 /***/ }),
-/* 50 */
+/* 52 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // style-loader: Adds some css to the DOM by adding a <style> tag
 
 // load the styles
-var content = __webpack_require__(51);
+var content = __webpack_require__(53);
 if(typeof content === 'string') content = [[module.i, content, '']];
 if(content.locals) module.exports = content.locals;
 // add the styles to the DOM
-var add = __webpack_require__(5).default
+var add = __webpack_require__(11).default
 var update = add("b509f970", content, false, {});
 // Hot Module Replacement
 if(false) {
@@ -18822,10 +16707,10 @@ if(false) {
 }
 
 /***/ }),
-/* 51 */
+/* 53 */
 /***/ (function(module, exports, __webpack_require__) {
 
-exports = module.exports = __webpack_require__(4)(false);
+exports = module.exports = __webpack_require__(10)(false);
 // imports
 
 
@@ -18836,42 +16721,7 @@ exports.push([module.i, "\n.form__select-large input {\n    color: #26231f;\n   
 
 
 /***/ }),
-/* 52 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony export (immutable) */ __webpack_exports__["a"] = listToStyles;
-/**
- * Translates the list format produced by css-loader into something
- * easier to manipulate.
- */
-function listToStyles (parentId, list) {
-  var styles = []
-  var newStyles = {}
-  for (var i = 0; i < list.length; i++) {
-    var item = list[i]
-    var id = item[0]
-    var css = item[1]
-    var media = item[2]
-    var sourceMap = item[3]
-    var part = {
-      id: parentId + ':' + i,
-      css: css,
-      media: media,
-      sourceMap: sourceMap
-    }
-    if (!newStyles[id]) {
-      styles.push(newStyles[id] = { id: id, parts: [part] })
-    } else {
-      newStyles[id].parts.push(part)
-    }
-  }
-  return styles
-}
-
-
-/***/ }),
-/* 53 */
+/* 54 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -19635,20 +17485,16 @@ if (false) {
 }
 
 /***/ }),
-/* 54 */
+/* 55 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__babel_loader_cacheDirectory_true_presets_env_modules_false_targets_browsers_2_uglify_true_plugins_transform_object_rest_spread_transform_runtime_polyfill_false_helpers_false_node_modules_vue_loader_lib_selector_type_script_index_0_SelectProducts_vue__ = __webpack_require__(16);
 /* empty harmony namespace reexport */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__node_modules_vue_loader_lib_template_compiler_index_id_data_v_8fa21c92_hasScoped_false_optionsId_0_buble_transforms_node_modules_vue_loader_lib_selector_type_template_index_0_SelectProducts_vue__ = __webpack_require__(63);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__node_modules_vue_loader_lib_template_compiler_index_id_data_v_8fa21c92_hasScoped_false_optionsId_0_buble_transforms_node_modules_vue_loader_lib_selector_type_template_index_0_SelectProducts_vue__ = __webpack_require__(56);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__node_modules_vue_loader_lib_runtime_component_normalizer__ = __webpack_require__(1);
 var disposed = false
-function injectStyle (context) {
-  if (disposed) return
-  __webpack_require__(55)
-}
 /* script */
 
 
@@ -19657,7 +17503,7 @@ function injectStyle (context) {
 /* template functional */
 var __vue_template_functional__ = false
 /* styles */
-var __vue_styles__ = injectStyle
+var __vue_styles__ = null
 /* scopeId */
 var __vue_scopeId__ = null
 /* moduleIdentifier (server only) */
@@ -19694,994 +17540,7 @@ if (false) {(function () {
 
 
 /***/ }),
-/* 55 */
-/***/ (function(module, exports, __webpack_require__) {
-
-// style-loader: Adds some css to the DOM by adding a <style> tag
-
-// load the styles
-var content = __webpack_require__(56);
-if(typeof content === 'string') content = [[module.i, content, '']];
-if(content.locals) module.exports = content.locals;
-// add the styles to the DOM
-var add = __webpack_require__(5).default
-var update = add("38ac9b1e", content, false, {});
-// Hot Module Replacement
-if(false) {
- // When the styles change, update the <style> tags
- if(!content.locals) {
-   module.hot.accept("!!../../../../node_modules/css-loader/index.js!../../../../node_modules/vue-loader/lib/style-compiler/index.js?{\"optionsId\":\"0\",\"vue\":true,\"scoped\":false,\"sourceMap\":false}!../../../../node_modules/vue-loader/lib/selector.js?type=styles&index=0!./SelectProducts.vue", function() {
-     var newContent = require("!!../../../../node_modules/css-loader/index.js!../../../../node_modules/vue-loader/lib/style-compiler/index.js?{\"optionsId\":\"0\",\"vue\":true,\"scoped\":false,\"sourceMap\":false}!../../../../node_modules/vue-loader/lib/selector.js?type=styles&index=0!./SelectProducts.vue");
-     if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
-     update(newContent);
-   });
- }
- // When the module is disposed, remove the <style> tags
- module.hot.dispose(function() { update(); });
-}
-
-/***/ }),
 /* 56 */
-/***/ (function(module, exports, __webpack_require__) {
-
-exports = module.exports = __webpack_require__(4)(false);
-// imports
-
-
-// module
-exports.push([module.i, "\n.form__select-large input {\n    color: #26231f;\n    width: 100%;\n}\n.disabled {\n    opacity: .5;\n    pointer-events: none;\n}\n", ""]);
-
-// exports
-
-
-/***/ }),
-/* 57 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__babel_loader_cacheDirectory_true_presets_env_modules_false_targets_browsers_2_uglify_true_plugins_transform_object_rest_spread_transform_runtime_polyfill_false_helpers_false_vue_loader_lib_selector_type_script_index_0_Multiselect_vue__ = __webpack_require__(17);
-/* unused harmony namespace reexport */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__vue_loader_lib_template_compiler_index_id_data_v_18e48ade_hasScoped_false_optionsId_0_buble_transforms_vue_loader_lib_selector_type_template_index_0_Multiselect_vue__ = __webpack_require__(62);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__vue_loader_lib_runtime_component_normalizer__ = __webpack_require__(1);
-var disposed = false
-function injectStyle (context) {
-  if (disposed) return
-  __webpack_require__(58)
-}
-/* script */
-
-
-/* template */
-
-/* template functional */
-var __vue_template_functional__ = false
-/* styles */
-var __vue_styles__ = injectStyle
-/* scopeId */
-var __vue_scopeId__ = null
-/* moduleIdentifier (server only) */
-var __vue_module_identifier__ = null
-
-var Component = Object(__WEBPACK_IMPORTED_MODULE_2__vue_loader_lib_runtime_component_normalizer__["a" /* default */])(
-  __WEBPACK_IMPORTED_MODULE_0__babel_loader_cacheDirectory_true_presets_env_modules_false_targets_browsers_2_uglify_true_plugins_transform_object_rest_spread_transform_runtime_polyfill_false_helpers_false_vue_loader_lib_selector_type_script_index_0_Multiselect_vue__["a" /* default */],
-  __WEBPACK_IMPORTED_MODULE_1__vue_loader_lib_template_compiler_index_id_data_v_18e48ade_hasScoped_false_optionsId_0_buble_transforms_vue_loader_lib_selector_type_template_index_0_Multiselect_vue__["a" /* render */],
-  __WEBPACK_IMPORTED_MODULE_1__vue_loader_lib_template_compiler_index_id_data_v_18e48ade_hasScoped_false_optionsId_0_buble_transforms_vue_loader_lib_selector_type_template_index_0_Multiselect_vue__["b" /* staticRenderFns */],
-  __vue_template_functional__,
-  __vue_styles__,
-  __vue_scopeId__,
-  __vue_module_identifier__
-)
-Component.options.__file = "vue-multiselect\\src\\Multiselect.vue"
-
-/* hot reload */
-if (false) {(function () {
-  var hotAPI = require("vue-hot-reload-api")
-  hotAPI.install(require("vue"), false)
-  if (!hotAPI.compatible) return
-  module.hot.accept()
-  if (!module.hot.data) {
-    hotAPI.createRecord("data-v-18e48ade", Component.options)
-  } else {
-    hotAPI.reload("data-v-18e48ade", Component.options)
-  }
-  module.hot.dispose(function (data) {
-    disposed = true
-  })
-})()}
-
-/* harmony default export */ __webpack_exports__["a"] = (Component.exports);
-
-
-/***/ }),
-/* 58 */
-/***/ (function(module, exports, __webpack_require__) {
-
-// style-loader: Adds some css to the DOM by adding a <style> tag
-
-// load the styles
-var content = __webpack_require__(59);
-if(typeof content === 'string') content = [[module.i, content, '']];
-if(content.locals) module.exports = content.locals;
-// add the styles to the DOM
-var add = __webpack_require__(5).default
-var update = add("57ba49fc", content, false, {});
-// Hot Module Replacement
-if(false) {
- // When the styles change, update the <style> tags
- if(!content.locals) {
-   module.hot.accept("!!../../css-loader/index.js!../../vue-loader/lib/style-compiler/index.js?{\"optionsId\":\"0\",\"vue\":true,\"scoped\":false,\"sourceMap\":false}!../../vue-loader/lib/selector.js?type=styles&index=0!./Multiselect.vue", function() {
-     var newContent = require("!!../../css-loader/index.js!../../vue-loader/lib/style-compiler/index.js?{\"optionsId\":\"0\",\"vue\":true,\"scoped\":false,\"sourceMap\":false}!../../vue-loader/lib/selector.js?type=styles&index=0!./Multiselect.vue");
-     if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
-     update(newContent);
-   });
- }
- // When the module is disposed, remove the <style> tags
- module.hot.dispose(function() { update(); });
-}
-
-/***/ }),
-/* 59 */
-/***/ (function(module, exports, __webpack_require__) {
-
-exports = module.exports = __webpack_require__(4)(false);
-// imports
-
-
-// module
-exports.push([module.i, "\nfieldset[disabled] .multiselect {\n  pointer-events: none;\n}\n.multiselect__spinner {\n  position: absolute;\n  right: 1px;\n  top: 1px;\n  width: 48px;\n  height: 35px;\n  background: #fff;\n  display: block;\n}\n.multiselect__spinner:before,\n.multiselect__spinner:after {\n  position: absolute;\n  content: \"\";\n  top: 50%;\n  left: 50%;\n  margin: -8px 0 0 -8px;\n  width: 16px;\n  height: 16px;\n  border-radius: 100%;\n  border-color: #41B883 transparent transparent;\n  border-style: solid;\n  border-width: 2px;\n  -webkit-box-shadow: 0 0 0 1px transparent;\n          box-shadow: 0 0 0 1px transparent;\n}\n.multiselect__spinner:before {\n  -webkit-animation: spinning 2.4s cubic-bezier(0.41, 0.26, 0.2, 0.62);\n          animation: spinning 2.4s cubic-bezier(0.41, 0.26, 0.2, 0.62);\n  -webkit-animation-iteration-count: infinite;\n          animation-iteration-count: infinite;\n}\n.multiselect__spinner:after {\n  -webkit-animation: spinning 2.4s cubic-bezier(0.51, 0.09, 0.21, 0.8);\n          animation: spinning 2.4s cubic-bezier(0.51, 0.09, 0.21, 0.8);\n  -webkit-animation-iteration-count: infinite;\n          animation-iteration-count: infinite;\n}\n.multiselect__loading-enter-active,\n.multiselect__loading-leave-active {\n  -webkit-transition: opacity 0.4s ease-in-out;\n  transition: opacity 0.4s ease-in-out;\n  opacity: 1;\n}\n.multiselect__loading-enter,\n.multiselect__loading-leave-active {\n  opacity: 0;\n}\n.multiselect,\n.multiselect__input,\n.multiselect__single {\n  font-family: inherit;\n  font-size: 16px;\n  -ms-touch-action: manipulation;\n      touch-action: manipulation;\n}\n.multiselect {\n  -webkit-box-sizing: content-box;\n          box-sizing: content-box;\n  display: block;\n  position: relative;\n  width: 100%;\n  min-height: 40px;\n  text-align: left;\n  color: #35495E;\n}\n.multiselect * {\n  -webkit-box-sizing: border-box;\n          box-sizing: border-box;\n}\n.multiselect:focus {\n  outline: none;\n}\n.multiselect--disabled {\n  pointer-events: none;\n  opacity: 0.6;\n}\n.multiselect--active {\n  z-index: 50;\n}\n.multiselect--active:not(.multiselect--above) .multiselect__current,\n.multiselect--active:not(.multiselect--above) .multiselect__input,\n.multiselect--active:not(.multiselect--above) .multiselect__tags {\n  border-bottom-left-radius: 0;\n  border-bottom-right-radius: 0;\n}\n.multiselect--active .multiselect__select {\n  -webkit-transform: rotateZ(180deg);\n          transform: rotateZ(180deg);\n}\n.multiselect--above.multiselect--active .multiselect__current,\n.multiselect--above.multiselect--active .multiselect__input,\n.multiselect--above.multiselect--active .multiselect__tags {\n  border-top-left-radius: 0;\n  border-top-right-radius: 0;\n}\n.multiselect__input,\n.multiselect__single {\n  position: relative;\n  display: inline-block;\n  min-height: 20px;\n  line-height: 20px;\n  border: none;\n  border-radius: 5px;\n  background: #fff;\n  padding: 0 0 0 5px;\n  width: calc(100%);\n  -webkit-transition: border 0.1s ease;\n  transition: border 0.1s ease;\n  -webkit-box-sizing: border-box;\n          box-sizing: border-box;\n  margin-bottom: 8px;\n  vertical-align: top;\n}\n.multiselect__input::-webkit-input-placeholder {\n  color: #35495E;\n}\n.multiselect__input:-ms-input-placeholder {\n  color: #35495E;\n}\n.multiselect__input::-ms-input-placeholder {\n  color: #35495E;\n}\n.multiselect__input::placeholder {\n  color: #35495E;\n}\n.multiselect__tag ~ .multiselect__input,\n.multiselect__tag ~ .multiselect__single {\n  width: auto;\n}\n.multiselect__input:hover,\n.multiselect__single:hover {\n  border-color: #cfcfcf;\n}\n.multiselect__input:focus,\n.multiselect__single:focus {\n  border-color: #a8a8a8;\n  outline: none;\n}\n.multiselect__single {\n  padding-left: 5px;\n  margin-bottom: 8px;\n}\n.multiselect__tags-wrap {\n  display: inline\n}\n.multiselect__tags {\n  min-height: 40px;\n  display: block;\n  padding: 8px 40px 0 8px;\n  border-radius: 5px;\n  border: 1px solid #E8E8E8;\n  background: #fff;\n  font-size: 14px;\n}\n.multiselect__tag {\n  position: relative;\n  display: inline-block;\n  padding: 4px 26px 4px 10px;\n  border-radius: 5px;\n  margin-right: 10px;\n  color: #fff;\n  line-height: 1;\n  background: #41B883;\n  margin-bottom: 5px;\n  white-space: nowrap;\n  overflow: hidden;\n  max-width: 100%;\n  text-overflow: ellipsis;\n}\n.multiselect__tag-icon {\n  cursor: pointer;\n  margin-left: 7px;\n  position: absolute;\n  right: 0;\n  top: 0;\n  bottom: 0;\n  font-weight: 700;\n  font-style: initial;\n  width: 22px;\n  text-align: center;\n  line-height: 22px;\n  -webkit-transition: all 0.2s ease;\n  transition: all 0.2s ease;\n  border-radius: 5px;\n}\n.multiselect__tag-icon:after {\n  content: \"\\D7\";\n  color: #266d4d;\n  font-size: 14px;\n}\n.multiselect__tag-icon:focus,\n.multiselect__tag-icon:hover {\n  background: #369a6e;\n}\n.multiselect__tag-icon:focus:after,\n.multiselect__tag-icon:hover:after {\n  color: white;\n}\n.multiselect__current {\n  line-height: 16px;\n  min-height: 40px;\n  -webkit-box-sizing: border-box;\n          box-sizing: border-box;\n  display: block;\n  overflow: hidden;\n  padding: 8px 12px 0;\n  padding-right: 30px;\n  white-space: nowrap;\n  margin: 0;\n  text-decoration: none;\n  border-radius: 5px;\n  border: 1px solid #E8E8E8;\n  cursor: pointer;\n}\n.multiselect__select {\n  line-height: 16px;\n  display: block;\n  position: absolute;\n  -webkit-box-sizing: border-box;\n          box-sizing: border-box;\n  width: 40px;\n  height: 38px;\n  right: 1px;\n  top: 1px;\n  padding: 4px 8px;\n  margin: 0;\n  text-decoration: none;\n  text-align: center;\n  cursor: pointer;\n  -webkit-transition: -webkit-transform 0.2s ease;\n  transition: -webkit-transform 0.2s ease;\n  transition: transform 0.2s ease;\n  transition: transform 0.2s ease, -webkit-transform 0.2s ease;\n}\n.multiselect__select:before {\n  position: relative;\n  right: 0;\n  top: 65%;\n  color: #999;\n  margin-top: 4px;\n  border-style: solid;\n  border-width: 5px 5px 0 5px;\n  border-color: #999999 transparent transparent transparent;\n  content: \"\";\n}\n.multiselect__placeholder {\n  color: #ADADAD;\n  display: inline-block;\n  margin-bottom: 10px;\n  padding-top: 2px;\n}\n.multiselect--active .multiselect__placeholder {\n  display: none;\n}\n.multiselect__content-wrapper {\n  position: absolute;\n  display: block;\n  background: #fff;\n  width: 100%;\n  max-height: 240px;\n  overflow: auto;\n  border: 1px solid #E8E8E8;\n  border-top: none;\n  border-bottom-left-radius: 5px;\n  border-bottom-right-radius: 5px;\n  z-index: 50;\n  -webkit-overflow-scrolling: touch;\n}\n.multiselect__content {\n  list-style: none;\n  display: inline-block;\n  padding: 0;\n  margin: 0;\n  min-width: 100%;\n  vertical-align: top;\n}\n.multiselect--above .multiselect__content-wrapper {\n  bottom: 100%;\n  border-bottom-left-radius: 0;\n  border-bottom-right-radius: 0;\n  border-top-left-radius: 5px;\n  border-top-right-radius: 5px;\n  border-bottom: none;\n  border-top: 1px solid #E8E8E8;\n}\n.multiselect__content::webkit-scrollbar {\n  display: none;\n}\n.multiselect__element {\n  display: block;\n}\n.multiselect__option {\n  display: block;\n  padding: 12px;\n  min-height: 40px;\n  line-height: 16px;\n  text-decoration: none;\n  text-transform: none;\n  vertical-align: middle;\n  position: relative;\n  cursor: pointer;\n  white-space: nowrap;\n}\n.multiselect__option:after {\n  top: 0;\n  right: 0;\n  position: absolute;\n  line-height: 40px;\n  padding-right: 12px;\n  padding-left: 20px;\n  font-size: 13px;\n}\n.multiselect__option--highlight {\n  background: #41B883;\n  outline: none;\n  color: white;\n}\n.multiselect__option--highlight:after {\n  content: attr(data-select);\n  background: #41B883;\n  color: white;\n}\n.multiselect__option--selected {\n  background: #F3F3F3;\n  color: #35495E;\n  font-weight: bold;\n}\n.multiselect__option--selected:after {\n  content: attr(data-selected);\n  color: silver;\n}\n.multiselect__option--selected.multiselect__option--highlight {\n  background: #FF6A6A;\n  color: #fff;\n}\n.multiselect__option--selected.multiselect__option--highlight:after {\n  background: #FF6A6A;\n  content: attr(data-deselect);\n  color: #fff;\n}\n.multiselect--disabled {\n  background: #ededed;\n  pointer-events: none;\n}\n.multiselect--disabled .multiselect__current,\n.multiselect--disabled .multiselect__select {\n  background: #ededed;\n  color: #a6a6a6;\n}\n.multiselect__option--disabled {\n  background: #ededed;\n  color: #a6a6a6;\n  cursor: text;\n  pointer-events: none;\n}\n.multiselect__option--group {\n  background: #ededed;\n  color: #35495E;\n}\n.multiselect__option--group.multiselect__option--highlight {\n  background: #35495E;\n  color: #fff;\n}\n.multiselect__option--group.multiselect__option--highlight:after {\n  background: #35495E;\n}\n.multiselect__option--disabled.multiselect__option--highlight {\n  background: #dedede;\n}\n.multiselect__option--group-selected.multiselect__option--highlight {\n  background: #FF6A6A;\n  color: #fff;\n}\n.multiselect__option--group-selected.multiselect__option--highlight:after {\n  background: #FF6A6A;\n  content: attr(data-deselect);\n  color: #fff;\n}\n.multiselect-enter-active,\n.multiselect-leave-active {\n  -webkit-transition: all 0.15s ease;\n  transition: all 0.15s ease;\n}\n.multiselect-enter,\n.multiselect-leave-active {\n  opacity: 0;\n}\n.multiselect__strong {\n  margin-bottom: 8px;\n  line-height: 20px;\n  display: inline-block;\n  vertical-align: top;\n}\n*[dir=\"rtl\"] .multiselect {\n    text-align: right;\n}\n*[dir=\"rtl\"] .multiselect__select {\n    right: auto;\n    left: 1px;\n}\n*[dir=\"rtl\"] .multiselect__tags {\n    padding: 8px 8px 0px 40px;\n}\n*[dir=\"rtl\"] .multiselect__content {\n    text-align: right;\n}\n*[dir=\"rtl\"] .multiselect__option:after {\n    right: auto;\n    left: 0;\n}\n*[dir=\"rtl\"] .multiselect__clear {\n    right: auto;\n    left: 12px;\n}\n*[dir=\"rtl\"] .multiselect__spinner {\n    right: auto;\n    left: 1px;\n}\n@-webkit-keyframes spinning {\nfrom { -webkit-transform:rotate(0); transform:rotate(0)\n}\nto { -webkit-transform:rotate(2turn); transform:rotate(2turn)\n}\n}\n@keyframes spinning {\nfrom { -webkit-transform:rotate(0); transform:rotate(0)\n}\nto { -webkit-transform:rotate(2turn); transform:rotate(2turn)\n}\n}\n", ""]);
-
-// exports
-
-
-/***/ }),
-/* 60 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-function isEmpty (opt) {
-  if (opt === 0) return false
-  if (Array.isArray(opt) && opt.length === 0) return true
-  return !opt
-}
-
-function not (fun) {
-  return (...params) => !fun(...params)
-}
-
-function includes (str, query) {
-  /* istanbul ignore else */
-  if (str === undefined) str = 'undefined'
-  if (str === null) str = 'null'
-  if (str === false) str = 'false'
-  const text = str.toString().toLowerCase()
-  return text.indexOf(query.trim()) !== -1
-}
-
-function filterOptions (options, search, label, customLabel) {
-  return options.filter(option => includes(customLabel(option, label), search))
-}
-
-function stripGroups (options) {
-  return options.filter(option => !option.$isLabel)
-}
-
-function flattenOptions (values, label) {
-  return (options) =>
-    options.reduce((prev, curr) => {
-      /* istanbul ignore else */
-      if (curr[values] && curr[values].length) {
-        prev.push({
-          $groupLabel: curr[label],
-          $isLabel: true
-        })
-        return prev.concat(curr[values])
-      }
-      return prev
-    }, [])
-}
-
-function filterGroups (search, label, values, groupLabel, customLabel) {
-  return (groups) =>
-    groups.map(group => {
-      /* istanbul ignore else */
-      if (!group[values]) {
-        console.warn(`Options passed to vue-multiselect do not contain groups, despite the config.`)
-        return []
-      }
-      const groupOptions = filterOptions(group[values], search, label, customLabel)
-
-      return groupOptions.length
-        ? {
-          [groupLabel]: group[groupLabel],
-          [values]: groupOptions
-        }
-        : []
-    })
-}
-
-const flow = (...fns) => x => fns.reduce((v, f) => f(v), x)
-
-/* harmony default export */ __webpack_exports__["a"] = ({
-  data () {
-    return {
-      search: '',
-      isOpen: false,
-      prefferedOpenDirection: 'below',
-      optimizedHeight: this.maxHeight
-    }
-  },
-  props: {
-    /**
-     * Decide whether to filter the results based on search query.
-     * Useful for async filtering, where we search through more complex data.
-     * @type {Boolean}
-     */
-    internalSearch: {
-      type: Boolean,
-      default: true
-    },
-    /**
-     * Array of available options: Objects, Strings or Integers.
-     * If array of objects, visible label will default to option.label.
-     * If `labal` prop is passed, label will equal option['label']
-     * @type {Array}
-     */
-    options: {
-      type: Array,
-      required: true
-    },
-    /**
-     * Equivalent to the `multiple` attribute on a `<select>` input.
-     * @default false
-     * @type {Boolean}
-     */
-    multiple: {
-      type: Boolean,
-      default: false
-    },
-    /**
-     * Presets the selected options value.
-     * @type {Object||Array||String||Integer}
-     */
-    value: {
-      type: null,
-      default () {
-        return []
-      }
-    },
-    /**
-     * Key to compare objects
-     * @default 'id'
-     * @type {String}
-     */
-    trackBy: {
-      type: String
-    },
-    /**
-     * Label to look for in option Object
-     * @default 'label'
-     * @type {String}
-     */
-    label: {
-      type: String
-    },
-    /**
-     * Enable/disable search in options
-     * @default true
-     * @type {Boolean}
-     */
-    searchable: {
-      type: Boolean,
-      default: true
-    },
-    /**
-     * Clear the search input after `)
-     * @default true
-     * @type {Boolean}
-     */
-    clearOnSelect: {
-      type: Boolean,
-      default: true
-    },
-    /**
-     * Hide already selected options
-     * @default false
-     * @type {Boolean}
-     */
-    hideSelected: {
-      type: Boolean,
-      default: false
-    },
-    /**
-     * Equivalent to the `placeholder` attribute on a `<select>` input.
-     * @default 'Select option'
-     * @type {String}
-     */
-    placeholder: {
-      type: String,
-      default: 'Select option'
-    },
-    /**
-     * Allow to remove all selected values
-     * @default true
-     * @type {Boolean}
-     */
-    allowEmpty: {
-      type: Boolean,
-      default: true
-    },
-    /**
-     * Reset this.internalValue, this.search after this.internalValue changes.
-     * Useful if want to create a stateless dropdown.
-     * @default false
-     * @type {Boolean}
-     */
-    resetAfter: {
-      type: Boolean,
-      default: false
-    },
-    /**
-     * Enable/disable closing after selecting an option
-     * @default true
-     * @type {Boolean}
-     */
-    closeOnSelect: {
-      type: Boolean,
-      default: true
-    },
-    /**
-     * Function to interpolate the custom label
-     * @default false
-     * @type {Function}
-     */
-    customLabel: {
-      type: Function,
-      default (option, label) {
-        if (isEmpty(option)) return ''
-        return label ? option[label] : option
-      }
-    },
-    /**
-     * Disable / Enable tagging
-     * @default false
-     * @type {Boolean}
-     */
-    taggable: {
-      type: Boolean,
-      default: false
-    },
-    /**
-     * String to show when highlighting a potential tag
-     * @default 'Press enter to create a tag'
-     * @type {String}
-    */
-    tagPlaceholder: {
-      type: String,
-      default: 'Press enter to create a tag'
-    },
-    /**
-     * By default new tags will appear above the search results.
-     * Changing to 'bottom' will revert this behaviour
-     * and will proritize the search results
-     * @default 'top'
-     * @type {String}
-    */
-    tagPosition: {
-      type: String,
-      default: 'top'
-    },
-    /**
-     * Number of allowed selected options. No limit if 0.
-     * @default 0
-     * @type {Number}
-    */
-    max: {
-      type: [Number, Boolean],
-      default: false
-    },
-    /**
-     * Will be passed with all events as second param.
-     * Useful for identifying events origin.
-     * @default null
-     * @type {String|Integer}
-    */
-    id: {
-      default: null
-    },
-    /**
-     * Limits the options displayed in the dropdown
-     * to the first X options.
-     * @default 1000
-     * @type {Integer}
-    */
-    optionsLimit: {
-      type: Number,
-      default: 1000
-    },
-    /**
-     * Name of the property containing
-     * the group values
-     * @default 1000
-     * @type {String}
-    */
-    groupValues: {
-      type: String
-    },
-    /**
-     * Name of the property containing
-     * the group label
-     * @default 1000
-     * @type {String}
-    */
-    groupLabel: {
-      type: String
-    },
-    /**
-     * Allow to select all group values
-     * by selecting the group label
-     * @default false
-     * @type {Boolean}
-     */
-    groupSelect: {
-      type: Boolean,
-      default: false
-    },
-    /**
-     * Array of keyboard keys to block
-     * when selecting
-     * @default 1000
-     * @type {String}
-    */
-    blockKeys: {
-      type: Array,
-      default () {
-        return []
-      }
-    },
-    /**
-     * Prevent from wiping up the search value
-     * @default false
-     * @type {Boolean}
-    */
-    preserveSearch: {
-      type: Boolean,
-      default: false
-    },
-    /**
-     * Select 1st options if value is empty
-     * @default false
-     * @type {Boolean}
-    */
-    preselectFirst: {
-      type: Boolean,
-      default: false
-    }
-  },
-  mounted () {
-    /* istanbul ignore else */
-    if (!this.multiple && !this.clearOnSelect) {
-      console.warn('[Vue-Multiselect warn]: ClearOnSelect and Multiple props can’t be both set to false.')
-    }
-    if (!this.multiple && this.max) {
-      console.warn('[Vue-Multiselect warn]: Max prop should not be used when prop Multiple equals false.')
-    }
-    if (
-      this.preselectFirst &&
-      !this.internalValue.length &&
-      this.options.length
-    ) {
-      this.select(this.filteredOptions[0])
-    }
-  },
-  computed: {
-    internalValue () {
-      return this.value || this.value === 0
-        ? Array.isArray(this.value) ? this.value : [this.value]
-        : []
-    },
-    filteredOptions () {
-      const search = this.search || ''
-      const normalizedSearch = search.toLowerCase().trim()
-
-      let options = this.options.concat()
-
-      /* istanbul ignore else */
-      if (this.internalSearch) {
-        options = this.groupValues
-          ? this.filterAndFlat(options, normalizedSearch, this.label)
-          : filterOptions(options, normalizedSearch, this.label, this.customLabel)
-      } else {
-        options = this.groupValues ? flattenOptions(this.groupValues, this.groupLabel)(options) : options
-      }
-
-      options = this.hideSelected
-        ? options.filter(not(this.isSelected))
-        : options
-
-      /* istanbul ignore else */
-      if (this.taggable && normalizedSearch.length && !this.isExistingOption(normalizedSearch)) {
-        if (this.tagPosition === 'bottom') {
-          options.push({ isTag: true, label: search })
-        } else {
-          options.unshift({ isTag: true, label: search })
-        }
-      }
-
-      return options.slice(0, this.optionsLimit)
-    },
-    valueKeys () {
-      if (this.trackBy) {
-        return this.internalValue.map(element => element[this.trackBy])
-      } else {
-        return this.internalValue
-      }
-    },
-    optionKeys () {
-      const options = this.groupValues ? this.flatAndStrip(this.options) : this.options
-      return options.map(element => this.customLabel(element, this.label).toString().toLowerCase())
-    },
-    currentOptionLabel () {
-      return this.multiple
-        ? this.searchable ? '' : this.placeholder
-        : this.internalValue.length
-          ? this.getOptionLabel(this.internalValue[0])
-          : this.searchable ? '' : this.placeholder
-    }
-  },
-  watch: {
-    internalValue () {
-      /* istanbul ignore else */
-      if (this.resetAfter && this.internalValue.length) {
-        this.search = ''
-        this.$emit('input', this.multiple ? [] : null)
-      }
-    },
-    search () {
-      this.$emit('search-change', this.search, this.id)
-    }
-  },
-  methods: {
-    /**
-     * Returns the internalValue in a way it can be emited to the parent
-     * @returns {Object||Array||String||Integer}
-     */
-    getValue () {
-      return this.multiple
-        ? this.internalValue
-        : this.internalValue.length === 0
-          ? null
-          : this.internalValue[0]
-    },
-    /**
-     * Filters and then flattens the options list
-     * @param  {Array}
-     * @returns {Array} returns a filtered and flat options list
-     */
-    filterAndFlat (options, search, label) {
-      return flow(
-        filterGroups(search, label, this.groupValues, this.groupLabel, this.customLabel),
-        flattenOptions(this.groupValues, this.groupLabel)
-      )(options)
-    },
-    /**
-     * Flattens and then strips the group labels from the options list
-     * @param  {Array}
-     * @returns {Array} returns a flat options list without group labels
-     */
-    flatAndStrip (options) {
-      return flow(
-        flattenOptions(this.groupValues, this.groupLabel),
-        stripGroups
-      )(options)
-    },
-    /**
-     * Updates the search value
-     * @param  {String}
-     */
-    updateSearch (query) {
-      this.search = query
-    },
-    /**
-     * Finds out if the given query is already present
-     * in the available options
-     * @param  {String}
-     * @returns {Boolean} returns true if element is available
-     */
-    isExistingOption (query) {
-      return !this.options
-        ? false
-        : this.optionKeys.indexOf(query) > -1
-    },
-    /**
-     * Finds out if the given element is already present
-     * in the result value
-     * @param  {Object||String||Integer} option passed element to check
-     * @returns {Boolean} returns true if element is selected
-     */
-    isSelected (option) {
-      const opt = this.trackBy
-        ? option[this.trackBy]
-        : option
-      return this.valueKeys.indexOf(opt) > -1
-    },
-    /**
-     * Returns empty string when options is null/undefined
-     * Returns tag query if option is tag.
-     * Returns the customLabel() results and casts it to string.
-     *
-     * @param  {Object||String||Integer} Passed option
-     * @returns {Object||String}
-     */
-    getOptionLabel (option) {
-      if (isEmpty(option)) return ''
-      /* istanbul ignore else */
-      if (option.isTag) return option.label
-      /* istanbul ignore else */
-      if (option.$isLabel) return option.$groupLabel
-
-      let label = this.customLabel(option, this.label)
-      /* istanbul ignore else */
-      if (isEmpty(label)) return ''
-      return label
-    },
-    /**
-     * Add the given option to the list of selected options
-     * or sets the option as the selected option.
-     * If option is already selected -> remove it from the results.
-     *
-     * @param  {Object||String||Integer} option to select/deselect
-     * @param  {Boolean} block removing
-     */
-    select (option, key) {
-      /* istanbul ignore else */
-      if (option.$isLabel && this.groupSelect) {
-        this.selectGroup(option)
-        return
-      }
-      if (this.blockKeys.indexOf(key) !== -1 ||
-        this.disabled ||
-        option.$isDisabled ||
-        option.$isLabel
-      ) return
-      /* istanbul ignore else */
-      if (this.max && this.multiple && this.internalValue.length === this.max) return
-      /* istanbul ignore else */
-      if (key === 'Tab' && !this.pointerDirty) return
-      if (option.isTag) {
-        this.$emit('tag', option.label, this.id)
-        this.search = ''
-        if (this.closeOnSelect && !this.multiple) this.deactivate()
-      } else {
-        const isSelected = this.isSelected(option)
-
-        if (isSelected) {
-          if (key !== 'Tab') this.removeElement(option)
-          return
-        }
-
-        this.$emit('select', option, this.id)
-
-        if (this.multiple) {
-          this.$emit('input', this.internalValue.concat([option]), this.id)
-        } else {
-          this.$emit('input', option, this.id)
-        }
-
-        /* istanbul ignore else */
-        if (this.clearOnSelect) this.search = ''
-      }
-      /* istanbul ignore else */
-      if (this.closeOnSelect) this.deactivate()
-    },
-    /**
-     * Add the given group options to the list of selected options
-     * If all group optiona are already selected -> remove it from the results.
-     *
-     * @param  {Object||String||Integer} group to select/deselect
-     */
-    selectGroup (selectedGroup) {
-      const group = this.options.find(option => {
-        return option[this.groupLabel] === selectedGroup.$groupLabel
-      })
-
-      if (!group) return
-
-      if (this.wholeGroupSelected(group)) {
-        this.$emit('remove', group[this.groupValues], this.id)
-
-        const newValue = this.internalValue.filter(
-          option => group[this.groupValues].indexOf(option) === -1
-        )
-
-        this.$emit('input', newValue, this.id)
-      } else {
-        const optionsToAdd = group[this.groupValues].filter(not(this.isSelected))
-
-        this.$emit('select', optionsToAdd, this.id)
-        this.$emit(
-          'input',
-          this.internalValue.concat(optionsToAdd),
-          this.id
-        )
-      }
-    },
-    /**
-     * Helper to identify if all values in a group are selected
-     *
-     * @param {Object} group to validated selected values against
-     */
-    wholeGroupSelected (group) {
-      return group[this.groupValues].every(this.isSelected)
-    },
-    /**
-     * Removes the given option from the selected options.
-     * Additionally checks this.allowEmpty prop if option can be removed when
-     * it is the last selected option.
-     *
-     * @param  {type} option description
-     * @returns {type}        description
-     */
-    removeElement (option, shouldClose = true) {
-      /* istanbul ignore else */
-      if (this.disabled) return
-      /* istanbul ignore else */
-      if (!this.allowEmpty && this.internalValue.length <= 1) {
-        this.deactivate()
-        return
-      }
-
-      const index = typeof option === 'object'
-        ? this.valueKeys.indexOf(option[this.trackBy])
-        : this.valueKeys.indexOf(option)
-
-      this.$emit('remove', option, this.id)
-      if (this.multiple) {
-        const newValue = this.internalValue.slice(0, index).concat(this.internalValue.slice(index + 1))
-        this.$emit('input', newValue, this.id)
-      } else {
-        this.$emit('input', null, this.id)
-      }
-
-      /* istanbul ignore else */
-      if (this.closeOnSelect && shouldClose) this.deactivate()
-    },
-    /**
-     * Calls this.removeElement() with the last element
-     * from this.internalValue (selected element Array)
-     *
-     * @fires this#removeElement
-     */
-    removeLastElement () {
-      /* istanbul ignore else */
-      if (this.blockKeys.indexOf('Delete') !== -1) return
-      /* istanbul ignore else */
-      if (this.search.length === 0 && Array.isArray(this.internalValue)) {
-        this.removeElement(this.internalValue[this.internalValue.length - 1], false)
-      }
-    },
-    /**
-     * Opens the multiselect’s dropdown.
-     * Sets this.isOpen to TRUE
-     */
-    activate () {
-      /* istanbul ignore else */
-      if (this.isOpen || this.disabled) return
-
-      this.adjustPosition()
-      /* istanbul ignore else  */
-      if (this.groupValues && this.pointer === 0 && this.filteredOptions.length) {
-        this.pointer = 1
-      }
-
-      this.isOpen = true
-      /* istanbul ignore else  */
-      if (this.searchable) {
-        if (!this.preserveSearch) this.search = ''
-        this.$nextTick(() => this.$refs.search.focus())
-      } else {
-        this.$el.focus()
-      }
-      this.$emit('open', this.id)
-    },
-    /**
-     * Closes the multiselect’s dropdown.
-     * Sets this.isOpen to FALSE
-     */
-    deactivate () {
-      /* istanbul ignore else */
-      if (!this.isOpen) return
-
-      this.isOpen = false
-      /* istanbul ignore else  */
-      if (this.searchable) {
-        this.$refs.search.blur()
-      } else {
-        this.$el.blur()
-      }
-      if (!this.preserveSearch) this.search = ''
-      this.$emit('close', this.getValue(), this.id)
-    },
-    /**
-     * Call this.activate() or this.deactivate()
-     * depending on this.isOpen value.
-     *
-     * @fires this#activate || this#deactivate
-     * @property {Boolean} isOpen indicates if dropdown is open
-     */
-    toggle () {
-      this.isOpen
-        ? this.deactivate()
-        : this.activate()
-    },
-    /**
-     * Updates the hasEnoughSpace variable used for
-     * detecting where to expand the dropdown
-     */
-    adjustPosition () {
-      if (typeof window === 'undefined') return
-
-      const spaceAbove = this.$el.getBoundingClientRect().top
-      const spaceBelow = window.innerHeight - this.$el.getBoundingClientRect().bottom
-      const hasEnoughSpaceBelow = spaceBelow > this.maxHeight
-
-      if (hasEnoughSpaceBelow || spaceBelow > spaceAbove || this.openDirection === 'below' || this.openDirection === 'bottom') {
-        this.prefferedOpenDirection = 'below'
-        this.optimizedHeight = Math.min(spaceBelow - 40, this.maxHeight)
-      } else {
-        this.prefferedOpenDirection = 'above'
-        this.optimizedHeight = Math.min(spaceAbove - 40, this.maxHeight)
-      }
-    }
-  }
-});
-
-
-/***/ }),
-/* 61 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony default export */ __webpack_exports__["a"] = ({
-  data () {
-    return {
-      pointer: 0,
-      pointerDirty: false
-    }
-  },
-  props: {
-    /**
-     * Enable/disable highlighting of the pointed value.
-     * @type {Boolean}
-     * @default true
-     */
-    showPointer: {
-      type: Boolean,
-      default: true
-    },
-    optionHeight: {
-      type: Number,
-      default: 40
-    }
-  },
-  computed: {
-    pointerPosition () {
-      return this.pointer * this.optionHeight
-    },
-    visibleElements () {
-      return this.optimizedHeight / this.optionHeight
-    }
-  },
-  watch: {
-    filteredOptions () {
-      this.pointerAdjust()
-    },
-    isOpen () {
-      this.pointerDirty = false
-    }
-  },
-  methods: {
-    optionHighlight (index, option) {
-      return {
-        'multiselect__option--highlight': index === this.pointer && this.showPointer,
-        'multiselect__option--selected': this.isSelected(option)
-      }
-    },
-    groupHighlight (index, selectedGroup) {
-      if (!this.groupSelect) {
-        return ['multiselect__option--disabled']
-      }
-
-      const group = this.options.find(option => {
-        return option[this.groupLabel] === selectedGroup.$groupLabel
-      })
-
-      return [
-        this.groupSelect ? 'multiselect__option--group' : 'multiselect__option--disabled',
-        { 'multiselect__option--highlight': index === this.pointer && this.showPointer },
-        { 'multiselect__option--group-selected': this.wholeGroupSelected(group) }
-      ]
-    },
-    addPointerElement ({ key } = 'Enter') {
-      /* istanbul ignore else */
-      if (this.filteredOptions.length > 0) {
-        this.select(this.filteredOptions[this.pointer], key)
-      }
-      this.pointerReset()
-    },
-    pointerForward () {
-      /* istanbul ignore else */
-      if (this.pointer < this.filteredOptions.length - 1) {
-        this.pointer++
-        /* istanbul ignore next */
-        if (this.$refs.list.scrollTop <= this.pointerPosition - (this.visibleElements - 1) * this.optionHeight) {
-          this.$refs.list.scrollTop = this.pointerPosition - (this.visibleElements - 1) * this.optionHeight
-        }
-        /* istanbul ignore else */
-        if (
-          this.filteredOptions[this.pointer] &&
-          this.filteredOptions[this.pointer].$isLabel &&
-          !this.groupSelect
-        ) this.pointerForward()
-      }
-      this.pointerDirty = true
-    },
-    pointerBackward () {
-      if (this.pointer > 0) {
-        this.pointer--
-        /* istanbul ignore else */
-        if (this.$refs.list.scrollTop >= this.pointerPosition) {
-          this.$refs.list.scrollTop = this.pointerPosition
-        }
-        /* istanbul ignore else */
-        if (
-          this.filteredOptions[this.pointer] &&
-          this.filteredOptions[this.pointer].$isLabel &&
-          !this.groupSelect
-        ) this.pointerBackward()
-      } else {
-        /* istanbul ignore else */
-        if (
-          this.filteredOptions[this.pointer] &&
-          this.filteredOptions[0].$isLabel &&
-          !this.groupSelect
-        ) this.pointerForward()
-      }
-      this.pointerDirty = true
-    },
-    pointerReset () {
-      /* istanbul ignore else */
-      if (!this.closeOnSelect) return
-      this.pointer = 0
-      /* istanbul ignore else */
-      if (this.$refs.list) {
-        this.$refs.list.scrollTop = 0
-      }
-    },
-    pointerAdjust () {
-      /* istanbul ignore else */
-      if (this.pointer >= this.filteredOptions.length - 1) {
-        this.pointer = this.filteredOptions.length
-          ? this.filteredOptions.length - 1
-          : 0
-      }
-
-      if (this.filteredOptions.length > 0 &&
-        this.filteredOptions[this.pointer].$isLabel &&
-        !this.groupSelect
-      ) {
-        this.pointerForward()
-      }
-    },
-    pointerSet (index) {
-      this.pointer = index
-      this.pointerDirty = true
-    }
-  }
-});
-
-
-/***/ }),
-/* 62 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -20691,574 +17550,7 @@ var render = function() {
   var _vm = this
   var _h = _vm.$createElement
   var _c = _vm._self._c || _h
-  return _c(
-    "div",
-    {
-      staticClass: "multiselect",
-      class: {
-        "multiselect--active": _vm.isOpen,
-        "multiselect--disabled": _vm.disabled,
-        "multiselect--above": _vm.isAbove
-      },
-      attrs: { tabindex: _vm.searchable ? -1 : _vm.tabindex },
-      on: {
-        focus: function($event) {
-          _vm.activate()
-        },
-        blur: function($event) {
-          _vm.searchable ? false : _vm.deactivate()
-        },
-        keydown: [
-          function($event) {
-            if (
-              !("button" in $event) &&
-              _vm._k($event.keyCode, "down", 40, $event.key, [
-                "Down",
-                "ArrowDown"
-              ])
-            ) {
-              return null
-            }
-            if ($event.target !== $event.currentTarget) {
-              return null
-            }
-            $event.preventDefault()
-            _vm.pointerForward()
-          },
-          function($event) {
-            if (
-              !("button" in $event) &&
-              _vm._k($event.keyCode, "up", 38, $event.key, ["Up", "ArrowUp"])
-            ) {
-              return null
-            }
-            if ($event.target !== $event.currentTarget) {
-              return null
-            }
-            $event.preventDefault()
-            _vm.pointerBackward()
-          },
-          function($event) {
-            if (
-              !("button" in $event) &&
-              _vm._k($event.keyCode, "enter", 13, $event.key, "Enter") &&
-              _vm._k($event.keyCode, "tab", 9, $event.key, "Tab")
-            ) {
-              return null
-            }
-            $event.stopPropagation()
-            if ($event.target !== $event.currentTarget) {
-              return null
-            }
-            _vm.addPointerElement($event)
-          }
-        ],
-        keyup: function($event) {
-          if (
-            !("button" in $event) &&
-            _vm._k($event.keyCode, "esc", 27, $event.key, "Escape")
-          ) {
-            return null
-          }
-          _vm.deactivate()
-        }
-      }
-    },
-    [
-      _vm._t(
-        "caret",
-        [
-          _c("div", {
-            staticClass: "multiselect__select",
-            on: {
-              mousedown: function($event) {
-                $event.preventDefault()
-                $event.stopPropagation()
-                _vm.toggle()
-              }
-            }
-          })
-        ],
-        { toggle: _vm.toggle }
-      ),
-      _vm._v(" "),
-      _vm._t("clear", null, { search: _vm.search }),
-      _vm._v(" "),
-      _c(
-        "div",
-        { ref: "tags", staticClass: "multiselect__tags" },
-        [
-          _c(
-            "div",
-            {
-              directives: [
-                {
-                  name: "show",
-                  rawName: "v-show",
-                  value: _vm.visibleValues.length > 0,
-                  expression: "visibleValues.length > 0"
-                }
-              ],
-              staticClass: "multiselect__tags-wrap"
-            },
-            [
-              _vm._l(_vm.visibleValues, function(option) {
-                return [
-                  _vm._t(
-                    "tag",
-                    [
-                      _c("span", { staticClass: "multiselect__tag" }, [
-                        _c("span", {
-                          domProps: {
-                            textContent: _vm._s(_vm.getOptionLabel(option))
-                          }
-                        }),
-                        _vm._v(" "),
-                        _c("i", {
-                          staticClass: "multiselect__tag-icon",
-                          attrs: { "aria-hidden": "true", tabindex: "1" },
-                          on: {
-                            keydown: function($event) {
-                              if (
-                                !("button" in $event) &&
-                                _vm._k(
-                                  $event.keyCode,
-                                  "enter",
-                                  13,
-                                  $event.key,
-                                  "Enter"
-                                )
-                              ) {
-                                return null
-                              }
-                              $event.preventDefault()
-                              _vm.removeElement(option)
-                            },
-                            mousedown: function($event) {
-                              $event.preventDefault()
-                              _vm.removeElement(option)
-                            }
-                          }
-                        })
-                      ])
-                    ],
-                    {
-                      option: option,
-                      search: _vm.search,
-                      remove: _vm.removeElement
-                    }
-                  )
-                ]
-              })
-            ],
-            2
-          ),
-          _vm._v(" "),
-          _vm.internalValue && _vm.internalValue.length > _vm.limit
-            ? [
-                _vm._t("limit", [
-                  _c("strong", {
-                    staticClass: "multiselect__strong",
-                    domProps: {
-                      textContent: _vm._s(
-                        _vm.limitText(_vm.internalValue.length - _vm.limit)
-                      )
-                    }
-                  })
-                ])
-              ]
-            : _vm._e(),
-          _vm._v(" "),
-          _c(
-            "transition",
-            { attrs: { name: "multiselect__loading" } },
-            [
-              _vm._t("loading", [
-                _c("div", {
-                  directives: [
-                    {
-                      name: "show",
-                      rawName: "v-show",
-                      value: _vm.loading,
-                      expression: "loading"
-                    }
-                  ],
-                  staticClass: "multiselect__spinner"
-                })
-              ])
-            ],
-            2
-          ),
-          _vm._v(" "),
-          _c("input", {
-            directives: [
-              {
-                name: "show",
-                rawName: "v-show",
-                value: _vm.isOpen && _vm.searchable,
-                expression: "isOpen && searchable"
-              }
-            ],
-            ref: "search",
-            staticClass: "multiselect__input",
-            style: _vm.inputStyle,
-            attrs: {
-              name: _vm.name,
-              id: _vm.id,
-              type: "text",
-              autocomplete: "off",
-              placeholder: _vm.placeholder,
-              disabled: _vm.disabled,
-              tabindex: _vm.tabindex
-            },
-            domProps: { value: _vm.search },
-            on: {
-              input: function($event) {
-                _vm.updateSearch($event.target.value)
-              },
-              focus: function($event) {
-                $event.preventDefault()
-                _vm.activate()
-              },
-              blur: function($event) {
-                $event.preventDefault()
-                _vm.deactivate()
-              },
-              keyup: function($event) {
-                if (
-                  !("button" in $event) &&
-                  _vm._k($event.keyCode, "esc", 27, $event.key, "Escape")
-                ) {
-                  return null
-                }
-                _vm.deactivate()
-              },
-              keydown: [
-                function($event) {
-                  if (
-                    !("button" in $event) &&
-                    _vm._k($event.keyCode, "down", 40, $event.key, [
-                      "Down",
-                      "ArrowDown"
-                    ])
-                  ) {
-                    return null
-                  }
-                  $event.preventDefault()
-                  _vm.pointerForward()
-                },
-                function($event) {
-                  if (
-                    !("button" in $event) &&
-                    _vm._k($event.keyCode, "up", 38, $event.key, [
-                      "Up",
-                      "ArrowUp"
-                    ])
-                  ) {
-                    return null
-                  }
-                  $event.preventDefault()
-                  _vm.pointerBackward()
-                },
-                function($event) {
-                  if (
-                    !("button" in $event) &&
-                    _vm._k($event.keyCode, "enter", 13, $event.key, "Enter")
-                  ) {
-                    return null
-                  }
-                  $event.preventDefault()
-                  $event.stopPropagation()
-                  if ($event.target !== $event.currentTarget) {
-                    return null
-                  }
-                  _vm.addPointerElement($event)
-                },
-                function($event) {
-                  if (
-                    !("button" in $event) &&
-                    _vm._k($event.keyCode, "delete", [8, 46], $event.key, [
-                      "Backspace",
-                      "Delete"
-                    ])
-                  ) {
-                    return null
-                  }
-                  $event.stopPropagation()
-                  _vm.removeLastElement()
-                }
-              ]
-            }
-          }),
-          _vm._v(" "),
-          _vm.isSingleLabelVisible
-            ? _c(
-                "span",
-                {
-                  staticClass: "multiselect__single",
-                  on: {
-                    mousedown: function($event) {
-                      $event.preventDefault()
-                      return _vm.toggle($event)
-                    }
-                  }
-                },
-                [
-                  _vm._t(
-                    "singleLabel",
-                    [[_vm._v(_vm._s(_vm.currentOptionLabel))]],
-                    { option: _vm.singleValue }
-                  )
-                ],
-                2
-              )
-            : _vm._e(),
-          _vm._v(" "),
-          _vm.isPlaceholderVisible
-            ? _c(
-                "span",
-                {
-                  on: {
-                    mousedown: function($event) {
-                      $event.preventDefault()
-                      return _vm.toggle($event)
-                    }
-                  }
-                },
-                [
-                  _vm._t("placeholder", [
-                    _c("span", { staticClass: "multiselect__single" }, [
-                      _vm._v(
-                        "\n            " +
-                          _vm._s(_vm.placeholder) +
-                          "\n          "
-                      )
-                    ])
-                  ])
-                ],
-                2
-              )
-            : _vm._e()
-        ],
-        2
-      ),
-      _vm._v(" "),
-      _c("transition", { attrs: { name: "multiselect" } }, [
-        _c(
-          "div",
-          {
-            directives: [
-              {
-                name: "show",
-                rawName: "v-show",
-                value: _vm.isOpen,
-                expression: "isOpen"
-              }
-            ],
-            ref: "list",
-            staticClass: "multiselect__content-wrapper",
-            style: { maxHeight: _vm.optimizedHeight + "px" },
-            on: {
-              focus: _vm.activate,
-              mousedown: function($event) {
-                $event.preventDefault()
-              }
-            }
-          },
-          [
-            _c(
-              "ul",
-              { staticClass: "multiselect__content", style: _vm.contentStyle },
-              [
-                _vm._t("beforeList"),
-                _vm._v(" "),
-                _vm.multiple && _vm.max === _vm.internalValue.length
-                  ? _c("li", [
-                      _c(
-                        "span",
-                        { staticClass: "multiselect__option" },
-                        [
-                          _vm._t("maxElements", [
-                            _vm._v(
-                              "Maximum of " +
-                                _vm._s(_vm.max) +
-                                " options selected. First remove a selected option to select another."
-                            )
-                          ])
-                        ],
-                        2
-                      )
-                    ])
-                  : _vm._e(),
-                _vm._v(" "),
-                !_vm.max || _vm.internalValue.length < _vm.max
-                  ? _vm._l(_vm.filteredOptions, function(option, index) {
-                      return _c(
-                        "li",
-                        { key: index, staticClass: "multiselect__element" },
-                        [
-                          !(option && (option.$isLabel || option.$isDisabled))
-                            ? _c(
-                                "span",
-                                {
-                                  staticClass: "multiselect__option",
-                                  class: _vm.optionHighlight(index, option),
-                                  attrs: {
-                                    "data-select":
-                                      option && option.isTag
-                                        ? _vm.tagPlaceholder
-                                        : _vm.selectLabelText,
-                                    "data-selected": _vm.selectedLabelText,
-                                    "data-deselect": _vm.deselectLabelText
-                                  },
-                                  on: {
-                                    click: function($event) {
-                                      $event.stopPropagation()
-                                      _vm.select(option)
-                                    },
-                                    mouseenter: function($event) {
-                                      if (
-                                        $event.target !== $event.currentTarget
-                                      ) {
-                                        return null
-                                      }
-                                      _vm.pointerSet(index)
-                                    }
-                                  }
-                                },
-                                [
-                                  _vm._t(
-                                    "option",
-                                    [
-                                      _c("span", [
-                                        _vm._v(
-                                          _vm._s(_vm.getOptionLabel(option))
-                                        )
-                                      ])
-                                    ],
-                                    { option: option, search: _vm.search }
-                                  )
-                                ],
-                                2
-                              )
-                            : _vm._e(),
-                          _vm._v(" "),
-                          option && (option.$isLabel || option.$isDisabled)
-                            ? _c(
-                                "span",
-                                {
-                                  staticClass: "multiselect__option",
-                                  class: _vm.groupHighlight(index, option),
-                                  attrs: {
-                                    "data-select":
-                                      _vm.groupSelect &&
-                                      _vm.selectGroupLabelText,
-                                    "data-deselect":
-                                      _vm.groupSelect &&
-                                      _vm.deselectGroupLabelText
-                                  },
-                                  on: {
-                                    mouseenter: function($event) {
-                                      if (
-                                        $event.target !== $event.currentTarget
-                                      ) {
-                                        return null
-                                      }
-                                      _vm.groupSelect && _vm.pointerSet(index)
-                                    },
-                                    mousedown: function($event) {
-                                      $event.preventDefault()
-                                      _vm.selectGroup(option)
-                                    }
-                                  }
-                                },
-                                [
-                                  _vm._t(
-                                    "option",
-                                    [
-                                      _c("span", [
-                                        _vm._v(
-                                          _vm._s(_vm.getOptionLabel(option))
-                                        )
-                                      ])
-                                    ],
-                                    { option: option, search: _vm.search }
-                                  )
-                                ],
-                                2
-                              )
-                            : _vm._e()
-                        ]
-                      )
-                    })
-                  : _vm._e(),
-                _vm._v(" "),
-                _c(
-                  "li",
-                  {
-                    directives: [
-                      {
-                        name: "show",
-                        rawName: "v-show",
-                        value:
-                          _vm.showNoResults &&
-                          (_vm.filteredOptions.length === 0 &&
-                            _vm.search &&
-                            !_vm.loading),
-                        expression:
-                          "showNoResults && (filteredOptions.length === 0 && search && !loading)"
-                      }
-                    ]
-                  },
-                  [
-                    _c(
-                      "span",
-                      { staticClass: "multiselect__option" },
-                      [
-                        _vm._t("noResult", [
-                          _vm._v(
-                            "No elements found. Consider changing the search query."
-                          )
-                        ])
-                      ],
-                      2
-                    )
-                  ]
-                ),
-                _vm._v(" "),
-                _vm._t("afterList")
-              ],
-              2
-            )
-          ]
-        )
-      ])
-    ],
-    2
-  )
-}
-var staticRenderFns = []
-render._withStripped = true
-
-if (false) {
-  module.hot.accept()
-  if (module.hot.data) {
-    require("vue-hot-reload-api")      .rerender("data-v-18e48ade", { render: render, staticRenderFns: staticRenderFns })
-  }
-}
-
-/***/ }),
-/* 63 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return render; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "b", function() { return staticRenderFns; });
-var render = function() {
-  var _vm = this
-  var _h = _vm.$createElement
-  var _c = _vm._self._c || _h
-  return _c("div", {}, [
+  return _c("div", { staticClass: "step1" }, [
     _c(
       "form",
       { staticClass: "form", attrs: { action: "" } },
@@ -21272,7 +17564,7 @@ var render = function() {
             }
           },
           [
-            _c("div", [
+            _c("div", { staticClass: "step", attrs: { id: "step1" } }, [
               _c("div", { staticClass: "a-title a-title_mb" }, [
                 _c("div", { staticClass: "a-title__h3" }, [
                   _vm._v("Выбор продукции")
@@ -21281,124 +17573,22 @@ var render = function() {
               _vm._v(" "),
               _c(
                 "div",
-                { staticClass: "products " },
-                _vm._l(_vm.productList, function(item, index) {
-                  return _c("div", { staticClass: "products__row " }, [
-                    _c(
-                      "div",
-                      { staticClass: "products__td products__td-number" },
-                      [
-                        _c("span", { staticClass: "products__number" }, [
-                          _vm._v(_vm._s(index + 1) + "." + _vm._s(item.index))
-                        ])
-                      ]
-                    ),
+                { staticClass: "products product-list" },
+                [
+                  _c("div", { staticClass: "products__row" }, [
+                    _c("div", {
+                      staticClass: "products__td products__td-number"
+                    }),
                     _vm._v(" "),
                     _c(
                       "div",
-                      { staticClass: "products__td" },
+                      { staticClass: "products__td products__td-flex1" },
                       [
                         _c(
                           "div",
                           { staticClass: "info-title products__info-title" },
                           [_vm._v("Марка")]
-                        ),
-                        _vm._v(" "),
-                        _c("drop-down", {
-                          attrs: {
-                            list: _vm.products.brand,
-                            placeholder: "Товар",
-                            "default-selected": item.brand || -1,
-                            disabled: false
-                          },
-                          on: {
-                            change: function($event) {
-                              _vm.changeProduct(index, $event)
-                            }
-                          }
-                        })
-                      ],
-                      1
-                    ),
-                    _vm._v(" "),
-                    _c(
-                      "div",
-                      { staticClass: "products__td" },
-                      [
-                        _c("drop-down", {
-                          attrs: {
-                            list: _vm.products.brand[item.brand]
-                              ? _vm.products.brand[item.brand].grammage
-                              : false,
-                            placeholder: "Граммаж",
-                            "default-selected": false
-                          },
-                          on: {
-                            change: function($event) {
-                              _vm.changeGrammage(index, $event)
-                            }
-                          }
-                        })
-                      ],
-                      1
-                    ),
-                    _vm._v(" "),
-                    _c(
-                      "div",
-                      { staticClass: "products__td products__td-flex1" },
-                      [
-                        _c("drop-down", {
-                          attrs: {
-                            list: _vm.products.brand[item.brand].grammage[
-                              item.grammage
-                            ].format
-                              ? _vm.products.brand[item.brand].grammage[
-                                  item.grammage
-                                ].format
-                              : false,
-                            placeholder: "Формат",
-                            "default-selected": false
-                          },
-                          on: {
-                            change: function($event) {
-                              _vm.changeFormat(index, $event)
-                              _vm.setProductSettings(index, item)
-                            }
-                          }
-                        })
-                      ],
-                      1
-                    ),
-                    _vm._v(" "),
-                    _c(
-                      "div",
-                      { staticClass: "products__td products__td-flex1" },
-                      [
-                        _c("input", {
-                          directives: [
-                            {
-                              name: "model",
-                              rawName: "v-model",
-                              value: item.volume_1,
-                              expression: "item.volume_1"
-                            }
-                          ],
-                          staticClass: "form__input form__input_large",
-                          class: { disabled: item.volume_1 === false },
-                          attrs: { type: "text" },
-                          domProps: { value: item.volume_1 },
-                          on: {
-                            keyup: function($event) {
-                              _vm.calcPrice(index, item)
-                            },
-                            input: function($event) {
-                              if ($event.target.composing) {
-                                return
-                              }
-                              _vm.$set(item, "volume_1", $event.target.value)
-                            }
-                          }
-                        })
+                        )
                       ]
                     ),
                     _vm._v(" "),
@@ -21406,31 +17596,11 @@ var render = function() {
                       "div",
                       { staticClass: "products__td products__td-flex1" },
                       [
-                        _c("input", {
-                          directives: [
-                            {
-                              name: "model",
-                              rawName: "v-model",
-                              value: item.volume_2,
-                              expression: "item.volume_2"
-                            }
-                          ],
-                          staticClass: "form__input form__input_large",
-                          class: { disabled: item.volume_2 === false },
-                          attrs: { type: "text" },
-                          domProps: { value: item.volume_2 },
-                          on: {
-                            keyup: function($event) {
-                              _vm.calcPrice(index, item)
-                            },
-                            input: function($event) {
-                              if ($event.target.composing) {
-                                return
-                              }
-                              _vm.$set(item, "volume_2", $event.target.value)
-                            }
-                          }
-                        })
+                        _c(
+                          "div",
+                          { staticClass: "info-title products__info-title" },
+                          [_vm._v("Граммаж")]
+                        )
                       ]
                     ),
                     _vm._v(" "),
@@ -21438,31 +17608,11 @@ var render = function() {
                       "div",
                       { staticClass: "products__td products__td-flex1" },
                       [
-                        _c("input", {
-                          directives: [
-                            {
-                              name: "model",
-                              rawName: "v-model",
-                              value: item.volume_3,
-                              expression: "item.volume_3"
-                            }
-                          ],
-                          staticClass: "form__input form__input_large",
-                          class: { disabled: item.volume_3 === false },
-                          attrs: { type: "text" },
-                          domProps: { value: item.volume_3 },
-                          on: {
-                            keyup: function($event) {
-                              _vm.calcPrice(index, item)
-                            },
-                            input: function($event) {
-                              if ($event.target.composing) {
-                                return
-                              }
-                              _vm.$set(item, "volume_3", $event.target.value)
-                            }
-                          }
-                        })
+                        _c(
+                          "div",
+                          { staticClass: "info-title products__info-title" },
+                          [_vm._v("Формат")]
+                        )
                       ]
                     ),
                     _vm._v(" "),
@@ -21470,26 +17620,48 @@ var render = function() {
                       "div",
                       { staticClass: "products__td products__td-flex1" },
                       [
-                        _c("drop-down", {
-                          attrs: {
-                            list: _vm.products.brand[item.brand].grammage[
-                              item.grammage
-                            ].format[item.grammage].deliveries
-                              ? _vm.products.brand[item.brand].grammage[
-                                  item.grammage
-                                ].format[item.grammage].deliveries
-                              : false,
-                            placeholder: "Способ доставки"
-                          },
-                          on: {
-                            change: function($event) {
-                              item.delivery = $event
-                              _vm.calcPrice(index)
-                            }
-                          }
-                        })
-                      ],
-                      1
+                        _c(
+                          "div",
+                          { staticClass: "info-title products__info-title" },
+                          [_vm._v("Объём 1 декада")]
+                        )
+                      ]
+                    ),
+                    _vm._v(" "),
+                    _c(
+                      "div",
+                      { staticClass: "products__td products__td-flex1" },
+                      [
+                        _c(
+                          "div",
+                          { staticClass: "info-title products__info-title" },
+                          [_vm._v("Объём 2 декада")]
+                        )
+                      ]
+                    ),
+                    _vm._v(" "),
+                    _c(
+                      "div",
+                      { staticClass: "products__td products__td-flex1" },
+                      [
+                        _c(
+                          "div",
+                          { staticClass: "info-title products__info-title" },
+                          [_vm._v("Объём 3 декада")]
+                        )
+                      ]
+                    ),
+                    _vm._v(" "),
+                    _c(
+                      "div",
+                      { staticClass: "products__td products__td-flex1" },
+                      [
+                        _c(
+                          "div",
+                          { staticClass: "info-title products__info-title" },
+                          [_vm._v("Способ доставки")]
+                        )
+                      ]
                     ),
                     _vm._v(" "),
                     _c(
@@ -21500,33 +17672,252 @@ var render = function() {
                           "div",
                           { staticClass: "info-title products__info-title" },
                           [_vm._v("Цена")]
-                        ),
-                        _vm._v(" "),
-                        _c("input", {
-                          staticClass:
-                            "form__input form__input form__input_bold",
-                          attrs: { type: "text" }
-                        }),
-                        _vm._v(
-                          _vm._s(_vm.productList[index].price) +
-                            "\n                        "
                         )
                       ]
-                    ),
-                    _vm._v(" "),
-                    _c("div", { staticClass: "products__td" }, [
-                      _c("i", {
-                        staticClass: "icon icon-trash ",
-                        on: {
-                          click: function($event) {
-                            $event.preventDefault()
-                            _vm.delProduct(index)
+                    )
+                  ]),
+                  _vm._v(" "),
+                  _vm._l(_vm.productList, function(item, index) {
+                    return _c("div", { staticClass: "products__row product" }, [
+                      _c(
+                        "div",
+                        { staticClass: "products__td products__td-number" },
+                        [
+                          _c("span", { staticClass: "products__number" }, [
+                            _vm._v(_vm._s(index + 1) + "." + _vm._s(item.index))
+                          ])
+                        ]
+                      ),
+                      _vm._v(" "),
+                      _c(
+                        "div",
+                        { staticClass: "products__td products__td-flex1" },
+                        [
+                          _c("drop-down", {
+                            attrs: {
+                              list: _vm.products.brand,
+                              placeholder: "Товар",
+                              "default-selected": item.brand,
+                              disabled: false
+                            },
+                            on: {
+                              change: function($event) {
+                                _vm.changeProduct(index, $event)
+                              }
+                            }
+                          })
+                        ],
+                        1
+                      ),
+                      _vm._v(" "),
+                      _c(
+                        "div",
+                        { staticClass: "products__td products__td-flex1" },
+                        [
+                          _c("drop-down", {
+                            attrs: {
+                              list: _vm.products.brand[item.brand]
+                                ? _vm.products.brand[item.brand].grammage
+                                : false,
+                              placeholder: "Граммаж",
+                              "default-selected": item.grammage
+                            },
+                            on: {
+                              change: function($event) {
+                                _vm.changeGrammage(index, $event)
+                              }
+                            }
+                          })
+                        ],
+                        1
+                      ),
+                      _vm._v(" "),
+                      _c(
+                        "div",
+                        { staticClass: "products__td products__td-flex1" },
+                        [
+                          _c("drop-down", {
+                            attrs: {
+                              list: _vm.products.brand[item.brand].grammage[
+                                item.grammage
+                              ].format
+                                ? _vm.products.brand[item.brand].grammage[
+                                    item.grammage
+                                  ].format
+                                : false,
+                              placeholder: "Формат",
+                              "default-selected": item.format
+                            },
+                            on: {
+                              change: function($event) {
+                                _vm.changeFormat(index, $event)
+                                _vm.setProductSettings(index, item)
+                              }
+                            }
+                          })
+                        ],
+                        1
+                      ),
+                      _vm._v(" "),
+                      _c(
+                        "div",
+                        { staticClass: "products__td products__td-flex1" },
+                        [
+                          _c("input", {
+                            directives: [
+                              {
+                                name: "model",
+                                rawName: "v-model",
+                                value: item.volume_1,
+                                expression: "item.volume_1"
+                              }
+                            ],
+                            staticClass: "form__input ",
+                            class: { disabled: item.volume_1 === false },
+                            attrs: { type: "text" },
+                            domProps: { value: item.volume_1 },
+                            on: {
+                              keyup: function($event) {
+                                _vm.calcPrice(index, item)
+                              },
+                              input: function($event) {
+                                if ($event.target.composing) {
+                                  return
+                                }
+                                _vm.$set(item, "volume_1", $event.target.value)
+                              }
+                            }
+                          })
+                        ]
+                      ),
+                      _vm._v(" "),
+                      _c(
+                        "div",
+                        { staticClass: "products__td products__td-flex1" },
+                        [
+                          _c("input", {
+                            directives: [
+                              {
+                                name: "model",
+                                rawName: "v-model",
+                                value: item.volume_2,
+                                expression: "item.volume_2"
+                              }
+                            ],
+                            staticClass: "form__input form__input",
+                            class: { disabled: item.volume_2 === false },
+                            attrs: { type: "text" },
+                            domProps: { value: item.volume_2 },
+                            on: {
+                              keyup: function($event) {
+                                _vm.calcPrice(index, item)
+                              },
+                              input: function($event) {
+                                if ($event.target.composing) {
+                                  return
+                                }
+                                _vm.$set(item, "volume_2", $event.target.value)
+                              }
+                            }
+                          })
+                        ]
+                      ),
+                      _vm._v(" "),
+                      _c(
+                        "div",
+                        { staticClass: "products__td products__td-flex1" },
+                        [
+                          _c("input", {
+                            directives: [
+                              {
+                                name: "model",
+                                rawName: "v-model",
+                                value: item.volume_3,
+                                expression: "item.volume_3"
+                              }
+                            ],
+                            staticClass: "form__input form__input",
+                            class: { disabled: item.volume_3 === false },
+                            attrs: { type: "text" },
+                            domProps: { value: item.volume_3 },
+                            on: {
+                              keyup: function($event) {
+                                _vm.calcPrice(index, item)
+                              },
+                              input: function($event) {
+                                if ($event.target.composing) {
+                                  return
+                                }
+                                _vm.$set(item, "volume_3", $event.target.value)
+                              }
+                            }
+                          })
+                        ]
+                      ),
+                      _vm._v(" "),
+                      _c(
+                        "div",
+                        { staticClass: "products__td products__td-flex1" },
+                        [
+                          _c("drop-down", {
+                            attrs: {
+                              list: _vm.products.brand[item.brand].grammage[
+                                item.grammage
+                              ].format[item.format].deliveries
+                                ? _vm.products.brand[item.brand].grammage[
+                                    item.grammage
+                                  ].format[item.format].deliveries
+                                : false,
+                              placeholder: "Способ доставки"
+                            },
+                            on: {
+                              change: function($event) {
+                                item.delivery = $event
+                                _vm.calcPrice(index)
+                              }
+                            }
+                          })
+                        ],
+                        1
+                      ),
+                      _vm._v(" "),
+                      _c(
+                        "div",
+                        { staticClass: "products__td products__td-flex1" },
+                        [
+                          _c(
+                            "div",
+                            {
+                              staticClass:
+                                "form__input form__input form__input_bold",
+                              attrs: { type: "text" }
+                            },
+                            [
+                              _vm._v(
+                                "\n                                " +
+                                  _vm._s(_vm.productList[index].price) +
+                                  "\n                            "
+                              )
+                            ]
+                          )
+                        ]
+                      ),
+                      _vm._v(" "),
+                      _c("div", { staticClass: "products__td" }, [
+                        _c("i", {
+                          staticClass: "icon icon-trash ",
+                          on: {
+                            click: function($event) {
+                              $event.preventDefault()
+                              _vm.delProduct(index)
+                            }
                           }
-                        }
-                      })
+                        })
+                      ])
                     ])
-                  ])
-                })
+                  })
+                ],
+                2
               ),
               _vm._v(" "),
               _c("div", { staticClass: "products-add" }, [
@@ -21581,6 +17972,123 @@ var render = function() {
           ]
         ),
         _vm._v(" "),
+        _vm.step === 2
+          ? _c("div", { staticClass: "step", attrs: { id: "step2" } }, [
+              _c("div", { staticClass: "a-information" }, [
+                _c("div", { staticClass: "a-goods" }, [
+                  _vm._m(0),
+                  _vm._v(" "),
+                  _c("table", { staticClass: "table a-table" }, [
+                    _vm._m(1),
+                    _vm._v(" "),
+                    _c(
+                      "tbody",
+                      [
+                        _vm._l(_vm.productList, function(item, index) {
+                          return _c(
+                            "tr",
+                            [
+                              item.product > -1
+                                ? [
+                                    _c("td", { staticClass: "table__td" }, [
+                                      _vm._v(_vm._s(index + 1))
+                                    ]),
+                                    _vm._v(" "),
+                                    _c("td", { staticClass: "table__td" }, [
+                                      _vm._v(
+                                        _vm._s(_vm.products[item.brand].name)
+                                      )
+                                    ]),
+                                    _vm._v(" "),
+                                    _c("td", { staticClass: "table__td" }, [
+                                      _vm._v(
+                                        _vm._s(
+                                          item.volume_1 === 0
+                                            ? item.volume_1
+                                            : "-"
+                                        )
+                                      )
+                                    ]),
+                                    _vm._v(" "),
+                                    _c("td", { staticClass: "table__td" }, [
+                                      _vm._v(
+                                        _vm._s(
+                                          item.volume_2 === 1
+                                            ? item.volume_2
+                                            : "-"
+                                        )
+                                      )
+                                    ]),
+                                    _vm._v(" "),
+                                    _c("td", { staticClass: "table__td" }, [
+                                      _vm._v(
+                                        _vm._s(
+                                          item.volume_3 === 2
+                                            ? item.volume_3
+                                            : "-"
+                                        )
+                                      )
+                                    ]),
+                                    _vm._v(" "),
+                                    _c("td", { staticClass: "table__td" }, [
+                                      _vm._v(_vm._s(item.volume))
+                                    ]),
+                                    _vm._v(" "),
+                                    _c("td", { staticClass: "table__td" }, [
+                                      _vm._v(_vm._s(item.price))
+                                    ])
+                                  ]
+                                : _vm._e()
+                            ],
+                            2
+                          )
+                        }),
+                        _vm._v(" "),
+                        _c("tr", [
+                          _c(
+                            "td",
+                            {
+                              staticClass:
+                                "table__td table__td_summary table__td_left",
+                              attrs: { colspan: "7" }
+                            },
+                            [
+                              _c("div", { staticClass: "table__summary" }, [
+                                _c(
+                                  "span",
+                                  { staticClass: "table__summary-title" },
+                                  [_vm._v("Итого:")]
+                                ),
+                                _vm._v(
+                                  " " +
+                                    _vm._s(_vm.totalVolume) +
+                                    " т\n                                "
+                                )
+                              ]),
+                              _vm._v(" "),
+                              _c("div", { staticClass: "table__summary" }, [
+                                _c(
+                                  "span",
+                                  { staticClass: "table__summary-title" },
+                                  [_vm._v("Итоговая сумма:")]
+                                ),
+                                _vm._v(" " + _vm._s(_vm.totalPrice) + " "),
+                                _c("span", { staticClass: "rouble" }, [
+                                  _vm._v("q")
+                                ])
+                              ])
+                            ]
+                          )
+                        ])
+                      ],
+                      2
+                    )
+                  ])
+                ])
+              ])
+            ])
+          : _vm._e(),
+        _vm._v(" "),
         _c("div", { staticClass: "sh-toolbar" }, [
           _c(
             "a",
@@ -21617,7 +18125,73 @@ var render = function() {
     )
   ])
 }
-var staticRenderFns = []
+var staticRenderFns = [
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c("div", { staticClass: "a-title" }, [
+      _c("div", { staticClass: "a-title__h3" }, [_vm._v("Товары в заявке")])
+    ])
+  },
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c("thead", [
+      _c("tr", [
+        _c("th", { staticClass: "table__th", attrs: { rowspan: "2" } }, [
+          _vm._v("№")
+        ]),
+        _vm._v(" "),
+        _c(
+          "th",
+          {
+            staticClass: "table__th a-table__th-name",
+            attrs: { rowspan: "2" }
+          },
+          [_vm._v("Наименование товара")]
+        ),
+        _vm._v(" "),
+        _c("th", { staticClass: "table__th", attrs: { colspan: "3" } }, [
+          _vm._v("Кол-во и срок отгрузки")
+        ]),
+        _vm._v(" "),
+        _c(
+          "th",
+          {
+            staticClass: "table__th a-table__th-total",
+            attrs: { rowspan: "2" }
+          },
+          [_vm._v("Итого")]
+        ),
+        _vm._v(" "),
+        _c(
+          "th",
+          {
+            staticClass: "table__th a-table__th-price",
+            attrs: { rowspan: "2" }
+          },
+          [_vm._v("Цена")]
+        )
+      ]),
+      _vm._v(" "),
+      _c("tr", [
+        _c("th", { staticClass: "table__th a-table__th-number" }, [
+          _vm._v("01-10")
+        ]),
+        _vm._v(" "),
+        _c("th", { staticClass: "table__th a-table__th-number" }, [
+          _vm._v("11-20")
+        ]),
+        _vm._v(" "),
+        _c("th", { staticClass: "table__th a-table__th-number" }, [
+          _vm._v("21-31")
+        ])
+      ])
+    ])
+  }
+]
 render._withStripped = true
 
 if (false) {
@@ -21628,14 +18202,14 @@ if (false) {
 }
 
 /***/ }),
-/* 64 */
+/* 57 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__babel_loader_cacheDirectory_true_presets_env_modules_false_targets_browsers_2_uglify_true_plugins_transform_object_rest_spread_transform_runtime_polyfill_false_helpers_false_node_modules_vue_loader_lib_selector_type_script_index_0_ExampleComponent_vue__ = __webpack_require__(18);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__babel_loader_cacheDirectory_true_presets_env_modules_false_targets_browsers_2_uglify_true_plugins_transform_object_rest_spread_transform_runtime_polyfill_false_helpers_false_node_modules_vue_loader_lib_selector_type_script_index_0_ExampleComponent_vue__ = __webpack_require__(17);
 /* empty harmony namespace reexport */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__node_modules_vue_loader_lib_template_compiler_index_id_data_v_0ca92eac_hasScoped_false_optionsId_0_buble_transforms_node_modules_vue_loader_lib_selector_type_template_index_0_ExampleComponent_vue__ = __webpack_require__(65);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__node_modules_vue_loader_lib_template_compiler_index_id_data_v_0ca92eac_hasScoped_false_optionsId_0_buble_transforms_node_modules_vue_loader_lib_selector_type_template_index_0_ExampleComponent_vue__ = __webpack_require__(58);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__node_modules_vue_loader_lib_runtime_component_normalizer__ = __webpack_require__(1);
 var disposed = false
 /* script */
@@ -21683,7 +18257,7 @@ if (false) {(function () {
 
 
 /***/ }),
-/* 65 */
+/* 58 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -21729,7 +18303,7 @@ if (false) {
 }
 
 /***/ }),
-/* 66 */
+/* 59 */
 /***/ (function(module, exports) {
 
 // removed by extract-text-webpack-plugin
