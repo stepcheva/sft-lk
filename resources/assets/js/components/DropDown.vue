@@ -1,7 +1,7 @@
 <template>
     <div>
-        <div class="selectize-control form__select-large single ">
-        <label class="selectize-input items not-full has-options" :class="{ disabled: disabled }">
+        <div class="selectize-control form__select single">
+        <label class="selectize-input items not-full has-options has-items" :class="{ disabled: disabled }">
             <input @focus="selectFocus($event)"
             @blur="selectBlur($event)"
             v-model="searchSelect"
@@ -9,11 +9,11 @@
             :placeholder="placeholder"
             autocomplete="off"
             type="text">
-            </label>
-        <div class="selectize-dropdown single form__select-large" style="display: none">
+        </label>
+        <div class="selectize-dropdown single form__select-large" style="display: none;">
             <div class="selectize-dropdown-content">
                 <div v-for="(item, index) in list" v-show="(listShow.indexOf(index)>-1 || listShow.length === 0)"
-                     v-bind="{'data-value':item.val}"
+                     v-bind="{'data-value':item.selected}"
                      @click="selectChange(index)" class="option" data-selectable>
                     {{item.name}}
                     </div>
@@ -48,9 +48,7 @@
             }
             // console.log(this.defaultSelected);
         },
-        mounted() {
-            //this.getConsigneers();
-        },
+
         methods : {
             selectFocus : function (e) {
                 this.searchSelect = '';
@@ -105,5 +103,15 @@
     }
 </script>
 
+<style>
+    .form__select-large input {
+        color: #26231f;
+        width: 100%;
+    }
 
+    .disabled {
+        opacity: .5;
+        pointer-events: none;
+    }
+</style>
 
